@@ -1,0 +1,921 @@
+/* =========================================================
+   JIHAAN COSMETICS - MAIN HEADER
+========================================================= */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.97);
+  border-bottom: 1px solid #eee8e2;
+  box-shadow: 0 4px 24px rgba(35, 28, 22, 0.04);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  animation: headerReveal 0.65s ease both;
+}
+
+.headerInner {
+  width: min(100% - 72px, 1500px);
+  min-height: 108px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 36px;
+}
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 15px;
+  flex-shrink: 0;
+  color: #22201e;
+  text-decoration: none;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.logo:hover {
+  opacity: 0.86;
+  transform: translateY(-2px);
+}
+
+.logoImage {
+  width: 53px;
+  height: 53px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: contain;
+  transition:
+    transform 0.4s ease,
+    filter 0.4s ease;
+}
+
+.logo:hover .logoImage {
+  transform: rotate(-8deg) scale(1.07);
+  filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.14));
+}
+
+.logoText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.logoMain {
+  color: #242220;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(23px, 2vw, 32px);
+  font-weight: 700;
+  letter-spacing: -1.2px;
+  white-space: nowrap;
+}
+
+.logoSub {
+  margin-top: 10px;
+  color: #9c938b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   SEARCH AREA
+========================================================= */
+
+.searchContainer {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 720px;
+  min-width: 280px;
+}
+
+/*
+  .desktopSearch is the FORM in MainHeader.tsx,
+  not the input.
+*/
+
+.desktopSearch {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 58px;
+  padding: 0 8px 0 22px;
+  box-sizing: border-box;
+  border: 1px solid #ddd4cb;
+  border-radius: 999px;
+  background: #ffffff;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease,
+    background 0.3s ease;
+}
+
+.desktopSearch:hover {
+  border-color: #cbbcaf;
+  background: #fffefd;
+}
+
+.desktopSearch:focus-within {
+  border-color: #b39b87;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 4px rgba(179, 155, 135, 0.12),
+    0 8px 26px rgba(45, 34, 25, 0.06);
+  transform: translateY(-1px);
+}
+
+/* Search icon before the input */
+
+.desktopSearch > svg {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  margin-right: 13px;
+  color: #282522;
+  stroke-width: 1.8;
+}
+
+/* Search input */
+
+.desktopSearch input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #292522;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.desktopSearch input::placeholder {
+  color: #99918a;
+  opacity: 1;
+}
+
+.desktopSearch input:focus {
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+/* Search submit button */
+
+.desktopSearch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  margin-left: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #f5f1ed;
+  color: #292522;
+  cursor: pointer;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.desktopSearch button:hover {
+  background: #292522;
+  color: #ffffff;
+  box-shadow: 0 7px 18px rgba(40, 30, 20, 0.18);
+  transform: scale(1.07);
+}
+
+.desktopSearch button:active {
+  transform: scale(0.94);
+}
+
+.desktopSearch button svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
+/* =========================================================
+   SEARCH DROPDOWN
+========================================================= */
+
+.searchDropdown {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 0;
+  left: 0;
+  z-index: 1100;
+  max-height: 430px;
+  padding: 9px;
+  overflow-y: auto;
+  border: 1px solid #eee7df;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow:
+    0 25px 70px rgba(34, 27, 20, 0.16),
+    0 5px 18px rgba(34, 27, 20, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: dropdownReveal 0.25s ease both;
+}
+
+.searchStatus {
+  padding: 26px 18px;
+  color: #8e857d;
+  font-size: 13px;
+  text-align: center;
+}
+
+.loadingIcon {
+  display: inline-block;
+  margin-right: 7px;
+  vertical-align: middle;
+  animation: loadingRotate 0.8s linear infinite;
+}
+
+.searchResult {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  color: #292522;
+  text-align: left;
+  cursor: pointer;
+  animation: resultReveal 0.3s ease both;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.searchResult:hover {
+  border-color: #eee4da;
+  background: #faf6f1;
+  transform: translateX(4px);
+}
+
+.searchResultImage {
+  width: 58px;
+  height: 68px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  object-fit: cover;
+  background: #f4f0eb;
+  transition: transform 0.3s ease;
+}
+
+.searchResult:hover .searchResultImage {
+  transform: scale(1.05);
+}
+
+.searchResultDetails {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.searchResultDetails strong {
+  margin-bottom: 5px;
+  overflow: hidden;
+  color: #292522;
+  font-size: 13px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.searchResultDetails small {
+  color: #99918a;
+  font-size: 12px;
+}
+
+.searchResultPrice {
+  margin-top: 6px;
+  color: #292522;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.searchResult > svg {
+  flex: 0 0 auto;
+  color: #aaa096;
+  transition:
+    color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.searchResult:hover > svg {
+  color: #967354;
+  transform: translateX(3px);
+}
+
+.viewAllResults {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 14px 12px 10px;
+  border: none;
+  border-top: 1px solid #eee7df;
+  border-radius: 12px;
+  background: transparent;
+  color: #292522;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    letter-spacing 0.25s ease;
+}
+
+.viewAllResults:hover {
+  background: #f8f2ec;
+  color: #967354;
+  letter-spacing: 0.2px;
+}
+
+/* =========================================================
+   HEADER ACTIONS
+========================================================= */
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.actionButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 8px 5px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: #2b2927;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.3s ease,
+    background 0.3s ease,
+    border-color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.actionButton:hover {
+  color: #967354;
+  transform: translateY(-3px);
+}
+
+.actionButton:active {
+  transform: translateY(-1px) scale(0.96);
+}
+
+.actionButton svg {
+  transition:
+    transform 0.3s ease,
+    stroke-width 0.3s ease;
+}
+
+.actionButton:hover svg {
+  transform: scale(1.1);
+  stroke-width: 2.1;
+}
+
+.actionLabel {
+  display: inline-block;
+}
+
+.profileImage {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px #ded5cc;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.actionButton:hover .profileImage {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 2px #cbb7a4;
+}
+
+.cartIconWrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cartBadge {
+  position: absolute;
+  top: -11px;
+  right: -13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 5px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: #292522;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  animation: badgeReveal 0.35s ease both;
+}
+
+/* =========================================================
+   ACCOUNT DROPDOWN
+========================================================= */
+
+.accountContainer {
+  position: relative;
+}
+
+.accountDropdown {
+  position: absolute;
+  top: calc(100% + 15px);
+  right: -10px;
+  width: 355px;
+  padding: 12px;
+  border: 1px solid #eee8e2;
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow:
+    0 25px 70px rgba(34, 27, 20, 0.16),
+    0 5px 18px rgba(34, 27, 20, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: dropdownReveal 0.25s ease both;
+}
+
+.accountHeader {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 17px;
+  border-radius: 19px;
+  background: #f8f5f1;
+}
+
+.dropdownProfileImage {
+  width: 49px;
+  height: 49px;
+  flex-shrink: 0;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 3px 12px rgba(40, 30, 20, 0.08);
+}
+
+.accountHeader > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.accountHeader strong {
+  margin-bottom: 6px;
+  overflow: hidden;
+  color: #292522;
+  font-size: 15px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountHeader span {
+  overflow: hidden;
+  color: #777068;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdownDivider {
+  height: 1px;
+  margin: 12px 4px;
+  background: #eee8e2;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  min-height: 47px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  background: transparent;
+  color: #514a44;
+  font-size: 14px;
+  font-weight: 650;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.dropdownItem:hover {
+  background: #f8f3ee;
+  color: #967354;
+  transform: translateX(4px);
+}
+
+.dropdownItem svg {
+  flex-shrink: 0;
+  color: #a59a90;
+  transition:
+    color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.dropdownItem:hover svg {
+  color: #967354;
+  transform: scale(1.1);
+}
+
+.logoutItem {
+  color: #bd5050;
+}
+
+.logoutItem:hover {
+  background: #fff1f1;
+  color: #a73d3d;
+}
+
+.logoutItem:hover svg {
+  color: #a73d3d;
+}
+
+.defaultAccountIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 49px;
+  height: 49px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #967354;
+  box-shadow: 0 3px 12px rgba(40, 30, 20, 0.08);
+}
+
+.dropdownPrimaryButton,
+.dropdownSecondaryButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 9px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.dropdownPrimaryButton {
+  border: 1px solid #292522;
+  background: #292522;
+  color: #ffffff;
+}
+
+.dropdownPrimaryButton:hover {
+  border-color: #967354;
+  background: #967354;
+  box-shadow: 0 8px 20px rgba(80, 55, 35, 0.2);
+  transform: translateY(-2px);
+}
+
+.dropdownSecondaryButton {
+  border: 1px solid #e1d8cf;
+  background: #ffffff;
+  color: #514a44;
+}
+
+.dropdownSecondaryButton:hover {
+  border-color: #cbb7a4;
+  background: #faf6f1;
+  color: #967354;
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   MOBILE SEARCH BUTTON
+========================================================= */
+
+.mobileSearchButton {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid #e5ddd5;
+  border-radius: 50%;
+  background: #faf7f3;
+  color: #292522;
+  cursor: pointer;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.mobileSearchButton:hover {
+  border-color: #cbb7a4;
+  background: #f4ebe2;
+  color: #967354;
+  transform: translateY(-2px) rotate(5deg);
+}
+
+.mobileSearchButton:active {
+  transform: scale(0.94);
+}
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+.logo:focus-visible,
+.actionButton:focus-visible,
+.dropdownItem:focus-visible,
+.dropdownPrimaryButton:focus-visible,
+.dropdownSecondaryButton:focus-visible,
+.searchResult:focus-visible,
+.viewAllResults:focus-visible,
+.mobileSearchButton:focus-visible {
+  outline: 3px solid rgba(150, 115, 84, 0.35);
+  outline-offset: 4px;
+}
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes headerReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dropdownReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-9px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes resultReveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes badgeReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+
+  70% {
+    transform: scale(1.15);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes loadingRotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1200px) {
+  .headerInner {
+    width: min(100% - 42px, 1500px);
+    gap: 24px;
+  }
+
+  .searchContainer {
+    max-width: 560px;
+  }
+
+  .actions {
+    gap: 10px;
+  }
+
+  .actionLabel {
+    display: none;
+  }
+
+  .actionButton {
+    width: 44px;
+    padding: 5px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+  .headerInner {
+    width: calc(100% - 28px);
+    min-height: 76px;
+    gap: 10px;
+  }
+
+  .logo {
+    gap: 9px;
+  }
+
+  .logoImage {
+    width: 39px;
+    height: 39px;
+  }
+
+  .logoMain {
+    font-size: 21px;
+    letter-spacing: -0.7px;
+  }
+
+  .logoSub {
+    margin-top: 6px;
+    font-size: 7px;
+    letter-spacing: 2.2px;
+  }
+
+  .searchContainer {
+    display: none;
+  }
+
+  .mobileSearchButton {
+    display: inline-flex;
+  }
+
+  .actions {
+    gap: 5px;
+  }
+
+  .actionButton {
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    padding: 5px;
+  }
+
+  .profileImage {
+    width: 29px;
+    height: 29px;
+  }
+
+  .cartBadge {
+    top: -7px;
+    right: -8px;
+    min-width: 18px;
+    height: 18px;
+    font-size: 9px;
+  }
+
+  .accountDropdown {
+    position: fixed;
+    top: 88px;
+    right: 14px;
+    left: 14px;
+    width: auto;
+    max-width: none;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 430px) {
+  .headerInner {
+    width: calc(100% - 18px);
+    gap: 6px;
+  }
+
+  .logoImage {
+    width: 34px;
+    height: 34px;
+  }
+
+  .logoMain {
+    font-size: 18px;
+  }
+
+  .logoSub {
+    font-size: 6px;
+    letter-spacing: 1.5px;
+  }
+
+  .mobileSearchButton,
+  .actionButton {
+    width: 35px;
+    height: 35px;
+    min-height: 35px;
+  }
+
+  .actions {
+    gap: 2px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

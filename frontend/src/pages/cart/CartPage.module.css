@@ -1,0 +1,413 @@
+.page {
+  min-height: 100vh;
+  background: #faf9f7;
+  padding: 48px 20px 80px;
+  color: #292522;
+}
+
+.container {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 36px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: #a47b55;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(32px, 5vw, 48px);
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 14px 0 0;
+  color: #77706a;
+  font-size: 15px;
+}
+
+.continueLink {
+  color: #7d5b3d;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.continueLink:hover {
+  text-decoration: underline;
+}
+
+.error {
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  border: 1px solid #efb8b8;
+  border-radius: 10px;
+  background: #fff1f1;
+  color: #a52c2c;
+  font-size: 14px;
+}
+
+.loading {
+  width: min(1180px, 100%);
+  margin: 80px auto;
+  text-align: center;
+  color: #77706a;
+  font-size: 16px;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  align-items: start;
+  gap: 28px;
+}
+
+.itemsSection,
+.summary {
+  border: 1px solid #e9e2dc;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.itemsSection {
+  padding: 24px;
+}
+
+.itemsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.itemsHeader h2,
+.summary h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.clearButton {
+  border: 0;
+  background: transparent;
+  color: #a34c4c;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.clearButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
+  gap: 18px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee8e3;
+}
+
+.item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.imageWrapper {
+  width: 112px;
+  height: 132px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f4f0ec;
+}
+
+.productImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagePlaceholder {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: #968b82;
+  font-size: 12px;
+}
+
+.itemDetails {
+  min-width: 0;
+}
+
+.productName {
+  margin: 2px 0 8px;
+  color: #302b27;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.size {
+  margin: 0 0 8px;
+  color: #887d74;
+  font-size: 13px;
+}
+
+.price {
+  margin: 0;
+  color: #7d5b3d;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.itemBottom {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.quantityControl {
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid #ded5ce;
+  border-radius: 8px;
+}
+
+.quantityControl button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: #ffffff;
+  color: #51483f;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.quantityControl button:hover:not(:disabled) {
+  background: #f6f0eb;
+}
+
+.quantityControl button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.quantityControl span {
+  min-width: 34px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.removeButton {
+  border: 0;
+  background: transparent;
+  color: #a34c4c;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.removeButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.itemTotal {
+  color: #302b27;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.summary {
+  position: sticky;
+  top: 24px;
+  padding: 26px;
+}
+
+.summary h2 {
+  margin-bottom: 26px;
+}
+
+.summaryRow,
+.totalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  color: #746b63;
+  font-size: 14px;
+}
+
+.summaryRow span:last-child {
+  color: #302b27;
+  font-weight: 600;
+}
+
+.free {
+  color: #43835b !important;
+}
+
+.divider {
+  height: 1px;
+  margin: 24px 0;
+  background: #eee8e3;
+}
+
+.totalRow {
+  margin-bottom: 26px;
+  color: #302b27;
+  font-size: 17px;
+}
+
+.totalRow strong {
+  color: #7d5b3d;
+  font-size: 22px;
+}
+
+.checkoutButton,
+.primaryButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 9px;
+  background: #8c6848;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.checkoutButton:hover,
+.primaryButton:hover {
+  background: #735237;
+}
+
+.secureText {
+  margin: 16px 0 0;
+  color: #93877d;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.empty {
+  padding: 80px 24px;
+  border: 1px solid #e9e2dc;
+  border-radius: 18px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.emptyIcon {
+  margin-bottom: 18px;
+  font-size: 44px;
+}
+
+.empty h2 {
+  margin: 0;
+  font-size: 25px;
+}
+
+.empty p {
+  margin: 12px 0 26px;
+  color: #81766e;
+  font-size: 14px;
+}
+
+.primaryButton {
+  width: min(220px, 100%);
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .content {
+    grid-template-columns: 1fr;
+  }
+
+  .summary {
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 30px 14px 60px;
+  }
+
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 26px;
+  }
+
+  .itemsSection {
+    padding: 18px;
+  }
+
+  .item {
+    grid-template-columns: 82px minmax(0, 1fr);
+    gap: 13px;
+  }
+
+  .imageWrapper {
+    width: 82px;
+    height: 105px;
+  }
+
+  .productName {
+    font-size: 14px;
+  }
+
+  .itemTotal {
+    grid-column: 2;
+    margin-top: -4px;
+  }
+
+  .itemBottom {
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .summary {
+    padding: 22px 18px;
+  }
+
+  .itemsHeader h2,
+  .summary h2 {
+    font-size: 18px;
+  }
+}

@@ -1,0 +1,281 @@
+/* =========================================
+   ADMIN HEADER
+========================================= */
+
+.adminHeader {
+  position: sticky;
+  top: 0;
+  z-index: 900;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+
+  width: 100%;
+  min-height: 82px;
+  padding: 18px 32px;
+
+  border-bottom: 1px solid #eadfd7;
+  background: rgba(255, 253, 251, 0.97);
+  backdrop-filter: blur(14px);
+  box-sizing: border-box;
+}
+
+/* Left side */
+
+.adminHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.adminHeaderLeft > div {
+  min-width: 0;
+}
+
+.adminHeaderLeft h1 {
+  overflow: hidden;
+  margin: 0;
+
+  color: #30251f;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adminHeaderLeft p {
+  margin: 6px 0 0;
+
+  color: #a18e82;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Mobile menu button */
+
+.mobileMenuButton {
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+
+  border: 1px solid #eadfd7;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #806b5d;
+
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.mobileMenuButton:hover {
+  border-color: #c9a78e;
+  background: #f8eee7;
+  color: #a66b45;
+}
+
+/* Right side */
+
+.adminHeaderRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Search */
+
+.adminSearchBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  width: 240px;
+  height: 42px;
+  padding: 0 13px;
+
+  border: 1px solid #e5d8ce;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #a18e82;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.adminSearchBox:focus-within {
+  border-color: #b47b55;
+  box-shadow: 0 0 0 3px rgba(180, 123, 85, 0.12);
+}
+
+.adminSearchBox input {
+  width: 100%;
+  min-width: 0;
+
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #30251f;
+
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.adminSearchBox input::placeholder {
+  color: #b3a095;
+}
+
+/* Header icon button */
+
+.headerIconButton {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+
+  border: 1px solid #eadfd7;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #806b5d;
+
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.headerIconButton:hover {
+  border-color: #c9a78e;
+  background: #f8eee7;
+  color: #a66b45;
+}
+
+.notificationDot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+
+  width: 7px;
+  height: 7px;
+
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #c76b58;
+}
+
+/* Profile button */
+
+.adminProfileButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+  min-height: 42px;
+  padding: 0 13px;
+
+  border: 1px solid #eadfd7;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #806b5d;
+
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.adminProfileButton:hover {
+  border-color: #c9a78e;
+  background: #f8eee7;
+  color: #a66b45;
+}
+
+.adminProfileButton svg {
+  flex-shrink: 0;
+}
+
+/* Tablet */
+
+@media (max-width: 1100px) {
+  .adminHeader {
+    padding: 18px 24px;
+  }
+
+  .adminSearchBox {
+    width: 190px;
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 850px) {
+  .adminHeader {
+    min-height: 72px;
+    padding: 15px 20px;
+  }
+
+  .mobileMenuButton {
+    display: inline-flex;
+  }
+
+  .adminHeaderLeft h1 {
+    font-size: 20px;
+  }
+
+  .adminSearchBox {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .adminHeader {
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .adminHeaderLeft {
+    gap: 11px;
+  }
+
+  .adminHeaderLeft h1 {
+    max-width: 190px;
+    font-size: 18px;
+  }
+
+  .adminHeaderLeft p {
+    display: none;
+  }
+
+  .adminProfileButton {
+    width: 42px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .adminProfileButton span {
+    display: none;
+  }
+}

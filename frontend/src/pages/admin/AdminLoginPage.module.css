@@ -1,0 +1,404 @@
+.page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 42px 20px;
+  background:
+    linear-gradient(135deg, #fffaf7 0%, #fdf3ee 48%, #f8e9e1 100%);
+  color: #292321;
+}
+
+.backgroundShapeOne,
+.backgroundShapeTwo {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.backgroundShapeOne {
+  width: 420px;
+  height: 420px;
+  top: -190px;
+  right: -150px;
+  background: rgba(213, 163, 132, 0.2);
+}
+
+.backgroundShapeTwo {
+  width: 350px;
+  height: 350px;
+  bottom: -180px;
+  left: -160px;
+  background: rgba(181, 126, 94, 0.12);
+}
+
+.pageContent {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.brand {
+  margin-bottom: 26px;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.logoImage {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.logoText {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.logoMain {
+  color: #30231e;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 1.7px;
+  line-height: 1.2;
+}
+
+.logoSub {
+  color: #9c7562;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2.2px;
+  line-height: 1.3;
+}
+
+.loginCard {
+  width: 100%;
+  padding: 38px;
+  border: 1px solid rgba(179, 133, 108, 0.2);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 18px 55px rgba(94, 62, 45, 0.1);
+  backdrop-filter: blur(12px);
+}
+
+.cardHeader {
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: #a4775d;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.cardHeader h1 {
+  margin: 0;
+  color: #2e241f;
+  font-size: 29px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.intro {
+  max-width: 350px;
+  margin: 13px auto 0;
+  color: #82736b;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 21px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.field label {
+  color: #45362f;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 52px;
+  padding: 0 15px;
+  border: 1px solid #e8dcd5;
+  border-radius: 12px;
+  background: #fffdfc;
+  color: #a78979;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.inputWrapper:focus-within {
+  border-color: #b98b70;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(185, 139, 112, 0.12);
+}
+
+.inputWrapper input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #342720;
+  font: inherit;
+  font-size: 14px;
+}
+
+.inputWrapper input::placeholder {
+  color: #b4a49b;
+}
+
+.passwordToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #a78979;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.passwordToggle:hover {
+  background: #f6ebe5;
+  color: #805b46;
+}
+
+.passwordToggle:focus-visible,
+.submitButton:focus-visible,
+.backButton:focus-visible,
+.logo:focus-visible {
+  outline: 3px solid rgba(171, 119, 88, 0.35);
+  outline-offset: 3px;
+}
+
+.error {
+  margin: -5px 0 0;
+  padding: 11px 13px;
+  border: 1px solid #f0caca;
+  border-radius: 10px;
+  background: #fff1f1;
+  color: #b33d3d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.submitButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 53px;
+  margin-top: 2px;
+  padding: 14px 20px;
+  border: 0;
+  border-radius: 12px;
+  background: #9d7057;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: #845943;
+  box-shadow: 0 8px 20px rgba(132, 89, 67, 0.2);
+  transform: translateY(-1px);
+}
+
+.submitButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submitButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.securityNote {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 25px;
+  color: #958177;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.securityNote svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #a4775d;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 27px 0 17px;
+  color: #a18f84;
+  font-size: 12px;
+  text-align: center;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #eee2db;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 49px;
+  padding: 13px 18px;
+  border: 1px solid #e5d4c9;
+  border-radius: 12px;
+  background: transparent;
+  color: #805b46;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.backButton:hover {
+  border-color: #c8a28b;
+  background: #fff8f3;
+  color: #684633;
+}
+
+.footer {
+  margin-top: 26px;
+  text-align: center;
+}
+
+.footerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.footerLinks a {
+  color: #987b6b;
+  font-size: 12px;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footerLinks a:hover {
+  color: #805b46;
+}
+
+.footer p {
+  margin: 0;
+  color: #ad9a8e;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 28px 16px;
+  }
+
+  .loginCard {
+    padding: 28px 22px;
+    border-radius: 20px;
+  }
+
+  .cardHeader h1 {
+    font-size: 25px;
+  }
+
+  .logoImage {
+    width: 50px;
+    height: 50px;
+  }
+
+  .logoMain {
+    font-size: 14px;
+    letter-spacing: 1.3px;
+  }
+
+  .logoSub {
+    font-size: 8px;
+    letter-spacing: 1.6px;
+  }
+}
+
+@media (max-width: 360px) {
+  .loginCard {
+    padding: 25px 18px;
+  }
+
+  .logo {
+    gap: 8px;
+  }
+
+  .logoMain {
+    font-size: 12px;
+  }
+
+  .logoSub {
+    font-size: 7px;
+  }
+}

@@ -1,0 +1,516 @@
+.usersManager {
+  min-width: 0;
+  padding: 28px;
+  color: #292522;
+}
+
+.usersManagerHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.usersEyebrow {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: #9b7047;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.usersManagerHeader h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.usersManagerHeader p {
+  max-width: 680px;
+  margin: 8px 0 0;
+  color: #888;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.usersRefreshButton,
+.usersViewButton,
+.usersPrimaryButton,
+.usersSecondaryButton,
+.usersDangerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: 0.2s ease;
+}
+
+.usersRefreshButton {
+  padding: 12px 16px;
+  color: #795638;
+  background: #f5eadd;
+}
+
+.usersRefreshButton:disabled,
+.usersPrimaryButton:disabled,
+.usersDangerButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.usersAlert {
+  margin-bottom: 18px;
+  padding: 13px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.usersAlertError {
+  border: 1px solid #efbaba;
+  color: #a32c2c;
+  background: #fff0f0;
+}
+
+.usersAlertSuccess {
+  border: 1px solid #b8dec6;
+  color: #287548;
+  background: #edf9f1;
+}
+
+.usersStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px;
+  margin-bottom: 24px;
+}
+
+.usersStatCard {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 20px;
+  border: 1px solid #eee6de;
+  border-radius: 15px;
+  color: #8b623f;
+  background: #fff;
+}
+
+.usersStatCard.active {
+  color: #39815a;
+}
+
+.usersStatCard.blocked {
+  color: #ad4a4a;
+}
+
+.usersStatCard.admin {
+  color: #66559b;
+}
+
+.usersStatCard div {
+  min-width: 0;
+}
+
+.usersStatCard span {
+  display: block;
+  color: #8d8d8d;
+  font-size: 12px;
+}
+
+.usersStatCard strong {
+  display: block;
+  margin-top: 5px;
+  color: #292522;
+  font-size: 25px;
+}
+
+.usersFilters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.usersSearch {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 10px;
+  min-width: 180px;
+  padding: 0 14px;
+  border: 1px solid #e6ded6;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.usersSearch svg {
+  color: #999;
+}
+
+.usersSearch input {
+  width: 100%;
+  height: 45px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+}
+
+.usersFilters select {
+  min-width: 180px;
+  height: 45px;
+  padding: 0 12px;
+  border: 1px solid #e6ded6;
+  border-radius: 11px;
+  outline: 0;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+}
+
+.usersTableCard {
+  overflow: hidden;
+  border: 1px solid #eee6de;
+  border-radius: 17px;
+  background: #fff;
+}
+
+.usersTableHeading {
+  padding: 21px;
+  border-bottom: 1px solid #f0ebe5;
+}
+
+.usersTableHeading h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.usersTableHeading p {
+  margin: 5px 0 0;
+  color: #999;
+  font-size: 13px;
+}
+
+.usersTableScroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.usersTable {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.usersTable th {
+  padding: 15px 18px;
+  color: #888;
+  background: #fcfaf8;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.usersTable td {
+  padding: 17px 18px;
+  border-top: 1px solid #f1ece6;
+  color: #666;
+  font-size: 13px;
+}
+
+.usersTable td strong {
+  display: block;
+  color: #333;
+}
+
+.usersTable td small {
+  display: block;
+  margin-top: 5px;
+  color: #999;
+  font-size: 11px;
+}
+
+.usersRoleBadge,
+.usersStatusBadge {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.usersRoleBadge {
+  color: #765a9d;
+  background: #f1eaff;
+}
+
+.usersStatusBadge.active {
+  color: #34774f;
+  background: #e5f6eb;
+}
+
+.usersStatusBadge.blocked {
+  color: #ac4545;
+  background: #ffebeb;
+}
+
+.usersViewButton {
+  padding: 9px 12px;
+  color: #755333;
+  background: #f5eadd;
+  font-size: 12px;
+}
+
+.usersEmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 270px;
+  padding: 30px;
+  color: #999;
+  text-align: center;
+}
+
+.usersEmptyState h3 {
+  margin: 12px 0 5px;
+  color: #555;
+}
+
+.usersEmptyState p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.usersModalOverlay {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(35, 27, 20, 0.58);
+}
+
+.usersModal {
+  width: min(850px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 25px 75px rgba(0, 0, 0, 0.22);
+}
+
+.usersModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 25px;
+  border-bottom: 1px solid #eee6de;
+}
+
+.usersModalHeader h2 {
+  margin: 0;
+  font-size: 25px;
+}
+
+.usersModalHeader p {
+  margin: 6px 0 0;
+  color: #888;
+  font-size: 13px;
+}
+
+.usersCloseButton {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  color: #777;
+  background: #f6f2ed;
+  cursor: pointer;
+}
+
+.usersModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 25px;
+}
+
+.usersDetailsCard {
+  padding: 20px;
+  border: 1px solid #eee6de;
+  border-radius: 15px;
+  background: #fff;
+}
+
+.usersDetailsHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 17px;
+}
+
+.usersDetailsHeading h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.usersSecondaryButton {
+  padding: 9px 12px;
+  color: #765536;
+  background: #f5eadd;
+  font-size: 12px;
+}
+
+.usersFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.usersDetailsCard label {
+  display: block;
+  margin-bottom: 7px;
+  color: #666;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.usersDetailsCard input,
+.usersDetailsCard select {
+  width: 100%;
+  box-sizing: border-box;
+  height: 43px;
+  padding: 10px 12px;
+  border: 1px solid #e5ddd5;
+  border-radius: 9px;
+  outline: 0;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+}
+
+.usersDetailsCard input:disabled,
+.usersDetailsCard select:disabled {
+  color: #777;
+  background: #f8f5f2;
+  cursor: not-allowed;
+}
+
+.usersPrimaryButton,
+.usersDangerButton {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 15px;
+  color: #fff;
+  background: #8c623e;
+  font-size: 13px;
+}
+
+.usersPrimaryButton:hover {
+  background: #735033;
+}
+
+.usersPrimaryButton.unblock {
+  background: #39815a;
+}
+
+.usersDangerButton {
+  background: #b84c4c;
+}
+
+.usersDangerButton:hover {
+  background: #963b3b;
+}
+
+.usersDescription {
+  margin: 0;
+  color: #888;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 1000px) {
+  .usersStatsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .usersManager {
+    padding: 18px;
+  }
+
+  .usersManagerHeader {
+    flex-direction: column;
+  }
+
+  .usersRefreshButton {
+    width: 100%;
+  }
+
+  .usersFilters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .usersFilters select {
+    width: 100%;
+  }
+
+  .usersFormGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .usersModalOverlay {
+    padding: 10px;
+  }
+
+  .usersModalHeader,
+  .usersModalBody {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .usersStatsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .usersManagerHeader h1 {
+    font-size: 25px;
+  }
+}
+.unblockButton {
+  color: #15803d;
+  border: 1px solid #86efac;
+  background: #f0fdf4;
+}
+
+.unblockButton:hover {
+  background: #dcfce7;
+}
+
+.blockButton {
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+}
+
+.blockButton:hover {
+  background: #fee2e2;
+}

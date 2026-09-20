@@ -1,0 +1,354 @@
+/* =========================================
+   ADMIN SIDEBAR
+========================================= */
+
+.adminSidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+
+  display: flex;
+  flex-direction: column;
+
+  width: 260px;
+  height: 100vh;
+  overflow: hidden;
+
+  border-right: 1px solid #eadfd7;
+  background: #fffdfb;
+
+  transition:
+    width 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+/* Desktop state */
+
+.adminSidebar.sidebarClosed {
+  transform: translateX(0);
+}
+
+.adminSidebar.sidebarOpen {
+  transform: translateX(0);
+}
+
+/* Collapsed sidebar */
+
+.adminSidebar.sidebarCollapsed {
+  width: 82px;
+}
+
+/* =========================================
+   BRAND AREA
+========================================= */
+
+.sidebarBrand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-height: 82px;
+  padding: 20px;
+
+  border-bottom: 1px solid #f0e7e1;
+  box-sizing: border-box;
+}
+
+.brandLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+
+  border-radius: 13px;
+  background: linear-gradient(135deg, #b47b55, #8f5737);
+  color: #ffffff;
+
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.brandText strong {
+  color: #30251f;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.brandText span {
+  margin-top: 4px;
+  color: #a18e82;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.sidebarCloseButton {
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+  margin-left: auto;
+  flex-shrink: 0;
+
+  border: 1px solid #eadfd7;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #806b5d;
+
+  cursor: pointer;
+}
+
+/* =========================================
+   NAVIGATION
+========================================= */
+
+.sidebarNavigation {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+
+  padding: 22px 14px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebarLabel {
+  margin: 0 10px 10px;
+
+  color: #b19c8e;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  white-space: nowrap;
+}
+
+.sidebarMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+
+  border: 0;
+  border-radius: 12px;
+  outline: none;
+
+  background: transparent;
+  color: #8c786b;
+
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.sidebarMenuItem svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.sidebarMenuItem:hover {
+  background: #f8eee7;
+  color: #a66b45;
+}
+
+.sidebarMenuItem:focus-visible {
+  box-shadow: 0 0 0 3px rgba(180, 123, 85, 0.2);
+}
+
+.sidebarMenuItem.active {
+  background: #f4e3d7;
+  color: #965d3b;
+}
+
+.sidebarMenuItem.active svg {
+  color: #a66b45;
+}
+
+/* =========================================
+   SIDEBAR BOTTOM
+========================================= */
+
+.sidebarBottom {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  padding: 16px 14px;
+
+  border-top: 1px solid #f0e7e1;
+}
+
+.collapseButton,
+.logoutButton {
+  flex-shrink: 0;
+}
+
+.logoutButton:hover {
+  background: #fff0ed;
+  color: #b85f4f;
+}
+
+.rotateIcon {
+  transform: rotate(180deg);
+  transition: transform 0.25s ease;
+}
+
+/* =========================================
+   COLLAPSED MODE
+========================================= */
+
+.adminSidebar.sidebarCollapsed .sidebarBrand {
+  justify-content: center;
+  padding: 20px 12px;
+}
+
+.adminSidebar.sidebarCollapsed .sidebarNavigation {
+  padding: 22px 12px;
+}
+
+.adminSidebar.sidebarCollapsed .sidebarBottom {
+  padding: 16px 12px;
+}
+
+.adminSidebar.sidebarCollapsed .sidebarMenuItem {
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+}
+
+.adminSidebar.sidebarCollapsed .sidebarLabel,
+.adminSidebar.sidebarCollapsed .brandText,
+.adminSidebar.sidebarCollapsed .sidebarMenuItem span {
+  display: none;
+}
+
+.adminSidebar.sidebarCollapsed .sidebarCloseButton {
+  display: none;
+}
+
+/* =========================================
+   MOBILE OVERLAY
+========================================= */
+
+.sidebarOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+
+  width: 100%;
+  height: 100%;
+
+  border: 0;
+  background: rgba(48, 37, 31, 0.42);
+
+  cursor: pointer;
+}
+
+/* =========================================
+   MOBILE SIDEBAR
+========================================= */
+
+@media (max-width: 850px) {
+  .adminSidebar {
+    width: 275px;
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+
+  .adminSidebar.sidebarClosed {
+    transform: translateX(-100%);
+  }
+
+  .adminSidebar.sidebarOpen {
+    transform: translateX(0);
+    box-shadow: 14px 0 40px rgba(48, 37, 31, 0.16);
+  }
+
+  .adminSidebar.sidebarCollapsed {
+    width: 275px;
+  }
+
+  .adminSidebar.sidebarCollapsed .sidebarBrand {
+    justify-content: flex-start;
+    padding: 20px;
+  }
+
+  .adminSidebar.sidebarCollapsed .sidebarNavigation {
+    padding: 22px 14px;
+  }
+
+  .adminSidebar.sidebarCollapsed .sidebarBottom {
+    padding: 16px 14px;
+  }
+
+  .adminSidebar.sidebarCollapsed .sidebarMenuItem {
+    justify-content: flex-start;
+    gap: 13px;
+    padding: 0 14px;
+  }
+
+  .adminSidebar.sidebarCollapsed .sidebarLabel,
+  .adminSidebar.sidebarCollapsed .brandText,
+  .adminSidebar.sidebarCollapsed .sidebarMenuItem span {
+    display: block;
+  }
+
+  .sidebarCloseButton {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 400px) {
+  .adminSidebar {
+    width: 86%;
+    max-width: 275px;
+  }
+}
+.sidebarMenuContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.sidebarMenuLabel {
+  line-height: 1.3;
+}
+
+.sidebarMenuDescription {
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 1.2;
+  opacity: 0.65;
+}
+
+.ordersMenuItem.active .sidebarMenuDescription {
+  opacity: 0.85;
+}

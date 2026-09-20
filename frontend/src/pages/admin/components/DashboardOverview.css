@@ -1,0 +1,1270 @@
+/* =========================================================
+   JIHAAN COSMETICS
+   ADMIN DASHBOARD OVERVIEW
+   ========================================================= */
+
+.dashboardOverview {
+  width: 100%;
+  min-width: 0;
+  animation: dashboardFadeIn 0.35s ease;
+}
+
+/* =========================================================
+   WELCOME SECTION
+   ========================================================= */
+
+.dashboardWelcome {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+
+  width: 100%;
+  min-width: 0;
+
+  margin-bottom: 30px;
+  padding: 30px 32px;
+
+  border: 1px solid #eadfd7;
+  border-radius: 22px;
+
+  background:
+    radial-gradient(
+      circle at 90% 5%,
+      rgba(190, 139, 103, 0.12),
+      transparent 30%
+    ),
+    linear-gradient(
+      135deg,
+      #fffdfb 0%,
+      #fbf4ef 52%,
+      #f8eee7 100%
+    );
+
+  box-shadow:
+    0 8px 24px rgba(75, 48, 32, 0.04),
+    0 2px 6px rgba(75, 48, 32, 0.02);
+
+  box-sizing: border-box;
+}
+
+.dashboardWelcome > div:first-child {
+  min-width: 0;
+}
+
+.dashboardEyebrow {
+  margin: 0 0 9px;
+
+  color: #b47b55;
+
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+}
+
+.dashboardWelcome h2 {
+  margin: 0;
+
+  color: #30251f;
+
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+.dashboardWelcome p:not(.dashboardEyebrow) {
+  margin: 10px 0 0;
+
+  color: #8d796d;
+
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.dashboardWelcomeRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  flex-shrink: 0;
+}
+
+.dashboardDate {
+  flex-shrink: 0;
+
+  padding: 12px 16px;
+
+  border: 1px solid #e7d5c8;
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.92);
+
+  color: #876f60;
+
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+
+  text-align: center;
+
+  box-shadow: 0 4px 12px rgba(75, 48, 32, 0.03);
+
+  white-space: nowrap;
+}
+
+/* =========================================================
+   REFRESH BUTTON
+   ========================================================= */
+
+.dashboardRefreshButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 42px;
+  padding: 10px 14px;
+
+  border: 1px solid #e4d2c5;
+  border-radius: 11px;
+
+  background: #ffffff;
+  color: #765f51;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+
+  cursor: pointer;
+
+  box-shadow: 0 3px 10px rgba(75, 48, 32, 0.03);
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.dashboardRefreshButton:hover:not(:disabled) {
+  border-color: #cfaa91;
+  background: #fbf3ed;
+  color: #9b6847;
+
+  transform: translateY(-1px);
+
+  box-shadow: 0 6px 16px rgba(75, 48, 32, 0.06);
+}
+
+.dashboardRefreshButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.dashboardRefreshButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dashboardRefreshButton svg {
+  flex-shrink: 0;
+}
+
+.dashboardRefreshSpin {
+  animation: dashboardSpin 0.8s linear infinite;
+}
+
+/* =========================================================
+   ERROR MESSAGE
+   ========================================================= */
+
+.dashboardError {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  width: 100%;
+  min-width: 0;
+
+  margin-bottom: 24px;
+  padding: 15px 17px;
+
+  border: 1px solid #efd5d5;
+  border-radius: 14px;
+
+  background: #fff8f8;
+  color: #a05c5c;
+
+  box-sizing: border-box;
+}
+
+.dashboardError > svg {
+  flex-shrink: 0;
+  color: #b56767;
+}
+
+.dashboardError > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  min-width: 0;
+  flex: 1;
+}
+
+.dashboardError strong {
+  color: #704141;
+
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.dashboardError span {
+  color: #9b6f6f;
+
+  font-size: 12px;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+.dashboardError button {
+  flex-shrink: 0;
+
+  min-height: 34px;
+  padding: 7px 13px;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: #b47b55;
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dashboardError button:hover {
+  background: #965f3e;
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   MAIN STATISTICS GRID
+   ========================================================= */
+
+.dashboardStatsGrid {
+  display: grid;
+
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 20px;
+
+  width: 100%;
+  margin-bottom: 28px;
+}
+
+/* =========================================================
+   STAT CARD
+   ========================================================= */
+
+.dashboardStatCard {
+  position: relative;
+
+  min-width: 0;
+  min-height: 170px;
+
+  overflow: hidden;
+
+  padding: 22px;
+
+  border: 1px solid #eadfd7;
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow: 0 8px 24px rgba(75, 48, 32, 0.045);
+
+  box-sizing: border-box;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.dashboardStatCard::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 3px;
+
+  content: "";
+
+  background: linear-gradient(
+    90deg,
+    rgba(180, 123, 85, 0.8),
+    rgba(180, 123, 85, 0.08)
+  );
+
+  opacity: 0;
+
+  transition: opacity 0.2s ease;
+}
+
+.dashboardStatCard::after {
+  position: absolute;
+  right: -42px;
+  bottom: -50px;
+
+  width: 135px;
+  height: 135px;
+
+  border-radius: 50%;
+
+  background: rgba(190, 139, 103, 0.065);
+
+  content: "";
+
+  pointer-events: none;
+}
+
+.dashboardStatCard:hover {
+  border-color: #d9bca8;
+
+  box-shadow: 0 14px 34px rgba(75, 48, 32, 0.085);
+
+  transform: translateY(-3px);
+}
+
+.dashboardStatCard:hover::before {
+  opacity: 1;
+}
+
+/* =========================================================
+   STAT CARD TOP
+   ========================================================= */
+
+.statCardTop {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 23px;
+}
+
+.statCardIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 48px;
+  height: 48px;
+
+  flex-shrink: 0;
+
+  border-radius: 15px;
+
+  color: #a66b45;
+  background: #f8e9df;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.dashboardStatCard:hover .statCardIcon {
+  transform: scale(1.04);
+
+  box-shadow: 0 5px 14px rgba(75, 48, 32, 0.08);
+}
+
+.statTrendIcon {
+  flex-shrink: 0;
+
+  color: #66a27a;
+}
+
+/* =========================================================
+   STAT CARD BODY
+   ========================================================= */
+
+.statCardBody {
+  position: relative;
+  z-index: 1;
+
+  min-width: 0;
+}
+
+.statCardBody p {
+  margin: 0 0 7px;
+
+  color: #8f7b6e;
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.statCardBody h3 {
+  margin: 0;
+
+  color: #30251f;
+
+  font-size: clamp(25px, 2.4vw, 33px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+
+  overflow-wrap: anywhere;
+}
+
+.statCardBody span {
+  display: block;
+
+  margin-top: 9px;
+
+  color: #a18e82;
+
+  font-size: 12px;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+/* =========================================================
+   STAT CARD COLORS
+   ========================================================= */
+
+.statProducts .statCardIcon {
+  color: #9a6847;
+  background: #f8e9df;
+}
+
+.statOrders .statCardIcon {
+  color: #6679b1;
+  background: #e9edfb;
+}
+
+.statCustomers .statCardIcon {
+  color: #638f78;
+  background: #e5f3eb;
+}
+
+.statRevenue .statCardIcon {
+  color: #a37b35;
+  background: #f9f0d9;
+}
+
+.statCategories .statCardIcon {
+  color: #8a70a7;
+  background: #f0e8f8;
+}
+
+.statOffers .statCardIcon {
+  color: #b56b86;
+  background: #fae8ef;
+}
+
+.statInventory .statCardIcon {
+  color: #607f91;
+  background: #e8f1f5;
+}
+
+.statAverage .statCardIcon {
+  color: #8b6f55;
+  background: #f3ece5;
+}
+
+/* =========================================================
+   BOTTOM INFORMATION GRID
+   ========================================================= */
+
+.dashboardBottomGrid {
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 22px;
+
+  width: 100%;
+}
+
+/* =========================================================
+   INFORMATION CARD
+   ========================================================= */
+
+.dashboardInfoCard {
+  min-width: 0;
+
+  padding: 24px;
+
+  border: 1px solid #eadfd7;
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow: 0 8px 24px rgba(75, 48, 32, 0.045);
+
+  box-sizing: border-box;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.dashboardInfoCard:hover {
+  border-color: #dfc8b8;
+
+  box-shadow: 0 12px 30px rgba(75, 48, 32, 0.065);
+}
+
+/* =========================================================
+   INFO CARD HEADER
+   ========================================================= */
+
+.infoCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding-bottom: 18px;
+
+  border-bottom: 1px solid #f0e7e1;
+}
+
+.infoCardHeader > div {
+  min-width: 0;
+}
+
+.infoCardHeader h3 {
+  margin: 0;
+
+  color: #30251f;
+
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.infoCardHeader p {
+  margin: 5px 0 0;
+
+  color: #9b887c;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.infoCardHeader > svg {
+  flex-shrink: 0;
+
+  color: #b47b55;
+}
+
+/* =========================================================
+   SUMMARY ROW
+   ========================================================= */
+
+.orderSummaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  min-width: 0;
+
+  padding: 16px 0;
+
+  border-bottom: 1px solid #f3ece7;
+}
+
+.orderSummaryRow:last-child {
+  padding-bottom: 0;
+
+  border-bottom: 0;
+}
+
+.orderSummaryRow span {
+  min-width: 0;
+
+  color: #8c786b;
+
+  font-size: 14px;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+.orderSummaryRow strong {
+  flex-shrink: 0;
+
+  color: #30251f;
+
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.4;
+
+  text-align: right;
+
+  overflow-wrap: anywhere;
+}
+
+/* =========================================================
+   INVENTORY VALUE COLORS
+   ========================================================= */
+
+.dashboardWarningValue {
+  color: #aa8039 !important;
+}
+
+.dashboardDangerValue {
+  color: #ad5d5d !important;
+}
+
+/* =========================================================
+   INVENTORY HEALTH
+   ========================================================= */
+
+.dashboardHealthGrid {
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 18px;
+
+  width: 100%;
+
+  margin-top: 22px;
+}
+
+.dashboardHealthCard {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  min-width: 0;
+
+  padding: 18px 20px;
+
+  border: 1px solid #eadfd7;
+  border-radius: 17px;
+
+  background: #ffffff;
+
+  box-shadow: 0 7px 20px rgba(75, 48, 32, 0.035);
+
+  box-sizing: border-box;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.dashboardHealthCard:hover {
+  transform: translateY(-2px);
+
+  box-shadow: 0 10px 26px rgba(75, 48, 32, 0.06);
+}
+
+.dashboardHealthCard > div:last-child {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.healthIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+
+  flex-shrink: 0;
+
+  border-radius: 13px;
+
+  background: #f8e9df;
+  color: #a66b45;
+}
+
+.dashboardHealthCard span {
+  color: #8c786b;
+
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.dashboardHealthCard strong {
+  color: #30251f;
+
+  font-size: 23px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.dashboardHealthCard small {
+  color: #a18e82;
+
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/* =========================================================
+   HEALTH — GOOD
+   ========================================================= */
+
+.dashboardHealthCard.healthGood {
+  border-color: #dcebe1;
+
+  background: #fbfefc;
+}
+
+.healthGood .healthIcon {
+  background: #e8f4ec;
+  color: #5d8c6d;
+}
+
+.healthGood strong {
+  color: #5d8c6d;
+}
+
+/* =========================================================
+   HEALTH — WARNING
+   ========================================================= */
+
+.dashboardHealthCard.healthWarning {
+  border-color: #f0dfbc;
+
+  background: #fffdf7;
+}
+
+.healthWarning .healthIcon {
+  background: #fff1d5;
+  color: #a27b37;
+}
+
+.healthWarning strong {
+  color: #a27b37;
+}
+
+/* =========================================================
+   HEALTH — DANGER
+   ========================================================= */
+
+.dashboardHealthCard.healthDanger {
+  border-color: #efd6d6;
+
+  background: #fffafa;
+}
+
+.healthDanger .healthIcon {
+  background: #ffeaea;
+  color: #a75d5d;
+}
+
+.healthDanger strong {
+  color: #a75d5d;
+}
+
+/* =========================================================
+   GENERAL VALUE STATES
+   ========================================================= */
+
+.valueSuccess {
+  color: #5f8e70 !important;
+}
+
+.valueWarning {
+  color: #a27b37 !important;
+}
+
+.valueDanger {
+  color: #a75d5d !important;
+}
+
+.valueAccent {
+  color: #b47b55 !important;
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.dashboardLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  min-height: 180px;
+
+  padding: 30px;
+
+  border: 1px solid #eadfd7;
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  color: #8c786b;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  box-sizing: border-box;
+}
+
+.dashboardLoadingSpinner {
+  width: 20px;
+  height: 20px;
+
+  border: 2px solid #eadfd7;
+  border-top-color: #b47b55;
+
+  border-radius: 50%;
+
+  animation: dashboardSpin 0.8s linear infinite;
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.dashboardEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 150px;
+
+  padding: 24px;
+
+  color: #9a887c;
+
+  text-align: center;
+}
+
+.dashboardEmpty svg {
+  margin-bottom: 10px;
+
+  color: #c8b3a4;
+}
+
+.dashboardEmpty strong {
+  margin-bottom: 4px;
+
+  color: #5f4d41;
+
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.dashboardEmpty span {
+  color: #9a887c;
+
+  font-size: 12px;
+}
+
+/* =========================================================
+   FOCUS / ACCESSIBILITY
+   ========================================================= */
+
+.dashboardRefreshButton:focus-visible,
+.dashboardError button:focus-visible {
+  outline: 2px solid rgba(180, 123, 85, 0.45);
+  outline-offset: 2px;
+}
+
+.dashboardStatCard:focus-within,
+.dashboardInfoCard:focus-within,
+.dashboardHealthCard:focus-within {
+  outline: 2px solid rgba(180, 123, 85, 0.25);
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   LARGE DESKTOP
+   ========================================================= */
+
+@media (min-width: 1400px) {
+  .dashboardStatsGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .dashboardStatCard {
+    min-height: 178px;
+    padding: 24px;
+  }
+
+  .dashboardStatBody h3 {
+    font-size: 34px;
+  }
+}
+
+/* =========================================================
+   1200px
+   ========================================================= */
+
+@media (max-width: 1200px) {
+  .dashboardStatsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboardWelcome {
+    padding: 27px 28px;
+  }
+}
+
+/* =========================================================
+   1100px
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .dashboardStatsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboardWelcome {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboardWelcomeRight {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .dashboardDate {
+    align-self: flex-start;
+  }
+}
+
+/* =========================================================
+   900px
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .dashboardBottomGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardHealthGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   700px
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .dashboardStatsGrid,
+  .dashboardBottomGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardWelcome {
+    margin-bottom: 22px;
+
+    padding: 22px;
+
+    border-radius: 18px;
+  }
+
+  .dashboardWelcome h2 {
+    font-size: 26px;
+  }
+
+  .dashboardWelcome p:not(.dashboardEyebrow) {
+    font-size: 13px;
+  }
+
+  .dashboardWelcomeRight {
+    align-items: stretch;
+    flex-direction: column;
+
+    width: 100%;
+  }
+
+  .dashboardDate {
+    width: 100%;
+
+    box-sizing: border-box;
+  }
+
+  .dashboardRefreshButton {
+    width: 100%;
+  }
+
+  .dashboardStatCard,
+  .dashboardInfoCard,
+  .dashboardHealthCard {
+    border-radius: 17px;
+  }
+
+  .dashboardStatCard {
+    min-height: 160px;
+
+    padding: 20px;
+  }
+
+  .dashboardInfoCard {
+    padding: 20px;
+  }
+
+  .dashboardHealthGrid {
+    gap: 14px;
+  }
+}
+
+/* =========================================================
+   560px
+   ========================================================= */
+
+@media (max-width: 560px) {
+  .dashboardError {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .dashboardError > div {
+    flex: 1 1 calc(100% - 45px);
+  }
+
+  .dashboardError button {
+    width: 100%;
+    margin-top: 3px;
+  }
+
+  .dashboardHealthCard {
+    padding: 16px;
+  }
+
+  .healthIcon {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+/* =========================================================
+   420px
+   ========================================================= */
+
+@media (max-width: 420px) {
+  .dashboardWelcome {
+    padding: 20px 18px;
+
+    border-radius: 16px;
+  }
+
+  .dashboardWelcome h2 {
+    font-size: 24px;
+  }
+
+  .dashboardWelcome p:not(.dashboardEyebrow) {
+    font-size: 12.5px;
+  }
+
+  .dashboardStatsGrid,
+  .dashboardBottomGrid {
+    gap: 14px;
+  }
+
+  .dashboardStatCard {
+    padding: 18px;
+
+    min-height: 150px;
+
+    border-radius: 16px;
+  }
+
+  .dashboardInfoCard {
+    padding: 18px;
+
+    border-radius: 16px;
+  }
+
+  .statCardIcon {
+    width: 44px;
+    height: 44px;
+
+    border-radius: 13px;
+  }
+
+  .statCardTop {
+    margin-bottom: 19px;
+  }
+
+  .statCardBody h3 {
+    font-size: 28px;
+  }
+
+  .statCardBody span {
+    font-size: 11px;
+  }
+
+  .infoCardHeader {
+    padding-bottom: 15px;
+  }
+
+  .infoCardHeader h3 {
+    font-size: 16px;
+  }
+
+  .infoCardHeader p {
+    font-size: 11px;
+  }
+
+  .orderSummaryRow {
+    gap: 12px;
+
+    padding: 15px 0;
+  }
+
+  .orderSummaryRow span {
+    font-size: 13px;
+  }
+
+  .orderSummaryRow strong {
+    font-size: 15px;
+  }
+
+  .dashboardHealthCard {
+    gap: 11px;
+
+    padding: 15px;
+
+    border-radius: 15px;
+  }
+
+  .dashboardHealthCard strong {
+    font-size: 21px;
+  }
+
+  .dashboardHealthCard small {
+    font-size: 10px;
+  }
+
+  .healthIcon {
+    width: 40px;
+    height: 40px;
+
+    border-radius: 11px;
+  }
+}
+
+/* =========================================================
+   360px
+   ========================================================= */
+
+@media (max-width: 360px) {
+  .dashboardWelcome {
+    padding: 18px 15px;
+  }
+
+  .dashboardWelcome h2 {
+    font-size: 22px;
+  }
+
+  .dashboardStatCard {
+    padding: 16px;
+  }
+
+  .dashboardInfoCard {
+    padding: 16px;
+  }
+
+  .statCardBody h3 {
+    font-size: 26px;
+  }
+
+  .statCardBody p {
+    font-size: 12px;
+  }
+
+  .orderSummaryRow span {
+    font-size: 12px;
+  }
+
+  .orderSummaryRow strong {
+    font-size: 14px;
+  }
+}
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes dashboardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dashboardSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboardOverview,
+  .dashboardStatCard,
+  .dashboardInfoCard,
+  .dashboardHealthCard,
+  .statCardIcon,
+  .dashboardRefreshButton {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .dashboardRefreshSpin {
+    animation: none !important;
+  }
+}

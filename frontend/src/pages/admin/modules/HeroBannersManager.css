@@ -1,0 +1,720 @@
+/* =========================================================
+   Hero Banners Manager
+========================================================= */
+
+.heroBannersManager {
+  width: 100%;
+  min-width: 0;
+  color: #29231f;
+}
+
+/* =========================================================
+   Header
+========================================================= */
+
+.heroBannersHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.heroBannersEyebrow {
+  margin: 0 0 7px;
+  color: #b4774d;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.heroBannersHeader h2 {
+  margin: 0;
+  color: #302822;
+  font-size: clamp(1.6rem, 3vw, 2.15rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.heroBannersDescription {
+  max-width: 650px;
+  margin: 8px 0 0;
+  color: #81766d;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+/* =========================================================
+   Buttons
+========================================================= */
+
+.heroPrimaryButton,
+.heroSecondaryButton,
+.heroActionButton,
+.heroRemoveFileButton,
+.heroCloseButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.heroPrimaryButton {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  background: #a86f48;
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(168, 111, 72, 0.18);
+}
+
+.heroPrimaryButton:hover {
+  background: #8f5938;
+  transform: translateY(-1px);
+}
+
+.heroPrimaryButton:disabled,
+.heroSecondaryButton:disabled,
+.heroActionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.heroSecondaryButton {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid #e5dcd4;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #65584e;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.heroSecondaryButton:hover {
+  border-color: #cdb6a4;
+  background: #faf6f2;
+}
+
+.heroActionButton {
+  min-height: 35px;
+  padding: 0 11px;
+  border: 1px solid #e8dfd8;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #75675d;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.heroActionButton:hover {
+  border-color: #c6aa94;
+  background: #faf5f0;
+  color: #8f5938;
+}
+
+.heroDeleteButton:hover {
+  border-color: #e4b8b2;
+  background: #fff4f2;
+  color: #b94e45;
+}
+
+.heroCloseButton {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #f7f1ec;
+  color: #75675d;
+}
+
+.heroCloseButton:hover {
+  background: #eee3da;
+  color: #8f5938;
+}
+
+/* =========================================================
+   Alerts
+========================================================= */
+
+.heroAlert {
+  margin-bottom: 20px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.heroAlertError {
+  border: 1px solid #efc7c2;
+  background: #fff2f0;
+  color: #a13f37;
+}
+
+.heroAlertSuccess {
+  border: 1px solid #c5e3d0;
+  background: #effaf3;
+  color: #287447;
+}
+
+/* =========================================================
+   Form Card
+========================================================= */
+
+.heroBannerFormCard {
+  margin-bottom: 30px;
+  padding: 26px;
+  border: 1px solid #eadfd6;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 12px 35px rgba(73, 48, 29, 0.06);
+}
+
+.heroBannerFormHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #f0e8e1;
+  margin-bottom: 24px;
+}
+
+.heroBannerFormHeader h3 {
+  margin: 0;
+  color: #302822;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.heroBannerFormHeader p {
+  max-width: 700px;
+  margin: 8px 0 0;
+  color: #897c72;
+  font-size: 0.83rem;
+  line-height: 1.6;
+}
+
+.heroBannerForm {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.heroFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.heroFormField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.heroFormField > span {
+  color: #5e5148;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.heroFormField input,
+.heroFormField select,
+.heroFormField textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #e5dbd2;
+  border-radius: 11px;
+  outline: none;
+  background: #fffdfb;
+  color: #302822;
+  font: inherit;
+  font-size: 0.88rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.heroFormField input,
+.heroFormField select {
+  height: 44px;
+  padding: 0 13px;
+}
+
+.heroFormField textarea {
+  min-height: 95px;
+  padding: 12px 13px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.heroFormField input::placeholder,
+.heroFormField textarea::placeholder {
+  color: #b3a69c;
+}
+
+.heroFormField input:focus,
+.heroFormField select:focus,
+.heroFormField textarea:focus {
+  border-color: #b88763;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(184, 135, 99, 0.13);
+}
+
+/* =========================================================
+   Upload Boxes
+========================================================= */
+
+.heroUploadGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.heroUploadBox {
+  min-width: 0;
+  padding: 18px;
+  border: 1px dashed #d9c7b8;
+  border-radius: 16px;
+  background: #fdfaf7;
+}
+
+.heroUploadBoxHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 16px;
+  color: #a86f48;
+}
+
+.heroUploadBoxHeader h4 {
+  margin: 0;
+  color: #493b31;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.heroUploadBoxHeader p {
+  margin: 6px 0 0;
+  color: #97897e;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.heroUploadLabel {
+  position: relative;
+  display: flex;
+  min-height: 130px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid #e8dcd1;
+  border-radius: 13px;
+  background: #ffffff;
+  color: #a86f48;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.heroUploadLabel:hover {
+  border-color: #b88763;
+  background: #fffaf6;
+}
+
+.heroUploadLabel span {
+  color: #5e5148;
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+
+.heroUploadLabel small {
+  color: #9d9085;
+  font-size: 0.73rem;
+}
+
+.heroUploadLabel input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  opacity: 0;
+}
+
+/* =========================================================
+   Upload Preview
+========================================================= */
+
+.heroPreviewWrapper {
+  margin-top: 16px;
+}
+
+.heroBannerUploadPreview {
+  display: block;
+  width: 100%;
+  max-height: 260px;
+  border-radius: 12px;
+  background: #eee6df;
+  object-fit: cover;
+}
+
+.heroRemoveFileButton {
+  margin-top: 10px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #ead3ce;
+  border-radius: 8px;
+  background: #fff5f3;
+  color: #b35a50;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.heroRemoveFileButton:hover {
+  background: #fbe8e4;
+}
+
+/* =========================================================
+   Checkbox and Form Actions
+========================================================= */
+
+.heroCheckboxField {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #66594f;
+  font-size: 0.85rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.heroCheckboxField input {
+  width: 17px;
+  height: 17px;
+  accent-color: #a86f48;
+  cursor: pointer;
+}
+
+.heroFormActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 22px;
+  border-top: 1px solid #f0e8e1;
+}
+
+/* =========================================================
+   Banner List
+========================================================= */
+
+.heroBannerList {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.heroBannerCard {
+  display: grid;
+  grid-template-columns: minmax(230px, 34%) minmax(0, 1fr);
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #eadfd6;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 8px 25px rgba(73, 48, 29, 0.045);
+}
+
+.heroBannerCardMedia {
+  min-width: 0;
+  min-height: 210px;
+  background: #f3ece6;
+}
+
+.heroBannerMedia {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 210px;
+  object-fit: cover;
+}
+
+.heroBannerMediaPlaceholder {
+  display: flex;
+  height: 100%;
+  min-height: 210px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  color: #b19d8d;
+  font-size: 0.82rem;
+}
+
+.heroBannerCardContent {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 23px;
+}
+
+.heroBannerCardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.heroBannerCategory {
+  display: inline-flex;
+  margin-bottom: 8px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: #f8eee7;
+  color: #a86f48;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.heroBannerCardTop h3 {
+  margin: 0;
+  color: #302822;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.heroBannerCardContent > p {
+  margin: 13px 0 0;
+  color: #82766c;
+  font-size: 0.86rem;
+  line-height: 1.7;
+}
+
+.heroStatus {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  min-height: 27px;
+  padding: 0 9px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.heroStatusActive {
+  background: #eaf7ee;
+  color: #378052;
+}
+
+.heroStatusInactive {
+  background: #f4eeee;
+  color: #9a7770;
+}
+
+.heroBannerMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.heroBannerMeta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid #eee5de;
+  border-radius: 7px;
+  color: #8b7d72;
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.heroBannerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 22px;
+}
+
+/* =========================================================
+   Empty State
+========================================================= */
+
+.heroEmptyState {
+  display: flex;
+  min-height: 260px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  padding: 35px 20px;
+  border: 1px dashed #dfd0c4;
+  border-radius: 18px;
+  background: #fdfaf7;
+  color: #b19d8d;
+  text-align: center;
+}
+
+.heroEmptyState h3 {
+  margin: 5px 0 0;
+  color: #4d4036;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.heroEmptyState p {
+  margin: 0 0 10px;
+  color: #948579;
+  font-size: 0.85rem;
+}
+
+/* =========================================================
+   Responsive Design
+========================================================= */
+
+@media (max-width: 1050px) {
+  .heroBannerCard {
+    grid-template-columns: minmax(190px, 30%) minmax(0, 1fr);
+  }
+
+  .heroBannerCardContent {
+    padding: 19px;
+  }
+
+  .heroBannerCardTop h3 {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 850px) {
+  .heroBannersHeader {
+    flex-direction: column;
+  }
+
+  .heroFormGrid,
+  .heroUploadGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .heroBannerCard {
+    grid-template-columns: 1fr;
+  }
+
+  .heroBannerCardMedia,
+  .heroBannerMedia {
+    min-height: 220px;
+    max-height: 320px;
+  }
+
+  .heroBannerCardContent {
+    padding: 22px;
+  }
+}
+
+@media (max-width: 600px) {
+  .heroBannerFormCard {
+    padding: 18px;
+    border-radius: 15px;
+  }
+
+  .heroBannerFormHeader {
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+  }
+
+  .heroBannerFormHeader h3 {
+    font-size: 1.05rem;
+  }
+
+  .heroBannerFormHeader p {
+    font-size: 0.77rem;
+  }
+
+  .heroUploadBox {
+    padding: 14px;
+  }
+
+  .heroBannerCardTop {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .heroStatus {
+    align-self: flex-start;
+  }
+
+  .heroFormActions {
+    flex-direction: column-reverse;
+  }
+
+  .heroFormActions button {
+    width: 100%;
+  }
+
+  .heroBannerActions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .heroActionButton {
+    padding: 0 7px;
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .heroBannersHeader h2 {
+    font-size: 1.5rem;
+  }
+
+  .heroPrimaryButton {
+    width: 100%;
+  }
+
+  .heroBannerCardContent {
+    padding: 16px;
+  }
+
+  .heroBannerActions {
+    grid-template-columns: 1fr;
+  }
+
+  .heroActionButton {
+    width: 100%;
+  }
+
+  .heroUploadLabel {
+    min-height: 115px;
+    padding: 15px;
+  }
+}

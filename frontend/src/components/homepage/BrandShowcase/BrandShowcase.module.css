@@ -1,0 +1,346 @@
+.section {
+  width: 100%;
+  padding: 90px 0 70px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.sectionLayout {
+  width: min(1400px, calc(100% - 80px));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 45px;
+  align-items: center;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: #777;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.heading h2,
+.storiesHeader h2 {
+  margin: 0;
+  color: #111;
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -1px;
+}
+
+.heading p {
+  margin: 20px 0 25px;
+  color: #777;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.viewAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #111;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: gap 0.25s ease;
+}
+
+.viewAll:hover {
+  gap: 13px;
+}
+
+.sliderArea {
+  min-width: 0;
+}
+
+.brandSwiper {
+  width: 100%;
+  padding-bottom: 35px !important;
+}
+
+.brandCard {
+  position: relative;
+  display: block;
+  height: 390px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #f3f1ef;
+  text-decoration: none;
+}
+
+.brandCard img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.brandCard:hover img {
+  transform: scale(1.06);
+}
+
+.overlay {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 70px 25px 25px;
+  color: #fff;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.75),
+    rgba(0, 0, 0, 0)
+  );
+}
+
+.overlay span {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.overlay h3 {
+  margin: 8px 0;
+  font-size: 25px;
+  font-weight: 600;
+}
+
+.overlay p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.beautyStories {
+  width: min(1900px, 100%);
+  margin: 85px auto 0;
+  padding: 0 32px;
+}
+
+.storiesHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 25px;
+  margin-bottom: 35px;
+}
+
+.storiesSwiper {
+  width: 100%;
+  overflow: visible;
+}
+
+.storyCard {
+  min-width: 0;
+}
+
+.storyImageLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.storyImageWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 14;
+  overflow: hidden;
+  border: 4px solid #eeeeee;
+  border-radius: 17px;
+  background: #e9e5e1;
+}
+
+.storyImage,
+.storyVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.storyImage {
+  z-index: 1;
+}
+
+.storyVideo {
+  z-index: 2;
+  opacity: 1;
+  background: #e9e5e1;
+}
+
+.viewCount {
+  position: absolute;
+  top: 15px;
+  right: 14px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 20px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  font-weight: 600;
+  backdrop-filter: blur(5px);
+}
+
+.storyPlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  color: #111;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.storyImageWrapper:hover .storyPlay {
+  opacity: 1;
+}
+
+.storyInfo {
+  padding: 14px 5px 0;
+}
+
+.storyInfo h3 {
+  margin: 0 0 7px;
+  color: #111;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.storyInfo p {
+  margin: 0;
+  color: #777;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Swiper pagination */
+:global(.swiper-pagination-bullet) {
+  width: 7px;
+  height: 7px;
+  background: #c7c7c7;
+  opacity: 1;
+}
+
+:global(.swiper-pagination-bullet-active) {
+  width: 22px;
+  border-radius: 10px;
+  background: #111;
+}
+
+/* Tablet */
+@media (max-width: 1100px) {
+  .sectionLayout {
+    width: min(100% - 45px, 900px);
+    grid-template-columns: 1fr;
+    gap: 35px;
+  }
+
+  .heading {
+    max-width: 600px;
+  }
+
+  .brandCard {
+    height: 350px;
+  }
+
+  .beautyStories {
+    padding: 0 22px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .section {
+    padding: 60px 0 45px;
+  }
+
+  .sectionLayout {
+    width: calc(100% - 32px);
+    gap: 28px;
+  }
+
+  .heading h2,
+  .storiesHeader h2 {
+    font-size: 30px;
+  }
+
+  .heading p {
+    font-size: 13px;
+  }
+
+  .brandCard {
+    height: 330px;
+    border-radius: 14px;
+  }
+
+  .overlay {
+    padding: 55px 18px 20px;
+  }
+
+  .overlay h3 {
+    font-size: 22px;
+  }
+
+  .beautyStories {
+    margin-top: 60px;
+    padding: 0 16px;
+  }
+
+  .storiesHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+    margin-bottom: 25px;
+  }
+
+  .storyImageWrapper {
+    border-width: 3px;
+    border-radius: 13px;
+  }
+
+  .storyInfo h3 {
+    font-size: 14px;
+  }
+
+  .storyInfo p {
+    font-size: 12px;
+  }
+
+  .storyPlay {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brandCard img,
+  .viewAll,
+  .storyPlay {
+    transition: none;
+  }
+}

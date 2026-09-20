@@ -1,0 +1,88 @@
+/* =========================================
+   GLOBAL ADMIN LAYOUT
+========================================= */
+
+.adminLayout {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  background: #f8f6f3;
+  color: #30251f;
+}
+
+.adminMain {
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  margin-left: 260px;
+  transition: margin-left 0.25s ease;
+}
+
+.adminMain.mainWithCollapsedSidebar {
+  margin-left: 82px;
+}
+
+.adminContent {
+  width: 100%;
+  max-width: 1600px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+.emptyAdminSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  padding: 32px;
+  border: 1px dashed #d8c8bd;
+  border-radius: 18px;
+  background: #fffdfb;
+  color: #9a877a;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.adminContent table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+}
+
+@media (max-width: 1024px) {
+  .adminMain,
+  .adminMain.mainWithCollapsedSidebar {
+    margin-left: 82px;
+  }
+
+  .adminContent {
+    padding: 26px;
+  }
+}
+
+@media (max-width: 850px) {
+  .adminMain,
+  .adminMain.mainWithCollapsedSidebar {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .adminContent {
+    padding: 24px 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .adminContent {
+    padding: 20px 16px;
+  }
+
+  .emptyAdminSection {
+    min-height: 220px;
+    padding: 22px;
+    font-size: 14px;
+  }
+}

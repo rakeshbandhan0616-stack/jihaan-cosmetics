@@ -1,0 +1,376 @@
+.section {
+  width: 100%;
+  padding: 38px 4% 58px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.container {
+  width: 100%;
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.heading h2 {
+  margin: 0;
+  color: #080808;
+  font-size: clamp(30px, 3vw, 46px);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -1px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.headingLine {
+  width: 69px;
+  height: 2px;
+  margin-top: 17px;
+  background: #e8a3a3;
+}
+
+.rangeGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 34px;
+  row-gap: 18px;
+  align-items: center;
+}
+
+.rangeItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  min-height: 125px;
+  padding: 4px 0;
+  color: #111111;
+  text-decoration: none;
+  transition: transform 0.25s ease;
+}
+
+.rangeItem:hover {
+  transform: translateY(-3px);
+}
+
+.rangeName {
+  flex: 0 0 42%;
+  max-width: 42%;
+  color: #111111;
+  font-size: clamp(14px, 1.3vw, 23px);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.imageWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58%;
+  height: 125px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.visualShape {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s ease;
+}
+
+.rangeItem:hover .visualShape {
+  transform: scale(1.08);
+}
+
+/* Eyeliner */
+.eyeliner .visualShape::before {
+  content: "";
+  position: absolute;
+  top: 48%;
+  left: 5%;
+  width: 90%;
+  height: 22px;
+  background: #17100c;
+  border-radius: 100% 10% 100% 10%;
+  transform: rotate(7deg) skewX(-25deg);
+  box-shadow: 0 0 2px #000000;
+}
+
+/* Concealer */
+.concealer .visualShape::before {
+  content: "";
+  position: absolute;
+  top: 25%;
+  left: 12%;
+  width: 82%;
+  height: 55px;
+  background: linear-gradient(
+    145deg,
+    #d79b5b,
+    #f2c48b 45%,
+    #dca66c
+  );
+  border-radius: 65% 15% 60% 20%;
+  transform: rotate(-18deg);
+  box-shadow: inset 0 5px 8px rgba(255, 255, 255, 0.35);
+}
+
+/* Eyeshadow */
+.eyeshadow .visualShape::before {
+  content: "";
+  position: absolute;
+  top: 18%;
+  left: 15%;
+  width: 75%;
+  height: 24px;
+  background: #b18b98;
+  border-radius: 50%;
+  box-shadow:
+    0 25px 0 #a87965,
+    0 50px 0 #768674;
+  transform: rotate(5deg);
+}
+
+/* Kajal */
+.kajal .visualShape::before {
+  content: "";
+  position: absolute;
+  top: 38%;
+  left: 8%;
+  width: 84%;
+  height: 45px;
+  border-top: 7px solid #151515;
+  border-radius: 50%;
+  transform: rotate(-18deg);
+  box-shadow:
+    20px 9px 0 -3px #151515,
+    35px -5px 0 -3px #151515;
+}
+
+/* Liquid lipstick */
+.liquidLipstick .visualShape::before {
+  content: "";
+  position: absolute;
+  top: 34%;
+  left: 7%;
+  width: 87%;
+  height: 48px;
+  background: linear-gradient(
+    180deg,
+    #ed2929,
+    #c90000
+  );
+  border-radius: 70% 15% 65% 25%;
+  transform: rotate(-12deg);
+  box-shadow: inset 0 5px 5px rgba(255, 255, 255, 0.25);
+}
+
+/* Highlighter */
+.highlighter .visualShape::before {
+  content: "";
+  position: absolute;
+  top: 34%;
+  left: 8%;
+  width: 87%;
+  height: 45px;
+  background: linear-gradient(
+    180deg,
+    #f7d8bd,
+    #c88b6e,
+    #f1c3a2
+  );
+  border-radius: 65% 15% 65% 20%;
+  transform: rotate(-14deg);
+  box-shadow: inset 0 4px 6px rgba(255, 255, 255, 0.6);
+}
+
+/* Mascara */
+.mascara .visualShape::before {
+  content: "";
+  position: absolute;
+  top: 40%;
+  left: 8%;
+  width: 88%;
+  height: 40px;
+  border-top: 8px solid #17191c;
+  border-radius: 70%;
+  transform: rotate(8deg);
+  box-shadow:
+    0 7px 0 -2px #292c30,
+    0 13px 0 -3px #3a3d40;
+}
+
+/* Nail polish */
+.nailPolish .visualShape::before {
+  content: "";
+  position: absolute;
+  top: 24%;
+  left: 7%;
+  width: 88%;
+  height: 75px;
+  background: linear-gradient(
+    90deg,
+    #f4a4bd,
+    #d779a0,
+    #e7a0a8
+  );
+  border-radius: 25px 35px 12px 12px;
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% 38%,
+    83% 38%,
+    83% 100%,
+    70% 100%,
+    70% 47%,
+    48% 47%,
+    48% 78%,
+    35% 78%,
+    35% 42%,
+    0 42%
+  );
+}
+
+/* Foundation */
+.foundation .visualShape::before {
+  content: "";
+  position: absolute;
+  top: 35%;
+  left: 8%;
+  width: 88%;
+  height: 50px;
+  background: linear-gradient(
+    180deg,
+    #e8b78e,
+    #c98b60,
+    #f0c7a3
+  );
+  border-radius: 70% 15% 65% 25%;
+  transform: rotate(-17deg);
+  box-shadow: inset 0 5px 7px rgba(255, 255, 255, 0.35);
+}
+
+/* Lipstick */
+.lipstick .visualShape::before {
+  content: "";
+  position: absolute;
+  top: 35%;
+  left: 7%;
+  width: 88%;
+  height: 48px;
+  background: linear-gradient(
+    180deg,
+    #ec1760,
+    #c60042
+  );
+  border-radius: 70% 15% 65% 25%;
+  transform: rotate(-13deg);
+  box-shadow: inset 0 5px 6px rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 1250px) {
+  .rangeGrid {
+    column-gap: 25px;
+    row-gap: 15px;
+  }
+
+  .rangeItem {
+    min-height: 110px;
+  }
+
+  .imageWrapper {
+    height: 110px;
+  }
+}
+
+@media (max-width: 950px) {
+  .section {
+    padding-inline: 3%;
+  }
+
+  .rangeGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 22px;
+  }
+
+  .rangeName {
+    font-size: 17px;
+  }
+
+  .rangeItem {
+    min-height: 105px;
+  }
+
+  .imageWrapper {
+    height: 105px;
+  }
+}
+
+@media (max-width: 650px) {
+  .section {
+    padding: 32px 16px 42px;
+  }
+
+  .heading {
+    margin-bottom: 26px;
+  }
+
+  .heading h2 {
+    font-size: 28px;
+    letter-spacing: -0.5px;
+  }
+
+  .headingLine {
+    width: 55px;
+    margin-top: 12px;
+  }
+
+  .rangeGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 15px;
+    row-gap: 12px;
+  }
+
+  .rangeItem {
+    min-height: 85px;
+  }
+
+  .rangeName {
+    flex-basis: 45%;
+    max-width: 45%;
+    font-size: 13px;
+  }
+
+  .imageWrapper {
+    width: 55%;
+    height: 85px;
+  }
+}
+
+@media (max-width: 380px) {
+  .section {
+    padding-inline: 12px;
+  }
+
+  .rangeGrid {
+    column-gap: 10px;
+  }
+
+  .rangeName {
+    font-size: 12px;
+  }
+
+  .imageWrapper {
+    height: 72px;
+  }
+}

@@ -1,0 +1,469 @@
+/* =========================================
+   Categories Manager
+========================================= */
+
+.adminSection {
+  width: 100%;
+  padding: 24px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  box-sizing: border-box;
+}
+
+/* =========================================
+   Page Header
+========================================= */
+
+.pageHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.pageHeading h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -0.5px;
+}
+
+.pageHeading p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* =========================================
+   Messages
+========================================= */
+
+.errorMessage,
+.successMessage {
+  width: 100%;
+  margin-bottom: 18px;
+  padding: 13px 15px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.errorMessage {
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.successMessage {
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+/* =========================================
+   Form
+========================================= */
+
+.adminForm {
+  margin-bottom: 28px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.04);
+}
+
+.adminForm h3 {
+  margin: 0 0 22px;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.formGrid > label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.formGrid .fullWidth {
+  grid-column: 1 / -1;
+}
+
+.formGrid input[type="text"],
+.formGrid input[type="file"],
+.formGrid textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 13px;
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  outline: none;
+  font: inherit;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.formGrid input[type="file"] {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.formGrid textarea {
+  min-height: 115px;
+  resize: vertical;
+}
+
+.formGrid input:focus,
+.formGrid textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.formGrid input::placeholder,
+.formGrid textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* =========================================
+   Image Preview
+========================================= */
+
+.imagePreviewContainer {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 14px;
+  grid-column: 1 / -1;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+}
+
+.imagePreview {
+  display: block;
+  width: 150px;
+  height: 110px;
+  object-fit: cover;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+/* =========================================
+   Checkbox
+========================================= */
+
+.checkboxLabel {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 10px !important;
+  cursor: pointer;
+}
+
+.checkboxLabel input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+.checkboxLabel span {
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* =========================================
+   Buttons
+========================================= */
+
+.formActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.formActions button,
+.tableActions button,
+.secondaryButton,
+.dangerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.formActions button[type="submit"],
+.tableActions button:not(.dangerButton) {
+  color: #ffffff;
+  background: #2563eb;
+}
+
+.formActions button[type="submit"]:hover,
+.tableActions button:not(.dangerButton):hover {
+  background: #1d4ed8;
+}
+
+.secondaryButton {
+  color: #334155;
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.secondaryButton:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.dangerButton {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.dangerButton:hover {
+  color: #ffffff;
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   Table
+========================================= */
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.04);
+}
+
+.dataTable {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.dataTable thead {
+  background: #f8fafc;
+}
+
+.dataTable th {
+  padding: 15px 18px;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dataTable td {
+  padding: 16px 18px;
+  color: #475569;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.dataTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.dataTable tbody tr {
+  transition: background 0.2s ease;
+}
+
+.dataTable tbody tr:hover {
+  background: #f8fafc;
+}
+
+.dataTable td strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+/* =========================================
+   Table Image
+========================================= */
+
+.tableImage {
+  display: block;
+  width: 58px;
+  height: 58px;
+  object-fit: cover;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+/* =========================================
+   Status Buttons
+========================================= */
+
+.statusActive,
+.statusInactive {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 78px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.statusActive {
+  color: #166534;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+}
+
+.statusActive:hover {
+  background: #bbf7d0;
+}
+
+.statusInactive {
+  color: #991b1b;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+}
+
+.statusInactive:hover {
+  background: #fecaca;
+}
+
+/* =========================================
+   Table Actions
+========================================= */
+
+.tableActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tableActions button {
+  min-height: 35px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+/* =========================================
+   Responsive Design
+========================================= */
+
+@media (max-width: 900px) {
+  .adminSection {
+    padding: 18px;
+  }
+
+  .adminForm {
+    padding: 20px;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formGrid .fullWidth,
+  .imagePreviewContainer {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .adminSection {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .pageHeading {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pageHeading h2 {
+    font-size: 24px;
+  }
+
+  .adminForm {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .adminForm h3 {
+    font-size: 18px;
+  }
+
+  .formActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .formActions button {
+    width: 100%;
+  }
+
+  .imagePreview {
+    width: 120px;
+    height: 90px;
+  }
+
+  .tableWrapper {
+    border-radius: 12px;
+  }
+}
