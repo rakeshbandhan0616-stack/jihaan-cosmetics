@@ -1,4 +1,4 @@
-import Contact from "../models/contactModel.js";
+import Contact from "../models/ContactModel.js";
 
 const getAuthenticatedUserId = (req) => {
   return req.user?._id || req.user?.id || req.user?.userId || null;
