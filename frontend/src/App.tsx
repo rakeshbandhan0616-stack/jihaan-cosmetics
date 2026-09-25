@@ -17,7 +17,7 @@ import CategoryProductsPage from "./components/homepage/CategoryProductsPage/Cat
 
 import AccountPage from "./pages/account/AccountPage";
 import OrdersPage from "./pages/Orders/OrdersPage";
-import CartPage from "./pages/Cart/CartPage";
+import CartPage from "./pages/cart/CartPage";
 import Checkout from "./pages/checkout/Checkout";
 
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
@@ -48,25 +48,21 @@ type StaffUser = {
   isActive?: boolean;
 };
 
-type StaffPortalProps = {
-  children?: React.ReactNode;
-};
-
 /* =========================================================
    STAFF PORTAL
    ========================================================= */
 
 function StaffPortal() {
-  const [staffUser, setStaffUser] = useState<StaffUser | null>(
-    null
-  );
+  const [staffUser, setStaffUser] =
+    useState<StaffUser | null>(null);
 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadStaffUser = () => {
       try {
-        const storedUser = localStorage.getItem("staffUser");
+        const storedUser =
+          localStorage.getItem("staffUser");
 
         if (!storedUser) {
           setStaffUser(null);
@@ -74,7 +70,8 @@ function StaffPortal() {
           return;
         }
 
-        const parsedUser = JSON.parse(storedUser) as StaffUser;
+        const parsedUser =
+          JSON.parse(storedUser) as StaffUser;
 
         if (!parsedUser?.role) {
           localStorage.removeItem("staffUser");
@@ -87,7 +84,10 @@ function StaffPortal() {
 
         setStaffUser(parsedUser);
       } catch (error) {
-        console.error("Failed to load staff session:", error);
+        console.error(
+          "Failed to load staff session:",
+          error,
+        );
 
         localStorage.removeItem("staffUser");
         localStorage.removeItem("staffToken");
@@ -100,6 +100,21 @@ function StaffPortal() {
 
     loadStaffUser();
   }, []);
+
+  /* ---------------------------------------------------------
+     Logout
+     --------------------------------------------------------- */
+
+  const handleLogout = () => {
+    localStorage.removeItem("staffUser");
+    localStorage.removeItem("staffToken");
+
+    setStaffUser(null);
+  };
+
+  /* ---------------------------------------------------------
+     Loading
+     --------------------------------------------------------- */
 
   if (loading) {
     return (
@@ -119,23 +134,49 @@ function StaffPortal() {
     );
   }
 
+  /* ---------------------------------------------------------
+     Authentication check
+     --------------------------------------------------------- */
+
   if (!staffUser?.role) {
-    return <Navigate to="/staff/login" replace />;
+    return (
+      <Navigate
+        to="/staff/login"
+        replace
+      />
+    );
   }
+
+  /* ---------------------------------------------------------
+     Role based dashboard
+     --------------------------------------------------------- */
 
   switch (staffUser.role) {
     case "accounts":
-      return <AccountsDashboard />;
+      return (
+        <AccountsDashboard
+          onLogout={handleLogout}
+        />
+      );
 
     case "logistics":
-      return <LogisticsDashboard />;
+      return (
+        <LogisticsDashboard
+          onLogout={handleLogout}
+        />
+      );
 
     case "superadmin":
     case "admin":
       return <AdminDashboardPage />;
 
     default:
-      return <Navigate to="/staff/login" replace />;
+      return (
+        <Navigate
+          to="/staff/login"
+          replace
+        />
+      );
   }
 }
 
@@ -144,26 +185,30 @@ function StaffPortal() {
    ========================================================= */
 
 function StaffRoute() {
-  const [staffUser, setStaffUser] = useState<StaffUser | null>(
-    null
-  );
+  const [staffUser, setStaffUser] =
+    useState<StaffUser | null>(null);
 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem("staffUser");
+      const storedUser =
+        localStorage.getItem("staffUser");
 
       if (!storedUser) {
         setStaffUser(null);
         return;
       }
 
-      const parsedUser = JSON.parse(storedUser) as StaffUser;
+      const parsedUser =
+        JSON.parse(storedUser) as StaffUser;
 
       setStaffUser(parsedUser);
     } catch (error) {
-      console.error("Staff session error:", error);
+      console.error(
+        "Staff session error:",
+        error,
+      );
 
       localStorage.removeItem("staffUser");
       localStorage.removeItem("staffToken");
@@ -193,7 +238,12 @@ function StaffRoute() {
   }
 
   if (!staffUser?.role) {
-    return <Navigate to="/staff/login" replace />;
+    return (
+      <Navigate
+        to="/staff/login"
+        replace
+      />
+    );
   }
 
   return <StaffPortal />;
@@ -209,15 +259,25 @@ function App() {
       <ScrollToTop />
 
       <Routes>
+
         {/* =================================================
             CUSTOMER ROUTES
            ================================================= */}
 
-        <Route path="/" element={<HomePage />} />
+        <Route
+          path="/"
+          element={<HomePage />}
+        />
 
-        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/login"
+          element={<LoginPage />}
+        />
 
-        <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/register"
+          element={<RegisterPage />}
+        />
 
         <Route
           path="/products/:id"
@@ -229,13 +289,25 @@ function App() {
           element={<CategoryProductsPage />}
         />
 
-        <Route path="/cart" element={<CartPage />} />
+        <Route
+          path="/cart"
+          element={<CartPage />}
+        />
 
-        <Route path="/checkout" element={<Checkout />} />
+        <Route
+          path="/checkout"
+          element={<Checkout />}
+        />
 
-        <Route path="/account" element={<AccountPage />} />
+        <Route
+          path="/account"
+          element={<AccountPage />}
+        />
 
-        <Route path="/orders" element={<OrdersPage />} />
+        <Route
+          path="/orders"
+          element={<OrdersPage />}
+        />
 
         <Route
           path="/account/orders"
@@ -243,7 +315,7 @@ function App() {
         />
 
         {/* =================================================
-            OLD ADMIN ROUTES
+            ADMIN
            ================================================= */}
 
         <Route
@@ -280,9 +352,7 @@ function App() {
 
         <Route
           path="/accounts/dashboard"
-          element={
-            <StaffRoute />
-          }
+          element={<StaffRoute />}
         />
 
         {/* =================================================
@@ -291,9 +361,7 @@ function App() {
 
         <Route
           path="/logistics/dashboard"
-          element={
-            <StaffRoute />
-          }
+          element={<StaffRoute />}
         />
 
         {/* =================================================
@@ -316,12 +384,16 @@ function App() {
 
         <Route
           path="/logistic-partner/login"
-          element={<LogisticPartnerLoginPage />}
+          element={
+            <LogisticPartnerLoginPage />
+          }
         />
 
         <Route
           path="/logistic-partner/register"
-          element={<LogisticPartnerRegisterPage />}
+          element={
+            <LogisticPartnerRegisterPage />
+          }
         />
 
         {/* =================================================
@@ -332,6 +404,7 @@ function App() {
           path="*"
           element={<HomePage />}
         />
+
       </Routes>
     </BrowserRouter>
   );
