@@ -56,7 +56,7 @@ type LoginResponse = {
 
 const API_BASE_URL = String(
   import.meta.env.VITE_API_BASE_URL ||
-    "http://localhost:5000/api",
+    "https://jihaan-cosmetics.onrender.com/api",
 ).replace(/\/+$/, "");
 
 const CURRENT_USER_STORAGE_KEY = "jihaan_current_user";

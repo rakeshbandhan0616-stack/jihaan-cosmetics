@@ -33,7 +33,7 @@ interface LoginResponse {
   user?: LogisticPartnerUser;
 }
 
-const API_URL = "http://localhost:5000/api/partners/login";
+const API_URL = "https://jihaan-cosmetics.onrender.com/api/partners/login";
 
 export default function LogisticPartnerLoginPage() {
   const navigate = useNavigate();

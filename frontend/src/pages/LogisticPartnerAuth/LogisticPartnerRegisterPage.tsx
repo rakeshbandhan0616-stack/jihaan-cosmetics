@@ -52,7 +52,7 @@ interface RegisterResponse {
   applicationId?: string;
 }
 
-const API_URL = "http://localhost:5000/api/partners/register";
+const API_URL = "https://jihaan-cosmetics.onrender.com/api/partners/register";
 
 const initialForm: RegisterForm = {
   partnerName: "",

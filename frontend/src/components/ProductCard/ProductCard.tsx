@@ -38,7 +38,7 @@ type CartApiResponse = {
 const API_BASE_URL = String(
   import.meta.env.VITE_API_URL ||
     import.meta.env.VITE_API_BASE_URL ||
-    "http://localhost:5000/api",
+    "https://jihaan-cosmetics.onrender.com/api",
 ).replace(/\/+$/, "");
 
 const AUTH_TOKEN_KEY = "jihaan_auth_token";
@@ -56,7 +56,7 @@ function getUploadBaseUrl(): string {
     const apiUrl = new URL(API_BASE_URL);
     return `${apiUrl.protocol}//${apiUrl.host}`;
   } catch {
-    return "http://localhost:5000";
+    return "https://jihaan-cosmetics.onrender.com";
   }
 }
 

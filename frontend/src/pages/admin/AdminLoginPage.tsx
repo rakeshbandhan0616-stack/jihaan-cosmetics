@@ -48,7 +48,7 @@ interface LoginForm {
 
 const API_URL = String(
   import.meta.env.VITE_API_BASE_URL ||
-    "http://localhost:5000/api",
+    "https://jihaan-cosmetics.onrender.com/api",
 ).replace(/\/+$/, "");
 
 const ADMIN_TOKEN_KEY = "adminToken";

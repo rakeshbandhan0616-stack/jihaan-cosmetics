@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import styles from "./OfferManager.module.css";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  import.meta.env.VITE_API_BASE_URL || "https://jihaan-cosmetics.onrender.com/api";
 
 type Product = {
   _id: string;

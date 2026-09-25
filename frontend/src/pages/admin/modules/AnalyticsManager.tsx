@@ -176,7 +176,7 @@ type PanelProps = {
   VITE_API_BASE_URL=http://localhost:5000/api
 */
 const RAW_API_BASE_URL = String(
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"
+  import.meta.env.VITE_API_BASE_URL || "https://jihaan-cosmetics.onrender.com"
 ).replace(/\/+$/, "");
 
 const API_BASE_URL = RAW_API_BASE_URL.endsWith("/api")

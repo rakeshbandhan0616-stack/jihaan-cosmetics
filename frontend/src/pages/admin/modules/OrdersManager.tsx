@@ -86,7 +86,7 @@ interface Order {
 }
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  import.meta.env.VITE_API_URL || "https://jihaan-cosmetics.onrender.com/api";
 
 const ORDER_STATUSES: OrderStatus[] = [
   "PLACED",

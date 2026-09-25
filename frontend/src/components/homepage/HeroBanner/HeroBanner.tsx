@@ -68,7 +68,7 @@ const FALLBACK_SLIDES: HeroSlide[] = [
 const IMAGE_DURATION = 4000;
 
 const API_BASE_URL = String(
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
+  import.meta.env.VITE_API_BASE_URL || "https://jihaan-cosmetics.onrender.com/api",
 ).replace(/\/$/, "");
 
 const HERO_BANNERS_ENDPOINT = `${API_BASE_URL}/hero-banners`;

@@ -12,7 +12,7 @@ import styles from "./ContactUsPage.module.css";
 const API_BASE_URL = String(
   import.meta.env.VITE_API_URL ||
     import.meta.env.VITE_API_BASE_URL ||
-    "http://localhost:5000/api",
+    "https://jihaan-cosmetics.onrender.com/api",
 ).replace(/\/+$/, "");
 
 type ContactForm = {

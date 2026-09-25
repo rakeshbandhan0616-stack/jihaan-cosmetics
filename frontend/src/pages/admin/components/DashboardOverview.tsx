@@ -75,7 +75,7 @@ interface StatCardProps {
 const RAW_API_BASE_URL = String(
   import.meta.env.VITE_API_BASE_URL ||
     import.meta.env.VITE_API_URL ||
-    "http://localhost:5000",
+    "https://jihaan-cosmetics.onrender.com",
 ).replace(/\/+$/, "");
 
 const API_BASE_URL = RAW_API_BASE_URL.endsWith("/api")

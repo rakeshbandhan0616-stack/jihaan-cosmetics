@@ -24,7 +24,7 @@ interface SellerLoginResponse {
   };
 }
 
-const API_URL = "http://localhost:5000/api/partners/login";
+const API_URL = "https://jihaan-cosmetics.onrender.com/api/partners/login";
 
 const SellerLoginPage = () => {
   const navigate = useNavigate();

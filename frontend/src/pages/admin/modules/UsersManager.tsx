@@ -45,7 +45,7 @@ type StatusFilter = "ALL" | "ACTIVE" | "BLOCKED";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
-  "http://localhost:5000/api";
+  "https://jihaan-cosmetics.onrender.com/api";
 
 /* =========================================================
    API HELPERS
