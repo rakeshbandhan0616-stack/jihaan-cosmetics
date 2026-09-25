@@ -101,6 +101,8 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
+console.log("Allowed CORS origins:", allowedOrigins);
+
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -361,35 +363,50 @@ app.use((error, _req, res, _next) => {
 
 const startServer = async () => {
   try {
-    // Connect to MongoDB first.
+    // ------------------------------------------------
+    // Check required environment variables
+    // ------------------------------------------------
+
+    if (!process.env.MONGO_URI) {
+      throw new Error("MONGO_URI is missing in environment variables");
+    }
+
+    if (!process.env.JWT_SECRET) {
+      console.warn(
+        "Warning: JWT_SECRET is missing in environment variables",
+      );
+    }
+
+    // ------------------------------------------------
+    // Connect to MongoDB
+    // ------------------------------------------------
+
     await connectDB();
 
-    app.listen(PORT, () => {
+    // ------------------------------------------------
+    // Start Express server
+    // ------------------------------------------------
+
+    app.listen(PORT, "0.0.0.0", () => {
       console.log("----------------------------------------");
-      console.log(
-        "Jihaan Beauty API started successfully",
-      );
-      console.log(
-        `Server running on port: ${PORT}`,
-      );
-      console.log(
-        `API URL: http://localhost:${PORT}`,
-      );
-      console.log(
-        `Health URL: http://localhost:${PORT}/api/health`,
-      );
-      console.log(
-        `Uploads URL: http://localhost:${PORT}/uploads`,
-      );
+      console.log("Jihaan Beauty API started successfully");
+      console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(`Server running on port: ${PORT}`);
+      console.log(`Frontend URL: ${process.env.FRONTEND_URL || "Not configured"}`);
+      console.log(`API URL: http://localhost:${PORT}`);
+      console.log(`Health URL: http://localhost:${PORT}/api/health`);
+      console.log(`Uploads URL: http://localhost:${PORT}/uploads`);
       console.log("----------------------------------------");
     });
   } catch (error) {
+    console.error("----------------------------------------");
+    console.error("Server startup failed:");
     console.error(
-      "Server startup failed:",
       error instanceof Error
         ? error.message
         : error,
     );
+    console.error("----------------------------------------");
 
     process.exit(1);
   }
