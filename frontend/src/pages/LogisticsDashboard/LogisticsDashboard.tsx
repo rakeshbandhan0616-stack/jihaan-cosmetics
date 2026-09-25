@@ -2551,7 +2551,7 @@ const LogisticsSidebar = ({
       <div className="logisticsInlineBrand">
         <div className="logisticsInlineBrandMark">
           <img
-            src="/jihaan-logo.png"
+            src="/jihaan-logo.jpeg"
             alt="Jihaan Beauty"
             onError={(event) => {
               event.currentTarget.style.display = "none";

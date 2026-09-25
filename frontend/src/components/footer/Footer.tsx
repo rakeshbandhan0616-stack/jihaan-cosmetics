@@ -19,7 +19,7 @@ import {
 import { Link } from "react-router-dom";
 
 import styles from "./Footer.module.css";
-import jihaanLogo from "../../assets/images/jihaan-logo.png";
+import jihaanLogo from "../../assets/images/jihaan-logo.jpeg";
 
 const shopLinks = [
   { label: "Skincare", href: "#skincare" },
@@ -58,10 +58,10 @@ function Footer() {
               />
 
               <span className={styles.logoText}>
-                <span className={styles.logoMain}>JIHAAN COSMETICS</span>
+                <span className={styles.logoMain}>JINI COSMETICS</span>
 
                 <span className={styles.logoSub}>
-                  BEAUTY. CONFIDENCE. YOU.
+                  BEAUTY. CARE. CONFIDENCE.
                 </span>
               </span>
             </Link>

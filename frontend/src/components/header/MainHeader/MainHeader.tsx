@@ -18,7 +18,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 import styles from "./MainHeader.module.css";
-import jihaanLogo from "../../../assets/images/jihaan-logo.png";
+import jihaanLogo from "../../../assets/images/jihaan-logo.jpeg";
 
 type Product = {
   _id: string;
@@ -417,21 +417,21 @@ function MainHeader() {
         <Link
           to="/"
           className={styles.logo}
-          aria-label="Jihaan Cosmetics home"
+          aria-label="Jini Cosmetics home"
         >
           <img
             src={jihaanLogo}
-            alt="Jihaan Cosmetics logo"
+            alt="Jini Cosmetics logo"
             className={styles.logoImage}
           />
 
           <span className={styles.logoText}>
             <span className={styles.logoMain}>
-              JIHAAN COSMETICS
+              JINI COSMETICS
             </span>
 
             <span className={styles.logoSub}>
-              BEAUTY. CONFIDENCE. YOU.
+              BEAUTY. CARE. CONFIDENCE.
             </span>
           </span>
         </Link>

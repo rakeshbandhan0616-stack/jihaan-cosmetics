@@ -97,7 +97,7 @@ const StaffSidebar = ({
       <div className={styles.brand}>
         <div className={styles.logoWrapper}>
           <img
-            src="/jihaan-logo.png"
+            src="/jihaan-logo.jpeg"
             alt="Jihaan Cosmetics"
             className={styles.logo}
             onError={(event) => {

@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import logo from "../../assets/images/jihaan-logo.png";
+import logo from "../../assets/images/jihaan-logo.jpeg";
 import styles from "./LoginPage.module.css";
 
 type LoginForm = {

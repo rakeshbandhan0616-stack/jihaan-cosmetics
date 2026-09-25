@@ -2669,7 +2669,7 @@ const AccountsSidebar = ({
       <div className="accountsInlineBrand">
         <div className="accountsInlineBrandMark">
           <img
-            src="/jihaan-logo.png"
+            src="/jihaan-logo.jpeg"
             alt="Jihaan Beauty"
             onError={(event) => {
               event.currentTarget.style.display = "none";
