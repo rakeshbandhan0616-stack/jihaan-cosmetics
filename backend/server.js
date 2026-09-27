@@ -96,33 +96,54 @@ const __dirname = path.dirname(__filename);
 // --------------------------------------------------
 
 const allowedOrigins = [
+  // Local development
   "http://localhost:5173",
   "http://localhost:5174",
+
+  // Production frontend
+  "https://jihaan-cosmetics.netlify.app",
+
+  // Render environment variable
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
-console.log("Allowed CORS origins:", allowedOrigins);
+console.log("----------------------------------------");
+console.log("Allowed CORS origins:");
+console.log(allowedOrigins);
+console.log("----------------------------------------");
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests without an Origin header.
-      // Useful for Postman, mobile apps and server-to-server requests.
+      // ------------------------------------------------
+      // Requests without Origin
+      // ------------------------------------------------
+      // Allows Postman, server-to-server requests,
+      // curl, health checks, etc.
       if (!origin) {
         return callback(null, true);
       }
 
+      // ------------------------------------------------
+      // Allowed frontend origin
+      // ------------------------------------------------
       if (allowedOrigins.includes(origin)) {
+        console.log(`CORS allowed: ${origin}`);
         return callback(null, true);
       }
 
-      console.warn(`Blocked CORS origin: ${origin}`);
+      // ------------------------------------------------
+      // Block unknown origins
+      // ------------------------------------------------
+      console.warn(`CORS blocked origin: ${origin}`);
 
-      return callback(
-        new Error(`CORS policy blocked this origin: ${origin}`),
-      );
+      // Do not throw an Express error here.
+      // Returning false prevents the CORS header from
+      // being added while keeping the server stable.
+      return callback(null, false);
     },
 
+    // Required if frontend sends cookies/auth credentials
     credentials: true,
 
     methods: [
@@ -144,6 +165,12 @@ app.use(
 );
 
 // --------------------------------------------------
+// Explicit OPTIONS handling
+// --------------------------------------------------
+
+app.options("*", cors());
+
+// --------------------------------------------------
 // Body parsing middleware
 // --------------------------------------------------
 
@@ -160,16 +187,15 @@ app.use(
   }),
 );
 
+// --------------------------------------------------
+// Cookie parser
+// --------------------------------------------------
+
 app.use(cookieParser());
 
 // --------------------------------------------------
 // Static files
 // --------------------------------------------------
-
-// Product images, review images, banners, etc.
-//
-// Example:
-// http://localhost:5000/uploads/products/example.jpg
 
 app.use(
   "/uploads",
@@ -249,30 +275,12 @@ app.use("/api/cart", cartRoutes);
 // ==================================================
 // Admin order management
 // ==================================================
-//
-// Used by:
-// - Superadmin
-// - Admin
-// - Logistics
-//
-// Accounts users have read-only access through the
-// order-view middleware configured inside adminOrderRoutes.
-//
 
 app.use("/api/admin/orders", adminOrderRoutes);
 
 // ==================================================
 // Accounts dashboard
 // ==================================================
-//
-// Accounts role:
-// - Sales overview
-// - Sales reports
-// - Orders/customer details
-// - Inventory
-//
-// The routes themselves enforce accountsOnly middleware.
-//
 
 app.use(
   "/api/accounts-dashboard",
@@ -282,17 +290,6 @@ app.use(
 // ==================================================
 // Logistics dashboard
 // ==================================================
-//
-// Logistics role:
-// - Logistics overview
-// - Orders
-// - Shipments
-// - Expected deliveries
-//
-// Order status, cancellation and tracking updates are
-// handled through /api/admin/orders with logistics
-// permissions.
-//
 
 app.use(
   "/api/logistics-dashboard",
@@ -345,14 +342,14 @@ app.use((error, _req, res, _next) => {
   console.error("API Error:", error);
 
   const statusCode =
-    error.status ||
-    error.statusCode ||
+    error?.status ||
+    error?.statusCode ||
     500;
 
   res.status(statusCode).json({
     success: false,
     message:
-      error.message ||
+      error?.message ||
       "Internal server error",
   });
 });
@@ -364,11 +361,13 @@ app.use((error, _req, res, _next) => {
 const startServer = async () => {
   try {
     // ------------------------------------------------
-    // Check required environment variables
+    // Required environment variables
     // ------------------------------------------------
 
     if (!process.env.MONGO_URI) {
-      throw new Error("MONGO_URI is missing in environment variables");
+      throw new Error(
+        "MONGO_URI is missing in environment variables",
+      );
     }
 
     if (!process.env.JWT_SECRET) {
@@ -377,8 +376,14 @@ const startServer = async () => {
       );
     }
 
+    if (!process.env.FRONTEND_URL) {
+      console.warn(
+        "Warning: FRONTEND_URL is missing. Production CORS is using the hard-coded Netlify URL.",
+      );
+    }
+
     // ------------------------------------------------
-    // Connect to MongoDB
+    // Connect MongoDB
     // ------------------------------------------------
 
     await connectDB();
@@ -390,22 +395,36 @@ const startServer = async () => {
     app.listen(PORT, "0.0.0.0", () => {
       console.log("----------------------------------------");
       console.log("Jihaan Beauty API started successfully");
-      console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(
+        `Environment: ${process.env.NODE_ENV || "development"}`,
+      );
       console.log(`Server running on port: ${PORT}`);
-      console.log(`Frontend URL: ${process.env.FRONTEND_URL || "Not configured"}`);
-      console.log(`API URL: http://localhost:${PORT}`);
-      console.log(`Health URL: http://localhost:${PORT}/api/health`);
-      console.log(`Uploads URL: http://localhost:${PORT}/uploads`);
+      console.log(
+        `Frontend URL: ${
+          process.env.FRONTEND_URL || "https://jihaan-cosmetics.netlify.app"
+        }`,
+      );
+      console.log(
+        `API URL: http://localhost:${PORT}`,
+      );
+      console.log(
+        `Health URL: http://localhost:${PORT}/api/health`,
+      );
+      console.log(
+        `Uploads URL: http://localhost:${PORT}/uploads`,
+      );
       console.log("----------------------------------------");
     });
   } catch (error) {
     console.error("----------------------------------------");
     console.error("Server startup failed:");
+
     console.error(
       error instanceof Error
         ? error.message
         : error,
     );
+
     console.error("----------------------------------------");
 
     process.exit(1);
