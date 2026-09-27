@@ -265,7 +265,7 @@ function StaffLogin() {
         {/* Back to website */}
         <Link to="/" className={styles.backLink}>
           <ArrowLeft size={17} />
-          <span>Back to Jihaan Cosmetics</span>
+          <span>Back to Jini Cosmetics</span>
         </Link>
 
         <div className={styles.loginCard}>
@@ -277,7 +277,7 @@ function StaffLogin() {
               </div>
 
               <span className={styles.eyebrow}>
-                JIHAAN COSMETICS
+                Jini COSMETICS
               </span>
 
               <h1>
@@ -287,7 +287,7 @@ function StaffLogin() {
               </h1>
 
               <p>
-                Secure access to your Jihaan Cosmetics
+                Secure access to your Jini Cosmetics
                 management systems.
               </p>
 
@@ -570,7 +570,7 @@ function StaffLogin() {
         </div>
 
         <p className={styles.copyright}>
-          © {new Date().getFullYear()} Jihaan Cosmetics.
+          © {new Date().getFullYear()} Jini Cosmetics.
           All rights reserved.
         </p>
       </div>

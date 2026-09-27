@@ -308,7 +308,7 @@ const SellerRegisterPage = () => {
             <div className={styles.brandIcon}>J</div>
 
             <div>
-              <strong>Jihaan Cosmetics</strong>
+              <strong>Jini Cosmetics</strong>
               <span>Seller Partner Portal</span>
             </div>
           </Link>
@@ -322,7 +322,7 @@ const SellerRegisterPage = () => {
 
             <p>
               Register your business and start selling your beauty products
-              through Jihaan Cosmetics.
+              through Jini Cosmetics.
             </p>
           </div>
 
@@ -868,7 +868,7 @@ const SellerRegisterPage = () => {
         </div>
 
         <p className={styles.bottomText}>
-          © {new Date().getFullYear()} Jihaan Cosmetics. Seller Partner
+          © {new Date().getFullYear()} Jini Cosmetics. Seller Partner
           Portal.
         </p>
       </section>

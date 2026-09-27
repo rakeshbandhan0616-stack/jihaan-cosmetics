@@ -1,0 +1,228 @@
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  font-family: "Poppins", sans-serif;
+}
+
+.fullScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: rgba(255, 250, 252, 0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.inline {
+  position: relative;
+  min-height: 250px;
+  padding: 40px 20px;
+  background: transparent;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  animation: fadeIn 0.45s ease both;
+}
+
+.logoContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 150px;
+  height: 150px;
+}
+
+.outerRing {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(194, 113, 145, 0.12);
+  border-top-color: #c27191;
+  border-right-color: #dca5b9;
+  border-radius: 50%;
+  animation: rotate 1.6s linear infinite;
+}
+
+.innerRing {
+  position: absolute;
+  inset: 12px;
+  border: 2px dashed rgba(194, 113, 145, 0.4);
+  border-radius: 50%;
+  animation: rotateReverse 3s linear infinite;
+}
+
+.logoWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 105px;
+  height: 105px;
+  padding: 12px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow:
+    0 10px 35px rgba(194, 113, 145, 0.12),
+    0 0 0 6px rgba(255, 255, 255, 0.7);
+  animation: logoPulse 2s ease-in-out infinite;
+}
+
+.logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.brandName {
+  margin-top: 26px;
+  color: #9f4d70;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 4px;
+}
+
+.brandName span {
+  color: #c27191;
+  font-weight: 400;
+}
+
+.loadingDots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 18px;
+}
+
+.loadingDots span {
+  width: 7px;
+  height: 7px;
+  background: #c27191;
+  border-radius: 50%;
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+
+.loadingDots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.loadingDots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.message {
+  margin: 13px 0 0;
+  color: #9a7a88;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+}
+
+/* Animations */
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotateReverse {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes logoPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes dotBounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+
+  30% {
+    transform: translateY(-7px);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 480px) {
+  .logoContainer {
+    width: 125px;
+    height: 125px;
+  }
+
+  .innerRing {
+    inset: 10px;
+  }
+
+  .logoWrapper {
+    width: 88px;
+    height: 88px;
+    padding: 10px;
+  }
+
+  .brandName {
+    font-size: 16px;
+    letter-spacing: 3px;
+  }
+
+  .message {
+    font-size: 11px;
+  }
+}
+
+/* Accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  .outerRing,
+  .innerRing,
+  .logoWrapper,
+  .loadingDots span,
+  .content {
+    animation: none;
+  }
+}

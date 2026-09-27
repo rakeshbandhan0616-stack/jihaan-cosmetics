@@ -459,7 +459,7 @@ const CartPage = () => {
         <section className={styles.container}>
           <div className={styles.header}>
             <div>
-              <p className={styles.eyebrow}>JIHAAN COSMETICS</p>
+              <p className={styles.eyebrow}>JINI COSMETICS</p>
 
               <h1 className={styles.title}>Shopping Cart</h1>
 

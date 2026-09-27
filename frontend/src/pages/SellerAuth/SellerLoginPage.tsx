@@ -120,7 +120,7 @@ const SellerLoginPage = () => {
             <div className={styles.brandIcon}>J</div>
 
             <div>
-              <strong>Jihaan Cosmetics</strong>
+              <strong>Jini Cosmetics</strong>
               <span>Seller Partner Portal</span>
             </div>
           </Link>
@@ -235,7 +235,7 @@ const SellerLoginPage = () => {
         </div>
 
         <p className={styles.bottomText}>
-          © {new Date().getFullYear()} Jihaan Cosmetics. Seller Partner Portal.
+          © {new Date().getFullYear()} Jini Cosmetics. Seller Partner Portal.
         </p>
       </section>
     </main>

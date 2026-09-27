@@ -630,7 +630,7 @@ function MainHeader() {
                       </div>
 
                       <div>
-                        <strong>Welcome to Jihaan</strong>
+                        <strong>Welcome to Jini</strong>
                         <span>
                           Login to manage your account
                         </span>

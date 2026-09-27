@@ -263,7 +263,7 @@ const LoginPage = () => {
       navigate(isAdmin ? "/admin/dashboard" : "/", {
         replace: true,
         state: {
-          message: "Welcome back to Jihaan Cosmetics!",
+          message: "Welcome back to Jini Cosmetics!",
         },
       });
     } catch (loginError) {
@@ -298,7 +298,7 @@ const LoginPage = () => {
 
             <span className={styles.logoText}>
               <span className={styles.logoMain}>
-                JIHAAN COSMETICS
+                Jini COSMETICS
               </span>
 
               <span className={styles.logoSub}>
@@ -458,7 +458,7 @@ const LoginPage = () => {
           </div>
 
           <div className={styles.divider}>
-            <span>New to Jihaan Cosmetics?</span>
+            <span>New to Jini Cosmetics?</span>
           </div>
 
           <Link
@@ -481,7 +481,7 @@ const LoginPage = () => {
           </nav>
 
           <p>
-            © {new Date().getFullYear()} Jihaan Cosmetics.
+            © {new Date().getFullYear()} Jini Cosmetics.
             All rights reserved.
           </p>
         </footer>

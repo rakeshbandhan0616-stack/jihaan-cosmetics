@@ -581,7 +581,7 @@ const Checkout = () => {
     <main className="checkout-page">
       <div className="checkout-container">
         <div className="checkout-heading">
-          <span>Jihaan Cosmetics</span>
+          <span>Jini Cosmetics</span>
 
           <h1>Checkout</h1>
 
@@ -930,7 +930,7 @@ const Checkout = () => {
             <h2>Order Placed Successfully!</h2>
 
             <p>
-              Thank you for shopping with Jihaan Cosmetics.
+              Thank you for shopping with Jini Cosmetics.
             </p>
 
             <div className="tracking-box">

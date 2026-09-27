@@ -149,7 +149,7 @@ export default function AdminSidebar({
 
           {!collapsed && (
             <div className="brandText">
-              <strong>Jihaan Cosmetics</strong>
+              <strong>Jini Cosmetics</strong>
               <span>Admin Panel</span>
             </div>
           )}

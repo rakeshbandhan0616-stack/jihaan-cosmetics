@@ -250,7 +250,7 @@ const AdminLoginPage = () => {
 
             <span className={styles.logoText}>
               <span className={styles.logoMain}>
-                JIHAAN COSMETICS
+                Jini COSMETICS
               </span>
 
               <span className={styles.logoSub}>
@@ -275,7 +275,7 @@ const AdminLoginPage = () => {
 
             <p className={styles.intro}>
               Manage products, orders, customers, and
-              your Jihaan Cosmetics store.
+              your Jini Cosmetics store.
             </p>
           </div>
 
@@ -425,7 +425,7 @@ const AdminLoginPage = () => {
           </nav>
 
           <p>
-            © {new Date().getFullYear()} Jihaan Cosmetics.
+            © {new Date().getFullYear()} Jini Cosmetics.
             All rights reserved.
           </p>
         </footer>

@@ -130,8 +130,8 @@ export default function ContactUsPage() {
 
               <div>
                 <span>Email</span>
-                <a href="mailto:support@example.com">
-                  support@example.com
+                <a href="mailto:namaste@jinicosmetics.com">
+                  namaste@jinicosmetics.com
                 </a>
               </div>
             </div>
@@ -143,7 +143,7 @@ export default function ContactUsPage() {
 
               <div>
                 <span>Phone</span>
-                <a href="tel:+919999999999">+91 99999 99999</a>
+                <a href="tel:+918884852372">+91 8884852372</a>
               </div>
             </div>
 
@@ -154,7 +154,10 @@ export default function ContactUsPage() {
 
               <div>
                 <span>Address</span>
-                <p>Nagpur, Maharashtra, India</p>
+                <p>#41, 1st cross
+1st main
+Hermit coloney Ulsoor
+Bangalore 560042</p>
               </div>
             </div>
           </div>

@@ -1,12 +1,19 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import {
   BrowserRouter,
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
+import Loader from "./components/common/Loader";
 
 import HomePage from "./pages/home/HomePage";
 import ProductPage from "./pages/product/ProductPage";
@@ -33,6 +40,10 @@ import StaffLogin from "./pages/StaffLogin/StaffLogin";
 import AccountsDashboard from "./pages/AccountsDashboard/AccountsDashboard";
 import LogisticsDashboard from "./pages/LogisticsDashboard/LogisticsDashboard";
 
+/* =========================================================
+   TYPES
+   ========================================================= */
+
 type StaffRole =
   | "superadmin"
   | "admin"
@@ -47,6 +58,96 @@ type StaffUser = {
   role?: StaffRole;
   isActive?: boolean;
 };
+
+/* =========================================================
+   INITIAL LOADER
+   ---------------------------------------------------------
+   Shows ONLY when the application first opens.
+   It will NEVER depend on API loading.
+   Maximum duration = 2 seconds.
+   ========================================================= */
+
+function InitialLoader({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <Loader
+        fullScreen
+        message="Welcome to Jini Cosmetics..."
+      />
+    );
+  }
+
+  return <>{children}</>;
+}
+
+/* =========================================================
+   NAVIGATION LOADER
+   ---------------------------------------------------------
+   Shows ONLY when the URL/path changes.
+   Always disappears after 2 seconds.
+   Does NOT depend on API requests.
+   ========================================================= */
+
+function NavigationLoader() {
+  const location = useLocation();
+
+  const previousPathRef = useRef(location.pathname);
+
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const currentPath = location.pathname;
+
+    // Ignore initial render.
+    if (previousPathRef.current === currentPath) {
+      return;
+    }
+
+    // Update previous path.
+    previousPathRef.current = currentPath;
+
+    // Show loader.
+    setLoading(true);
+
+    // IMPORTANT:
+    // Loader automatically disappears after 2 seconds.
+    // It does NOT wait for API requests.
+    const timer = window.setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [location.pathname]);
+
+  if (!loading) {
+    return null;
+  }
+
+  return (
+    <Loader
+      fullScreen
+      message="Loading..."
+    />
+  );
+}
 
 /* =========================================================
    STAFF PORTAL
@@ -79,6 +180,7 @@ function StaffPortal() {
 
           setStaffUser(null);
           setLoading(false);
+
           return;
         }
 
@@ -86,7 +188,7 @@ function StaffPortal() {
       } catch (error) {
         console.error(
           "Failed to load staff session:",
-          error,
+          error
         );
 
         localStorage.removeItem("staffUser");
@@ -102,7 +204,7 @@ function StaffPortal() {
   }, []);
 
   /* ---------------------------------------------------------
-     Logout
+     LOGOUT
      --------------------------------------------------------- */
 
   const handleLogout = () => {
@@ -113,29 +215,20 @@ function StaffPortal() {
   };
 
   /* ---------------------------------------------------------
-     Loading
+     LOADING
      --------------------------------------------------------- */
 
   if (loading) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#f8f7f4",
-          color: "#555",
-          fontFamily: "Arial, sans-serif",
-        }}
-      >
-        Loading staff portal...
-      </div>
+      <Loader
+        fullScreen
+        message="Loading staff portal..."
+      />
     );
   }
 
   /* ---------------------------------------------------------
-     Authentication check
+     AUTHENTICATION
      --------------------------------------------------------- */
 
   if (!staffUser?.role) {
@@ -148,7 +241,7 @@ function StaffPortal() {
   }
 
   /* ---------------------------------------------------------
-     Role based dashboard
+     ROLE BASED DASHBOARD
      --------------------------------------------------------- */
 
   switch (staffUser.role) {
@@ -207,7 +300,7 @@ function StaffRoute() {
     } catch (error) {
       console.error(
         "Staff session error:",
-        error,
+        error
       );
 
       localStorage.removeItem("staffUser");
@@ -219,23 +312,22 @@ function StaffRoute() {
     }
   }, []);
 
+  /* ---------------------------------------------------------
+     LOADING
+     --------------------------------------------------------- */
+
   if (loading) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#f8f7f4",
-          color: "#555",
-          fontFamily: "Arial, sans-serif",
-        }}
-      >
-        Checking staff session...
-      </div>
+      <Loader
+        fullScreen
+        message="Checking staff session..."
+      />
     );
   }
+
+  /* ---------------------------------------------------------
+     AUTHENTICATION
+     --------------------------------------------------------- */
 
   if (!staffUser?.role) {
     return (
@@ -255,158 +347,166 @@ function StaffRoute() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <ScrollToTop />
+    <InitialLoader>
+      <BrowserRouter>
 
-      <Routes>
+        {/* Scroll to top whenever route changes */}
+        <ScrollToTop />
 
-        {/* =================================================
-            CUSTOMER ROUTES
-           ================================================= */}
+        {/* Global navigation loader */}
+        <NavigationLoader />
 
-        <Route
-          path="/"
-          element={<HomePage />}
-        />
+        <Routes>
 
-        <Route
-          path="/login"
-          element={<LoginPage />}
-        />
+          {/* =================================================
+              CUSTOMER ROUTES
+             ================================================= */}
 
-        <Route
-          path="/register"
-          element={<RegisterPage />}
-        />
+          <Route
+            path="/"
+            element={<HomePage />}
+          />
 
-        <Route
-          path="/products/:id"
-          element={<ProductPage />}
-        />
+          <Route
+            path="/login"
+            element={<LoginPage />}
+          />
 
-        <Route
-          path="/category/:categoryName"
-          element={<CategoryProductsPage />}
-        />
+          <Route
+            path="/register"
+            element={<RegisterPage />}
+          />
 
-        <Route
-          path="/cart"
-          element={<CartPage />}
-        />
+          <Route
+            path="/products/:id"
+            element={<ProductPage />}
+          />
 
-        <Route
-          path="/checkout"
-          element={<Checkout />}
-        />
+          <Route
+            path="/category/:categoryName"
+            element={<CategoryProductsPage />}
+          />
 
-        <Route
-          path="/account"
-          element={<AccountPage />}
-        />
+          <Route
+            path="/cart"
+            element={<CartPage />}
+          />
 
-        <Route
-          path="/orders"
-          element={<OrdersPage />}
-        />
+          <Route
+            path="/checkout"
+            element={<Checkout />}
+          />
 
-        <Route
-          path="/account/orders"
-          element={<OrdersPage />}
-        />
+          <Route
+            path="/account"
+            element={<AccountPage />}
+          />
 
-        {/* =================================================
-            ADMIN
-           ================================================= */}
+          <Route
+            path="/orders"
+            element={<OrdersPage />}
+          />
 
-        <Route
-          path="/admin/login"
-          element={<AdminLoginPage />}
-        />
+          <Route
+            path="/account/orders"
+            element={<OrdersPage />}
+          />
 
-        <Route
-          path="/admin/dashboard"
-          element={<AdminDashboardPage />}
-        />
+          {/* =================================================
+              ADMIN
+             ================================================= */}
 
-        {/* =================================================
-            STAFF LOGIN
-           ================================================= */}
+          <Route
+            path="/admin/login"
+            element={<AdminLoginPage />}
+          />
 
-        <Route
-          path="/staff/login"
-          element={<StaffLogin />}
-        />
+          <Route
+            path="/admin/dashboard"
+            element={<AdminDashboardPage />}
+          />
 
-        {/* =================================================
-            STAFF PORTAL
-           ================================================= */}
+          {/* =================================================
+              STAFF LOGIN
+             ================================================= */}
 
-        <Route
-          path="/staff"
-          element={<StaffRoute />}
-        />
+          <Route
+            path="/staff/login"
+            element={<StaffLogin />}
+          />
 
-        {/* =================================================
-            ACCOUNTS
-           ================================================= */}
+          {/* =================================================
+              STAFF PORTAL
+             ================================================= */}
 
-        <Route
-          path="/accounts/dashboard"
-          element={<StaffRoute />}
-        />
+          <Route
+            path="/staff"
+            element={<StaffRoute />}
+          />
 
-        {/* =================================================
-            LOGISTICS
-           ================================================= */}
+          {/* =================================================
+              ACCOUNTS
+             ================================================= */}
 
-        <Route
-          path="/logistics/dashboard"
-          element={<StaffRoute />}
-        />
+          <Route
+            path="/accounts/dashboard"
+            element={<StaffRoute />}
+          />
 
-        {/* =================================================
-            SELLER
-           ================================================= */}
+          {/* =================================================
+              LOGISTICS
+             ================================================= */}
 
-        <Route
-          path="/seller/login"
-          element={<SellerLoginPage />}
-        />
+          <Route
+            path="/logistics/dashboard"
+            element={<StaffRoute />}
+          />
 
-        <Route
-          path="/seller/register"
-          element={<SellerRegisterPage />}
-        />
+          {/* =================================================
+              SELLER
+             ================================================= */}
 
-        {/* =================================================
-            LOGISTIC PARTNER
-           ================================================= */}
+          <Route
+            path="/seller/login"
+            element={<SellerLoginPage />}
+          />
 
-        <Route
-          path="/logistic-partner/login"
-          element={
-            <LogisticPartnerLoginPage />
-          }
-        />
+          <Route
+            path="/seller/register"
+            element={<SellerRegisterPage />}
+          />
 
-        <Route
-          path="/logistic-partner/register"
-          element={
-            <LogisticPartnerRegisterPage />
-          }
-        />
+          {/* =================================================
+              LOGISTIC PARTNER
+             ================================================= */}
 
-        {/* =================================================
-            FALLBACK
-           ================================================= */}
+          <Route
+            path="/logistic-partner/login"
+            element={
+              <LogisticPartnerLoginPage />
+            }
+          />
 
-        <Route
-          path="*"
-          element={<HomePage />}
-        />
+          <Route
+            path="/logistic-partner/register"
+            element={
+              <LogisticPartnerRegisterPage />
+            }
+          />
 
-      </Routes>
-    </BrowserRouter>
+          {/* =================================================
+              FALLBACK
+             ================================================= */}
+
+          <Route
+            path="*"
+            element={<HomePage />}
+          />
+
+        </Routes>
+
+      </BrowserRouter>
+    </InitialLoader>
   );
 }
 

@@ -201,7 +201,7 @@ const RegisterPage = () => {
           />
 
           <span className={styles.logoText}>
-            <span className={styles.logoMain}>JIHAAN COSMETICS</span>
+            <span className={styles.logoMain}>JINI COSMETICS</span>
 
             <span className={styles.logoSub}>
               BEAUTY. CONFIDENCE. YOU.
@@ -212,12 +212,12 @@ const RegisterPage = () => {
 
       <section className={styles.registerCard}>
         <div className={styles.cardHeader}>
-          <span className={styles.eyebrow}>WELCOME TO JIHAAN</span>
+          <span className={styles.eyebrow}>WELCOME TO JINI</span>
 
           <h1>Create your account</h1>
 
           <p className={styles.intro}>
-            Join Jihaan Cosmetics and discover beauty essentials made
+            Join Jini Cosmetics and discover beauty essentials made
             for you.
           </p>
         </div>
@@ -424,7 +424,7 @@ const RegisterPage = () => {
         </nav>
 
         <p>
-          © {new Date().getFullYear()} Jihaan Cosmetics. All rights
+          © {new Date().getFullYear()} Jini Cosmetics. All rights
           reserved.
         </p>
       </footer>

@@ -116,7 +116,7 @@ const trackingSteps: TrackingStep[] = [
   {
     key: "CONFIRMED",
     title: "Order Confirmed",
-    description: "Your order has been confirmed by Jihaan Cosmetics.",
+    description: "Your order has been confirmed by Jini Cosmetics.",
   },
   {
     key: "PROCESSING",
@@ -801,7 +801,7 @@ export default function OrdersPage() {
           <div className={styles.container}>
             <div className={styles.headingRow}>
               <div className={styles.headingContent}>
-                <p className={styles.eyebrow}>JIHAAN COSMETICS</p>
+                <p className={styles.eyebrow}>Jini COSMETICS</p>
                 <h1 className={styles.title}>
                   Your order,
                   <span> beautifully tracked.</span>

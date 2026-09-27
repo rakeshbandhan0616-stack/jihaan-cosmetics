@@ -4,7 +4,6 @@ import {
   Phone,
   ArrowUpRight,
   Truck,
-  Store,
   ShieldCheck,
   WalletCards,
 } from "lucide-react";
@@ -44,21 +43,24 @@ function Footer() {
     <footer className={styles.footer}>
       <div className={styles.footerTop}>
         <div className={styles.footerContainer}>
+
           {/* ==================== BRAND COLUMN ==================== */}
           <div className={styles.brandColumn}>
             <Link
               to="/"
               className={styles.logo}
-              aria-label="Jihaan Cosmetics home"
+              aria-label="Jini Cosmetics home"
             >
               <img
                 src={jihaanLogo}
-                alt="Jihaan Cosmetics logo"
+                alt="Jini Cosmetics logo"
                 className={styles.logoImage}
               />
 
               <span className={styles.logoText}>
-                <span className={styles.logoMain}>JINI COSMETICS</span>
+                <span className={styles.logoMain}>
+                  JINI COSMETICS
+                </span>
 
                 <span className={styles.logoSub}>
                   BEAUTY. CARE. CONFIDENCE.
@@ -199,31 +201,47 @@ function Footer() {
           <div className={styles.contactColumn}>
             <h3>Get In Touch</h3>
 
+            {/* Email */}
             <a
-              href="mailto:hello@jihaancosmetics.com"
+              href="mailto:namaste@jinicosmetics.com"
               className={styles.contactItem}
             >
               <span className={styles.contactIcon}>
                 <Mail size={16} />
               </span>
 
-              <span>hello@jihaancosmetics.com</span>
+              <span>namaste@jinicosmetics.com</span>
             </a>
 
-            <a href="tel:+919876543210" className={styles.contactItem}>
+            {/* Phone */}
+            <a
+              href="tel:+918884852372"
+              className={styles.contactItem}
+            >
               <span className={styles.contactIcon}>
                 <Phone size={16} />
               </span>
 
-              <span>+91 98765 43210</span>
+              <span>+91 88848 52372</span>
             </a>
 
+            {/* Address */}
             <div className={styles.contactItem}>
               <span className={styles.contactIcon}>
                 <MapPin size={16} />
               </span>
 
-              <span>Maharashtra, India</span>
+              <span>
+                Jini Cosmetics India Pvt. Ltd.
+                <br />
+                #41, 1st Cross,
+                <br />
+                1st Main,
+                <br />
+                Hermit Colony, Ulsoor,
+                <br />
+                Bangalore – 560042
+              </span>
             </div>
           </div>
         </div>
@@ -232,14 +250,22 @@ function Footer() {
       {/* ==================== FOOTER BOTTOM ==================== */}
       <div className={styles.footerBottom}>
         <div className={styles.footerBottomInner}>
-          <p>© {currentYear} Jihaan Cosmetics. All rights reserved.</p>
+          <p>
+            © {currentYear} Jini Cosmetics. All rights reserved.
+          </p>
 
           <div className={styles.legalLinks}>
-            <a href="#privacy">Privacy Policy</a>
+            <a href="#privacy">
+              Privacy Policy
+            </a>
 
-            <a href="#terms">Terms &amp; Conditions</a>
+            <a href="#terms">
+              Terms &amp; Conditions
+            </a>
 
-            <a href="#shipping">Shipping Policy</a>
+            <a href="#shipping">
+              Shipping Policy
+            </a>
 
             {/* Admin Login */}
             <Link
