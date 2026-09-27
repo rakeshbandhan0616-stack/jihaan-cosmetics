@@ -118,8 +118,8 @@ app.use(
       // ------------------------------------------------
       // Requests without Origin
       // ------------------------------------------------
-      // Allows Postman, server-to-server requests,
-      // curl, health checks, etc.
+      // Allows Postman, curl, health checks,
+      // server-to-server requests, etc.
       if (!origin) {
         return callback(null, true);
       }
@@ -137,13 +137,11 @@ app.use(
       // ------------------------------------------------
       console.warn(`CORS blocked origin: ${origin}`);
 
-      // Do not throw an Express error here.
-      // Returning false prevents the CORS header from
-      // being added while keeping the server stable.
+      // Don't throw an Express error.
+      // Simply don't add CORS headers.
       return callback(null, false);
     },
 
-    // Required if frontend sends cookies/auth credentials
     credentials: true,
 
     methods: [
@@ -163,12 +161,6 @@ app.use(
     ],
   }),
 );
-
-// --------------------------------------------------
-// Explicit OPTIONS handling
-// --------------------------------------------------
-
-app.options("*", cors());
 
 // --------------------------------------------------
 // Body parsing middleware
@@ -378,7 +370,8 @@ const startServer = async () => {
 
     if (!process.env.FRONTEND_URL) {
       console.warn(
-        "Warning: FRONTEND_URL is missing. Production CORS is using the hard-coded Netlify URL.",
+        "Warning: FRONTEND_URL is missing. " +
+          "Production CORS is using the hard-coded Netlify URL.",
       );
     }
 
@@ -399,20 +392,26 @@ const startServer = async () => {
         `Environment: ${process.env.NODE_ENV || "development"}`,
       );
       console.log(`Server running on port: ${PORT}`);
+
       console.log(
         `Frontend URL: ${
-          process.env.FRONTEND_URL || "https://jihaan-cosmetics.netlify.app"
+          process.env.FRONTEND_URL ||
+          "https://jihaan-cosmetics.netlify.app"
         }`,
       );
+
       console.log(
         `API URL: http://localhost:${PORT}`,
       );
+
       console.log(
         `Health URL: http://localhost:${PORT}/api/health`,
       );
+
       console.log(
         `Uploads URL: http://localhost:${PORT}/uploads`,
       );
+
       console.log("----------------------------------------");
     });
   } catch (error) {
