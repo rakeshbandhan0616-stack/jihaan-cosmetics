@@ -96,14 +96,36 @@ const __dirname = path.dirname(__filename);
 // --------------------------------------------------
 
 const allowedOrigins = [
+  // ------------------------------------------------
   // Local development
+  // ------------------------------------------------
   "http://localhost:5173",
   "http://localhost:5174",
 
-  // Production frontend
+  // ------------------------------------------------
+  // Existing Netlify frontend
+  // ------------------------------------------------
   "https://jihaan-cosmetics.netlify.app",
 
-  // Render environment variable
+  // ------------------------------------------------
+  // Production custom domain
+  // ------------------------------------------------
+  "https://jinicosmetics.com",
+  "https://www.jinicosmetics.com",
+
+  // ------------------------------------------------
+  // Current GoDaddy preview URL
+  // ------------------------------------------------
+  "https://1zt0y3t6bu.preview.c39.airoapp.ai",
+
+  // ------------------------------------------------
+  // Previous GoDaddy preview URL
+  // ------------------------------------------------
+  "https://mzuc7ikh7j.c38.airoapp.ai",
+
+  // ------------------------------------------------
+  // Environment variable
+  // ------------------------------------------------
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
@@ -112,32 +134,59 @@ console.log("Allowed CORS origins:");
 console.log(allowedOrigins);
 console.log("----------------------------------------");
 
+// --------------------------------------------------
+// CORS middleware
+// --------------------------------------------------
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // ------------------------------------------------
-      // Requests without Origin
-      // ------------------------------------------------
-      // Allows Postman, curl, health checks,
-      // server-to-server requests, etc.
+      // Requests without an Origin header.
+      // Allows curl, Postman, server-to-server requests,
+      // Render health checks, etc.
       if (!origin) {
         return callback(null, true);
       }
 
-      // ------------------------------------------------
-      // Allowed frontend origin
-      // ------------------------------------------------
+      // Exact allowed origins
       if (allowedOrigins.includes(origin)) {
         console.log(`CORS allowed: ${origin}`);
         return callback(null, true);
       }
 
       // ------------------------------------------------
-      // Block unknown origins
+      // Allow GoDaddy preview domains
       // ------------------------------------------------
+      //
+      // Examples:
+      //
+      // https://1zt0y3t6bu.preview.c39.airoapp.ai
+      // https://mzuc7ikh7j.preview.c38.airoapp.ai
+      //
+      // This prevents the backend from breaking when
+      // GoDaddy generates another preview hostname.
+      // ------------------------------------------------
+
+      const isGoDaddyPreview =
+        /^https:\/\/[a-z0-9]+\.preview\.c\d+\.airoapp\.ai$/i.test(
+          origin,
+        );
+
+      if (isGoDaddyPreview) {
+        console.log(
+          `CORS allowed GoDaddy preview: ${origin}`,
+        );
+
+        return callback(null, true);
+      }
+
+      // ------------------------------------------------
+      // Unknown origin
+      // ------------------------------------------------
+
       console.warn(`CORS blocked origin: ${origin}`);
 
-      // Don't throw an Express error.
+      // Do not throw an Express error.
       // Simply don't add CORS headers.
       return callback(null, false);
     },
@@ -191,21 +240,35 @@ app.use(cookieParser());
 
 app.use(
   "/uploads",
-  express.static(path.join(__dirname, "uploads")),
+  express.static(
+    path.join(__dirname, "uploads"),
+  ),
 );
 
 // --------------------------------------------------
 // Health check routes
 // --------------------------------------------------
 
+// Root health endpoint
 app.get("/", (_req, res) => {
   res.status(200).json({
     success: true,
     message: "Jihaan Beauty API is running",
-    environment: process.env.NODE_ENV || "development",
+    environment:
+      process.env.NODE_ENV || "development",
   });
 });
 
+// Simple public health endpoint
+app.get("/health", (_req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Jihaan Beauty API is healthy",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// API health endpoint
 app.get("/api/health", (_req, res) => {
   res.status(200).json({
     success: true,
@@ -224,51 +287,96 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 
-app.use("/api/admin/users", adminUserRoutes);
+app.use(
+  "/api/admin/users",
+  adminUserRoutes,
+);
 
 // ==================================================
 // Partners
 // ==================================================
 
-app.use("/api/partners", partnerRoutes);
+app.use(
+  "/api/partners",
+  partnerRoutes,
+);
 
-app.use("/api/admin/partners", adminPartnerRoutes);
+app.use(
+  "/api/admin/partners",
+  adminPartnerRoutes,
+);
 
 // ==================================================
 // Catalog
 // ==================================================
 
-app.use("/api/categories", categoryRoutes);
+app.use(
+  "/api/categories",
+  categoryRoutes,
+);
 
-app.use("/api/category-manager", categoryManagerRoutes);
+app.use(
+  "/api/category-manager",
+  categoryManagerRoutes,
+);
 
-app.use("/api/hero-banners", heroBannerRoutes);
+app.use(
+  "/api/hero-banners",
+  heroBannerRoutes,
+);
 
-app.use("/api/offers", offerRoutes);
+app.use(
+  "/api/offers",
+  offerRoutes,
+);
 
-app.use("/api/new-arrivals", newArrivalRoutes);
+app.use(
+  "/api/new-arrivals",
+  newArrivalRoutes,
+);
 
-app.use("/api/products", productRoutes);
+app.use(
+  "/api/products",
+  productRoutes,
+);
 
-app.use("/api/brands", brandRoutes);
+app.use(
+  "/api/brands",
+  brandRoutes,
+);
 
-app.use("/api/beauty-stories", beautyStoryRoutes);
+app.use(
+  "/api/beauty-stories",
+  beautyStoryRoutes,
+);
 
 // ==================================================
 // Customer account, orders and cart
 // ==================================================
 
-app.use("/api/account", accountRoutes);
+app.use(
+  "/api/account",
+  accountRoutes,
+);
 
-app.use("/api/orders", orderRoutes);
+app.use(
+  "/api/orders",
+  orderRoutes,
+);
 
-app.use("/api/cart", cartRoutes);
+app.use(
+  "/api/cart",
+  cartRoutes,
+);
 
 // ==================================================
 // Admin order management
 // ==================================================
 
-app.use("/api/admin/orders", adminOrderRoutes);
+app.use(
+  "/api/admin/orders",
+  adminOrderRoutes,
+);
 
 // ==================================================
 // Accounts dashboard
@@ -292,9 +400,15 @@ app.use(
 // Contact
 // ==================================================
 
-app.use("/api/contact", contactRoutes);
+app.use(
+  "/api/contact",
+  contactRoutes,
+);
 
-app.use("/api/admin/contact", adminContactRoutes);
+app.use(
+  "/api/admin/contact",
+  adminContactRoutes,
+);
 
 // ==================================================
 // Admin analytics, reports and reviews
@@ -330,21 +444,23 @@ app.use((req, res) => {
 // Global error handler
 // --------------------------------------------------
 
-app.use((error, _req, res, _next) => {
-  console.error("API Error:", error);
+app.use(
+  (error, _req, res, _next) => {
+    console.error("API Error:", error);
 
-  const statusCode =
-    error?.status ||
-    error?.statusCode ||
-    500;
+    const statusCode =
+      error?.status ||
+      error?.statusCode ||
+      500;
 
-  res.status(statusCode).json({
-    success: false,
-    message:
-      error?.message ||
-      "Internal server error",
-  });
-});
+    res.status(statusCode).json({
+      success: false,
+      message:
+        error?.message ||
+        "Internal server error",
+    });
+  },
+);
 
 // --------------------------------------------------
 // Start server
@@ -371,7 +487,7 @@ const startServer = async () => {
     if (!process.env.FRONTEND_URL) {
       console.warn(
         "Warning: FRONTEND_URL is missing. " +
-          "Production CORS is using the hard-coded Netlify URL.",
+          "Production CORS will use the hard-coded allowed origins.",
       );
     }
 
@@ -385,38 +501,57 @@ const startServer = async () => {
     // Start Express server
     // ------------------------------------------------
 
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log("----------------------------------------");
-      console.log("Jihaan Beauty API started successfully");
-      console.log(
-        `Environment: ${process.env.NODE_ENV || "development"}`,
-      );
-      console.log(`Server running on port: ${PORT}`);
+    app.listen(
+      PORT,
+      "0.0.0.0",
+      () => {
+        console.log("----------------------------------------");
+        console.log(
+          "Jihaan Beauty API started successfully",
+        );
 
-      console.log(
-        `Frontend URL: ${
-          process.env.FRONTEND_URL ||
-          "https://jihaan-cosmetics.netlify.app"
-        }`,
-      );
+        console.log(
+          `Environment: ${
+            process.env.NODE_ENV ||
+            "development"
+          }`,
+        );
 
-      console.log(
-        `API URL: http://localhost:${PORT}`,
-      );
+        console.log(
+          `Server running on port: ${PORT}`,
+        );
 
-      console.log(
-        `Health URL: http://localhost:${PORT}/api/health`,
-      );
+        console.log(
+          `Frontend URL: ${
+            process.env.FRONTEND_URL ||
+            "https://jinicosmetics.com"
+          }`,
+        );
 
-      console.log(
-        `Uploads URL: http://localhost:${PORT}/uploads`,
-      );
+        console.log(
+          `API URL: http://localhost:${PORT}`,
+        );
 
-      console.log("----------------------------------------");
-    });
+        console.log(
+          `Health URL: http://localhost:${PORT}/health`,
+        );
+
+        console.log(
+          `API Health URL: http://localhost:${PORT}/api/health`,
+        );
+
+        console.log(
+          `Uploads URL: http://localhost:${PORT}/uploads`,
+        );
+
+        console.log("----------------------------------------");
+      },
+    );
   } catch (error) {
     console.error("----------------------------------------");
-    console.error("Server startup failed:");
+    console.error(
+      "Server startup failed:",
+    );
 
     console.error(
       error instanceof Error
