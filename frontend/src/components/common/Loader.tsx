@@ -19,53 +19,59 @@ export default function Loader({
       aria-live="polite"
       aria-label={message}
     >
+      <div className={styles.backgroundGlow} />
+
       <div className={styles.content}>
-        {/* ================================================
-            LOGO LOADER
-           ================================================ */}
-
+        {/* Logo loader */}
         <div className={styles.logoContainer}>
-          {/* Rotating outer ring */}
-          <div className={styles.outerRing} />
+          <div className={styles.outerGlow} />
 
-          {/* Rotating inner ring */}
+          <div className={styles.outerRing}>
+            <span />
+          </div>
+
           <div className={styles.innerRing} />
 
-          {/* Logo */}
+          <div className={styles.orbit}>
+            <span className={styles.orbitDot} />
+          </div>
+
           <div className={styles.logoWrapper}>
+            <div className={styles.logoShine} />
+
             <img
               src={jihaanLogo}
-              alt="Jihaan Cosmetics"
+              alt="Jini Cosmetics"
               className={styles.logo}
             />
           </div>
         </div>
 
-        {/* ================================================
-            BRAND NAME
-           ================================================ */}
+        {/* Brand */}
+        <div className={styles.brandBlock}>
+          <div className={styles.brandName}>
+            JINI
+          </div>
 
-        <div className={styles.brandName}>
-          JINI <span>COSMETICS</span>
+          <div className={styles.brandSub}>
+            COSMETICS
+          </div>
+
+          <div className={styles.brandUnderline}>
+            <span />
+          </div>
         </div>
 
-        {/* ================================================
-            LOADING DOTS
-           ================================================ */}
+        {/* Loading */}
+        <div className={styles.loadingArea}>
+          <div className={styles.loadingDots}>
+            <span />
+            <span />
+            <span />
+          </div>
 
-        <div className={styles.loadingDots}>
-          <span />
-          <span />
-          <span />
+          <p className={styles.message}>{message}</p>
         </div>
-
-        {/* ================================================
-            LOADING MESSAGE
-           ================================================ */}
-
-        <p className={styles.message}>
-          {message}
-        </p>
       </div>
     </div>
   );

@@ -1,136 +1,602 @@
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=DM+Sans:wght@400;500;600&family=Montserrat:wght@500;600;700&display=swap");
+
+/* =========================================
+   BASE
+========================================= */
+
 .loader {
+  position: relative;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   width: 100%;
-  font-family: "Poppins", sans-serif;
+
+  overflow: hidden;
+
+  font-family: "DM Sans", sans-serif;
+
+  color: #302923;
+
+  isolation: isolate;
 }
+
+/* =========================================
+   FULL SCREEN
+========================================= */
 
 .fullScreen {
   position: fixed;
+
   inset: 0;
+
   z-index: 99999;
+
   min-height: 100vh;
   min-height: 100dvh;
-  background: rgba(255, 250, 252, 0.97);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+
+  background:
+    radial-gradient(
+      circle at 50% 35%,
+      rgba(221, 183, 192, 0.15),
+      transparent 32%
+    ),
+    linear-gradient(
+      135deg,
+      #fffdfc 0%,
+      #fff9fa 48%,
+      #fffdfb 100%
+    );
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
+
+/* =========================================
+   INLINE
+========================================= */
 
 .inline {
   position: relative;
-  min-height: 250px;
-  padding: 40px 20px;
+
+  min-height: 280px;
+
+  padding: 50px 20px;
+
   background: transparent;
 }
 
-.content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  animation: fadeIn 0.45s ease both;
+/* =========================================
+   BACKGROUND GLOW
+========================================= */
+
+.backgroundGlow {
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  width: 260px;
+  height: 260px;
+
+  border-radius: 50%;
+
+  background: rgba(194, 113, 145, 0.08);
+
+  filter: blur(60px);
+
+  transform: translate(-50%, -50%);
+
+  animation: backgroundPulse 4s ease-in-out infinite;
+
+  pointer-events: none;
 }
+
+/* =========================================
+   CONTENT
+========================================= */
+
+.content {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+
+  animation: contentReveal 0.8s
+    cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+}
+
+/* =========================================
+   LOGO CONTAINER
+========================================= */
 
 .logoContainer {
   position: relative;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
-  width: 150px;
-  height: 150px;
+
+  width: 155px;
+  height: 155px;
 }
+
+/* =========================================
+   OUTER GLOW
+========================================= */
+
+.outerGlow {
+  position: absolute;
+
+  inset: 12px;
+
+  border-radius: 50%;
+
+  background: rgba(194, 113, 145, 0.08);
+
+  filter: blur(18px);
+
+  animation: glowPulse 2.8s ease-in-out infinite;
+}
+
+/* =========================================
+   OUTER RING
+========================================= */
 
 .outerRing {
   position: absolute;
+
   inset: 0;
-  border: 2px solid rgba(194, 113, 145, 0.12);
-  border-top-color: #c27191;
-  border-right-color: #dca5b9;
+
+  border: 1px solid rgba(194, 113, 145, 0.15);
+
+  border-top-color: #b86686;
+  border-right-color: #d79cad;
+
   border-radius: 50%;
-  animation: rotate 1.6s linear infinite;
+
+  animation:
+    ringRotate 2.2s linear infinite,
+    ringAppear 0.8s ease both;
 }
+
+.outerRing::before,
+.outerRing::after {
+  position: absolute;
+
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #b86686;
+
+  box-shadow:
+    0 0 10px rgba(184, 102, 134, 0.45);
+
+  content: "";
+}
+
+.outerRing::before {
+  top: 16px;
+  left: 30px;
+}
+
+.outerRing::after {
+  right: 25px;
+  bottom: 22px;
+
+  width: 5px;
+  height: 5px;
+
+  background: #d7a0b0;
+}
+
+/* =========================================
+   INNER RING
+========================================= */
 
 .innerRing {
   position: absolute;
-  inset: 12px;
-  border: 2px dashed rgba(194, 113, 145, 0.4);
+
+  inset: 13px;
+
+  border: 1px dashed rgba(194, 113, 145, 0.3);
+
   border-radius: 50%;
-  animation: rotateReverse 3s linear infinite;
+
+  animation: ringRotateReverse 4s linear infinite;
 }
+
+/* =========================================
+   ORBIT
+========================================= */
+
+.orbit {
+  position: absolute;
+
+  inset: 21px;
+
+  border-radius: 50%;
+
+  animation: orbitRotate 3.2s linear infinite;
+}
+
+.orbitDot {
+  position: absolute;
+
+  top: 3px;
+  left: 50%;
+
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #c27191;
+
+  box-shadow:
+    0 0 8px rgba(194, 113, 145, 0.55);
+
+  transform: translateX(-50%);
+}
+
+/* =========================================
+   LOGO WRAPPER
+========================================= */
 
 .logoWrapper {
   position: relative;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   width: 105px;
   height: 105px;
-  padding: 12px;
-  background: #ffffff;
+
+  padding: 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.9);
+
   border-radius: 50%;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.98),
+      rgba(250, 243, 245, 0.96)
+    );
+
   box-shadow:
-    0 10px 35px rgba(194, 113, 145, 0.12),
-    0 0 0 6px rgba(255, 255, 255, 0.7);
-  animation: logoPulse 2s ease-in-out infinite;
+    0 18px 45px rgba(194, 113, 145, 0.13),
+    0 0 0 7px rgba(255, 255, 255, 0.55),
+    inset 0 0 0 1px rgba(194, 113, 145, 0.06);
+
+  animation:
+    logoFloat 2.8s ease-in-out infinite,
+    logoAppear 0.8s
+      cubic-bezier(0.22, 1, 0.36, 1)
+      both;
+}
+
+/* =========================================
+   LOGO SHINE
+========================================= */
+
+.logoShine {
+  position: absolute;
+
+  top: -20%;
+  left: -70%;
+
+  width: 45%;
+  height: 140%;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.75),
+    transparent
+  );
+
+  transform: rotate(20deg);
+
+  animation: logoShine 2.8s ease-in-out infinite;
+
+  pointer-events: none;
 }
 
 .logo {
+  position: relative;
+  z-index: 2;
+
   display: block;
+
   width: 100%;
   height: 100%;
+
   object-fit: contain;
+
+  border-radius: 50%;
+}
+
+/* =========================================
+   BRAND
+========================================= */
+
+.brandBlock {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  margin-top: 25px;
+
+  animation: brandReveal 0.8s
+    0.25s
+    cubic-bezier(0.22, 1, 0.36, 1)
+    both;
 }
 
 .brandName {
-  margin-top: 26px;
   color: #9f4d70;
-  font-size: 20px;
+
+  font-family: "Montserrat", sans-serif;
+
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: 4px;
+
+  line-height: 1;
+
+  letter-spacing: 6px;
+
+  text-indent: 6px;
 }
 
-.brandName span {
+.brandSub {
+  margin-top: 7px;
+
   color: #c27191;
-  font-weight: 400;
+
+  font-family: "Montserrat", sans-serif;
+
+  font-size: 9px;
+  font-weight: 500;
+
+  line-height: 1;
+
+  letter-spacing: 4px;
+
+  text-indent: 4px;
 }
+
+/* =========================================
+   BRUSH UNDERLINE
+========================================= */
+
+.brandUnderline {
+  position: relative;
+
+  width: 68px;
+  height: 13px;
+
+  margin-top: 5px;
+}
+
+.brandUnderline::before {
+  position: absolute;
+
+  top: 5px;
+  left: 50%;
+
+  width: 62px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: rgba(194, 113, 145, 0.2);
+
+  content: "";
+
+  transform:
+    translateX(-50%)
+    rotate(-2deg);
+}
+
+.brandUnderline span {
+  position: absolute;
+
+  top: 4px;
+  left: 50%;
+
+  width: 44px;
+  height: 2px;
+
+  border-radius: 50%;
+
+  background: #c27191;
+
+  transform:
+    translateX(-50%)
+    rotate(-3deg);
+
+  animation: underlineGrow 1s
+    0.7s
+    cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+}
+
+/* =========================================
+   LOADING AREA
+========================================= */
+
+.loadingArea {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  margin-top: 21px;
+
+  animation: loadingReveal 0.7s
+    0.45s
+    ease both;
+}
+
+/* =========================================
+   DOTS
+========================================= */
 
 .loadingDots {
   display: flex;
+
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  margin-top: 18px;
+
+  gap: 6px;
 }
 
 .loadingDots span {
-  width: 7px;
-  height: 7px;
-  background: #c27191;
+  width: 6px;
+  height: 6px;
+
   border-radius: 50%;
-  animation: dotBounce 1.2s ease-in-out infinite;
+
+  background: #c27191;
+
+  opacity: 0.35;
+
+  animation:
+    dotBounce 1.25s
+    ease-in-out
+    infinite;
+}
+
+.loadingDots span:nth-child(1) {
+  animation-delay: 0s;
 }
 
 .loadingDots span:nth-child(2) {
-  animation-delay: 0.15s;
+  animation-delay: 0.16s;
 }
 
 .loadingDots span:nth-child(3) {
-  animation-delay: 0.3s;
+  animation-delay: 0.32s;
 }
+
+/* =========================================
+   MESSAGE
+========================================= */
 
 .message {
-  margin: 13px 0 0;
-  color: #9a7a88;
-  font-size: 12px;
+  margin: 11px 0 0;
+
+  color: #917982;
+
+  font-family: "DM Sans", sans-serif;
+
+  font-size: 11px;
   font-weight: 400;
-  letter-spacing: 1.5px;
+
+  line-height: 1.5;
+
+  letter-spacing: 1.2px;
+
+  text-transform: uppercase;
 }
 
-/* Animations */
+/* =========================================
+   ANIMATIONS
+========================================= */
 
-@keyframes rotate {
+@keyframes contentReveal {
+  from {
+    opacity: 0;
+
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+}
+
+@keyframes logoAppear {
+  from {
+    opacity: 0;
+
+    transform: scale(0.72);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: scale(1);
+  }
+}
+
+@keyframes brandReveal {
+  from {
+    opacity: 0;
+
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+}
+
+@keyframes loadingReveal {
+  from {
+    opacity: 0;
+
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+}
+
+@keyframes ringAppear {
+  from {
+    opacity: 0;
+
+    transform: scale(0.7);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: scale(1);
+  }
+}
+
+@keyframes ringRotate {
   from {
     transform: rotate(0deg);
   }
@@ -140,7 +606,7 @@
   }
 }
 
-@keyframes rotateReverse {
+@keyframes ringRotateReverse {
   from {
     transform: rotate(360deg);
   }
@@ -150,14 +616,96 @@
   }
 }
 
-@keyframes logoPulse {
+@keyframes orbitRotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes logoFloat {
   0%,
   100% {
-    transform: scale(1);
+    transform: translateY(0) scale(1);
   }
 
   50% {
-    transform: scale(1.06);
+    transform: translateY(-5px) scale(1.025);
+  }
+}
+
+@keyframes glowPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+
+    transform: scale(0.92);
+  }
+
+  50% {
+    opacity: 0.9;
+
+    transform: scale(1.08);
+  }
+}
+
+@keyframes backgroundPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.9);
+  }
+
+  50% {
+    opacity: 1;
+
+    transform:
+      translate(-50%, -50%)
+      scale(1.1);
+  }
+}
+
+@keyframes logoShine {
+  0% {
+    left: -70%;
+
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  50% {
+    left: 120%;
+
+    opacity: 0;
+  }
+
+  100% {
+    left: 120%;
+
+    opacity: 0;
+  }
+}
+
+@keyframes underlineGrow {
+  from {
+    width: 0;
+
+    opacity: 0;
+  }
+
+  to {
+    width: 44px;
+
+    opacity: 1;
   }
 }
 
@@ -165,31 +713,63 @@
   0%,
   60%,
   100% {
-    transform: translateY(0);
-    opacity: 0.5;
+    opacity: 0.35;
+
+    transform: translateY(0) scale(1);
   }
 
   30% {
-    transform: translateY(-7px);
     opacity: 1;
+
+    transform: translateY(-6px) scale(1.15);
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 768px) {
+  .logoContainer {
+    width: 140px;
+    height: 140px;
   }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .logoWrapper {
+    width: 96px;
+    height: 96px;
+  }
+
+  .brandName {
+    font-size: 20px;
+
+    letter-spacing: 5px;
+
+    text-indent: 5px;
   }
 }
 
-/* Mobile */
+/* =========================================
+   MOBILE
+========================================= */
 
 @media (max-width: 480px) {
+  .fullScreen {
+    background:
+      radial-gradient(
+        circle at 50% 35%,
+        rgba(221, 183, 192, 0.18),
+        transparent 38%
+      ),
+      #fffafb;
+  }
+
+  .inline {
+    min-height: 240px;
+
+    padding: 35px 18px;
+  }
+
   .logoContainer {
     width: 125px;
     height: 125px;
@@ -199,30 +779,119 @@
     inset: 10px;
   }
 
+  .orbit {
+    inset: 17px;
+  }
+
   .logoWrapper {
-    width: 88px;
-    height: 88px;
-    padding: 10px;
+    width: 86px;
+    height: 86px;
+
+    padding: 9px;
+  }
+
+  .brandBlock {
+    margin-top: 22px;
   }
 
   .brandName {
-    font-size: 16px;
+    font-size: 17px;
+
+    letter-spacing: 4px;
+
+    text-indent: 4px;
+  }
+
+  .brandSub {
+    margin-top: 6px;
+
+    font-size: 8px;
+
     letter-spacing: 3px;
+
+    text-indent: 3px;
+  }
+
+  .brandUnderline {
+    transform: scale(0.9);
+  }
+
+  .loadingArea {
+    margin-top: 17px;
   }
 
   .message {
-    font-size: 11px;
+    font-size: 10px;
+
+    letter-spacing: 1px;
   }
 }
 
-/* Accessibility */
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 360px) {
+  .logoContainer {
+    width: 112px;
+    height: 112px;
+  }
+
+  .logoWrapper {
+    width: 78px;
+    height: 78px;
+
+    padding: 8px;
+  }
+
+  .brandName {
+    font-size: 15px;
+
+    letter-spacing: 3.5px;
+
+    text-indent: 3.5px;
+  }
+
+  .brandSub {
+    font-size: 7px;
+
+    letter-spacing: 2.5px;
+
+    text-indent: 2.5px;
+  }
+
+  .message {
+    max-width: 240px;
+
+    font-size: 9px;
+  }
+}
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
 
 @media (prefers-reduced-motion: reduce) {
+  .backgroundGlow,
+  .outerGlow,
   .outerRing,
   .innerRing,
+  .orbit,
   .logoWrapper,
-  .loadingDots span,
-  .content {
-    animation: none;
+  .logoShine,
+  .brandUnderline span,
+  .content,
+  .brandBlock,
+  .loadingArea,
+  .loadingDots span {
+    animation: none !important;
+  }
+
+  .content,
+  .brandBlock,
+  .loadingArea,
+  .logoWrapper {
+    opacity: 1;
+    transform: none;
   }
 }

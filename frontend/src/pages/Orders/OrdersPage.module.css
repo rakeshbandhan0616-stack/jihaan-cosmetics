@@ -1857,3 +1857,795 @@
   }
 }
 
+
+
+/* =========================================================
+   JINI COSMETICS — PREMIUM ORDERS UI
+========================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap");
+
+:global(html) {
+  scroll-behavior: smooth;
+}
+
+:global(body) {
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #faf8f5;
+  color: #2c2722;
+}
+
+.page {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 7% 5%, rgba(218, 183, 151, .18), transparent 28rem),
+    radial-gradient(circle at 94% 30%, rgba(199, 137, 157, .09), transparent 25rem),
+    linear-gradient(180deg, #fcfaf7 0%, #fff 72%, #faf7f3 100%);
+}
+
+.page::before,
+.page::after {
+  position: absolute;
+  z-index: 0;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+  filter: blur(75px);
+}
+
+.page::before {
+  top: 430px;
+  left: -170px;
+  background: rgba(208, 171, 140, .10);
+  animation: ambientFloat 10s ease-in-out infinite;
+}
+
+.page::after {
+  right: -160px;
+  bottom: 260px;
+  background: rgba(199, 137, 157, .08);
+  animation: ambientFloatReverse 12s ease-in-out infinite;
+}
+
+.heroSection {
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 78% 5%, rgba(209, 174, 140, .22), transparent 24rem),
+    linear-gradient(135deg, #fffdfa 0%, #f5eee7 100%);
+}
+
+.heroSection::after {
+  position: absolute;
+  right: 12%;
+  bottom: 8px;
+  width: 120px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(163, 123, 80, .18);
+  content: "";
+  transform: rotate(-2deg);
+  animation: brushReveal 1s .7s ease both;
+}
+
+.heroGlow {
+  animation:
+    floatingGlow 9s ease-in-out infinite,
+    glowPulse 4s ease-in-out infinite;
+}
+
+.headingContent {
+  animation: heroContentIn .85s cubic-bezier(.22,1,.36,1) both;
+}
+
+.eyebrow {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 800;
+  letter-spacing: .22em;
+}
+
+.eyebrow::after {
+  display: inline-block;
+  width: 25px;
+  height: 1px;
+  margin-left: 9px;
+  vertical-align: middle;
+  background: #c6a382;
+  content: "";
+  transform-origin: left;
+  animation: lineReveal .7s .4s ease both;
+}
+
+.title,
+.toolbarHeading h2,
+.orderNumber,
+.modalHeader h2,
+.sectionHeading h3,
+.emptyState h2 {
+  font-family: "Montserrat", sans-serif;
+}
+
+.title {
+  font-weight: 700;
+  letter-spacing: -.055em;
+}
+
+.title span {
+  font-family: "Caveat", cursive;
+  font-size: 1.12em;
+  font-weight: 600;
+  letter-spacing: -.015em;
+  line-height: .95;
+  transform: rotate(-1deg);
+  transform-origin: left center;
+  animation: titleAccentIn .9s .2s cubic-bezier(.22,1,.36,1) both;
+}
+
+.subtitle {
+  font-family: "DM Sans", sans-serif;
+}
+
+.refreshButton {
+  position: relative;
+  overflow: hidden;
+  font-family: "Montserrat", sans-serif;
+  box-shadow: 0 10px 28px rgba(91,67,44,.05);
+}
+
+.refreshButton::before,
+.primaryButton::before,
+.secondaryButton::before,
+.dangerButton::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -120%;
+  width: 65%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.38), transparent);
+  content: "";
+  transform: skewX(-20deg);
+  transition: left .65s ease;
+}
+
+.refreshButton:hover::before,
+.primaryButton:hover::before,
+.secondaryButton:hover::before,
+.dangerButton:hover::before {
+  left: 140%;
+}
+
+.refreshButton .buttonArrow {
+  transition: transform .3s ease;
+}
+
+.refreshButton:hover .buttonArrow {
+  transform: translate(3px,-3px) rotate(5deg);
+}
+
+.heroStats {
+  perspective: 1000px;
+}
+
+.statCard {
+  position: relative;
+  overflow: hidden;
+  font-family: "DM Sans", sans-serif;
+  animation:
+    fadeUp .65s cubic-bezier(.22,1,.36,1) both,
+    cardFloat 5s ease-in-out 1s infinite;
+  transition:
+    transform .35s ease,
+    box-shadow .35s ease,
+    border-color .35s ease;
+}
+
+.statCard::after {
+  position: absolute;
+  top: -100%;
+  left: -40%;
+  width: 35%;
+  height: 300%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent);
+  content: "";
+  transform: rotate(25deg);
+  transition: left .8s ease;
+}
+
+.statCard:hover {
+  border-color: rgba(162,123,80,.25);
+  box-shadow: 0 20px 44px rgba(73,53,35,.09);
+  transform: translateY(-5px);
+}
+
+.statCard:hover::after {
+  left: 140%;
+}
+
+.statCard strong {
+  font-family: "Montserrat", sans-serif;
+}
+
+.errorBox {
+  animation: messageIn .45s cubic-bezier(.22,1,.36,1) both;
+  box-shadow: 0 10px 30px rgba(150,75,65,.05);
+}
+
+.toolbar {
+  animation: sectionReveal .7s .08s cubic-bezier(.22,1,.36,1) both;
+}
+
+.searchWrapper {
+  transition: transform .3s ease;
+}
+
+.searchWrapper:focus-within {
+  transform: translateY(-2px);
+}
+
+.searchInput,
+.statusSelect {
+  font-family: "DM Sans", sans-serif;
+  transition:
+    border-color .3s ease,
+    box-shadow .3s ease,
+    transform .3s ease,
+    background .3s ease;
+}
+
+.searchInput:hover,
+.statusSelect:hover {
+  border-color: #cfb9a1;
+}
+
+.searchInput:focus,
+.statusSelect:focus {
+  background: #fff;
+  box-shadow:
+    0 0 0 4px rgba(185,154,120,.10),
+    0 10px 24px rgba(91,67,44,.05);
+  transform: translateY(-1px);
+}
+
+.ordersList {
+  perspective: 1200px;
+}
+
+.orderCard {
+  position: relative;
+  animation: cardReveal .65s cubic-bezier(.22,1,.36,1) both;
+}
+
+.orderCard:nth-child(1) { animation-delay: .04s; }
+.orderCard:nth-child(2) { animation-delay: .10s; }
+.orderCard:nth-child(3) { animation-delay: .16s; }
+.orderCard:nth-child(4) { animation-delay: .22s; }
+.orderCard:nth-child(5) { animation-delay: .28s; }
+.orderCard:nth-child(n+6) { animation-delay: .34s; }
+
+.orderCard::before {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #b99a78, #c7869d, #b99a78);
+  content: "";
+  transition: width .55s ease;
+}
+
+.orderCard:hover::before {
+  width: 100%;
+}
+
+.orderCard:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 55px rgba(49,39,29,.10);
+}
+
+.orderNumber {
+  font-weight: 700;
+}
+
+.statusBadge {
+  font-family: "Montserrat", sans-serif;
+  box-shadow: 0 5px 15px rgba(49,39,29,.04);
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+
+.orderCard:hover .statusBadge {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(49,39,29,.07);
+}
+
+.statusDot {
+  animation: statusPulse 2.2s ease-in-out infinite;
+}
+
+.productPreview {
+  background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(252,249,245,.5));
+}
+
+.productRow {
+  position: relative;
+  padding: 6px;
+  border-radius: 16px;
+  transition: background .3s ease, transform .3s ease;
+}
+
+.productRow:hover {
+  background: #fcf8f3;
+  transform: translateX(4px);
+}
+
+.productImage,
+.detailImage,
+.productTrackingImage {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #ece1d6;
+  background: linear-gradient(135deg, #faf5ef, #f1e9df);
+  object-fit: contain;
+  transition:
+    transform .45s cubic-bezier(.22,1,.36,1),
+    box-shadow .35s ease,
+    filter .35s ease;
+}
+
+.productImage {
+  padding: 6px;
+}
+
+.productRow:hover .productImage,
+.productTrackingCard:hover .productTrackingImage {
+  transform: scale(1.06) rotate(-1deg);
+  box-shadow: 0 10px 24px rgba(75,54,37,.10);
+  filter: saturate(1.05);
+}
+
+.productInfo h3,
+.detailProductInfo h4,
+.productTrackingInfo h4 {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+}
+
+.productRow:hover .productInfo h3 {
+  color: #967354;
+}
+
+.itemPrice,
+.totalAmount {
+  font-family: "Montserrat", sans-serif;
+}
+
+.orderBottom {
+  background: linear-gradient(135deg, #fffdfa, #fbf6f0);
+}
+
+.primaryButton,
+.secondaryButton,
+.dangerButton {
+  position: relative;
+  overflow: hidden;
+  font-family: "Montserrat", sans-serif;
+  transition:
+    transform .3s ease,
+    box-shadow .3s ease,
+    background .3s ease,
+    border-color .3s ease;
+}
+
+.primaryButton:hover {
+  box-shadow: 0 12px 25px rgba(48,41,32,.16);
+  transform: translateY(-3px);
+}
+
+.secondaryButton:hover {
+  box-shadow: 0 10px 22px rgba(90,70,50,.08);
+  transform: translateY(-3px);
+}
+
+.dangerButton:hover {
+  box-shadow: 0 10px 22px rgba(182,91,86,.10);
+  transform: translateY(-3px);
+}
+
+.stateBox {
+  animation: sectionReveal .65s ease both;
+}
+
+.loader {
+  width: 38px;
+  height: 38px;
+  border-width: 2px;
+  border-top-color: #a27b50;
+  border-right-color: #c7869d;
+  box-shadow: 0 0 0 7px rgba(162,123,80,.06);
+}
+
+.emptyState {
+  animation: cardReveal .65s cubic-bezier(.22,1,.36,1) both;
+}
+
+.emptyIcon {
+  font-family: "Caveat", cursive;
+  animation: emptyFloat 4s ease-in-out infinite;
+  box-shadow: 0 10px 25px rgba(162,123,80,.08);
+}
+
+.modal {
+  position: relative;
+  border-color: rgba(255,255,255,.72);
+  box-shadow:
+    0 35px 110px rgba(25,20,15,.28),
+    0 0 0 1px rgba(185,154,120,.08);
+}
+
+.modal::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, #b99a78, #c7869d, #b99a78);
+  content: "";
+}
+
+.modalHeader h2 {
+  font-weight: 700;
+}
+
+.closeButton:hover {
+  border-color: #cdb9a1;
+  background: #faf5ef;
+  transform: rotate(90deg) scale(1.05);
+}
+
+.detailSection {
+  animation: detailReveal .55s ease both;
+}
+
+.detailSection:nth-of-type(2) { animation-delay: .05s; }
+.detailSection:nth-of-type(3) { animation-delay: .10s; }
+.detailSection:nth-of-type(4) { animation-delay: .15s; }
+
+.sectionNumber {
+  font-family: "Montserrat", sans-serif;
+  transition: transform .3s ease, background .3s ease;
+}
+
+.detailSection:hover .sectionNumber {
+  background: #e9dccf;
+  transform: rotate(-4deg) scale(1.06);
+}
+
+.detailProduct,
+.productTrackingCard {
+  transition:
+    transform .3s ease,
+    box-shadow .3s ease,
+    border-color .3s ease;
+}
+
+.detailProduct:hover,
+.productTrackingCard:hover {
+  border-color: #dfcdbb;
+  box-shadow: 0 10px 26px rgba(72,54,38,.06);
+  transform: translateY(-2px);
+}
+
+.detailImage {
+  padding: 5px;
+}
+
+.trackingSection {
+  background: linear-gradient(135deg, #fffdfa 0%, #fbf5ef 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+}
+
+.trackingStatus {
+  font-family: "Montserrat", sans-serif;
+}
+
+.trackingStep {
+  animation: timelineIn .5s cubic-bezier(.22,1,.36,1) both;
+}
+
+.trackingStep:nth-child(1) { animation-delay: .05s; }
+.trackingStep:nth-child(2) { animation-delay: .10s; }
+.trackingStep:nth-child(3) { animation-delay: .15s; }
+.trackingStep:nth-child(4) { animation-delay: .20s; }
+.trackingStep:nth-child(5) { animation-delay: .25s; }
+.trackingStep:nth-child(6) { animation-delay: .30s; }
+
+.trackingMarker {
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+
+.trackingStep:hover .trackingMarker {
+  transform: scale(1.08);
+}
+
+.activeStep .trackingMarker {
+  animation: markerPulse 2s ease-in-out infinite;
+}
+
+.currentTrackingLabel {
+  font-family: "Montserrat", sans-serif;
+  animation: labelIn .4s ease both;
+}
+
+.productTrackingCard:hover .productTrackingImage {
+  transform: scale(1.06);
+}
+
+.summaryRow {
+  transition: background .25s ease, padding-left .25s ease;
+}
+
+.summaryRow:hover {
+  background: #fdf9f5;
+  padding-left: 8px;
+  border-radius: 8px;
+}
+
+.grandTotal strong {
+  font-family: "Montserrat", sans-serif;
+  color: #967354;
+}
+
+@media (max-width: 800px) {
+  .heroSection {
+    padding-top: 40px;
+  }
+
+  .headingRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .refreshButton {
+    width: 100%;
+  }
+
+  .title {
+    font-size: clamp(34px, 10vw, 52px);
+  }
+
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .toolbarControls {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .searchWrapper,
+  .statusSelect {
+    width: 100%;
+  }
+
+  .orderTop,
+  .orderBottom {
+    padding: 19px;
+  }
+
+  .productPreview {
+    padding: 18px;
+  }
+
+  .productImage {
+    width: 64px;
+    height: 64px;
+    flex-basis: 64px;
+  }
+
+  .orderBottom {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cardActions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .cardActions > button {
+    flex: 1 1 auto;
+  }
+
+  .modalOverlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal {
+    width: 100%;
+    max-height: 94vh;
+    border-radius: 24px 24px 0 0;
+    animation: mobileModalIn .4s cubic-bezier(.22,1,.36,1) both;
+  }
+
+  .modalHeader,
+  .detailSection,
+  .modalActions {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .trackingSection {
+    margin: 0 18px;
+    padding: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: min(100% - 22px, 1180px);
+  }
+
+  .heroStats {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .statCard {
+    padding: 15px 17px;
+  }
+
+  .statCard strong {
+    font-size: 25px;
+  }
+
+  .orderTop {
+    gap: 12px;
+  }
+
+  .statusBadge {
+    font-size: 9px;
+    padding: 6px 9px;
+  }
+
+  .productRow {
+    align-items: flex-start;
+  }
+
+  .itemPrice {
+    font-size: 12px;
+  }
+
+  .productInfo h3 {
+    font-size: 12px;
+    white-space: normal;
+  }
+
+  .cardActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cardActions > button:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .modalHeader h2 {
+    font-size: 21px;
+  }
+
+  .trackingHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .productTrackingCard,
+  .detailProduct {
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* =========================================================
+   KEYFRAMES
+========================================================= */
+
+@keyframes heroContentIn {
+  from { opacity: 0; transform: translateY(25px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes titleAccentIn {
+  from { opacity: 0; transform: translateY(10px) rotate(-4deg); }
+  to { opacity: 1; transform: translateY(0) rotate(-1deg); }
+}
+
+@keyframes lineReveal {
+  from { opacity: 0; transform: scaleX(0); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes brushReveal {
+  from { opacity: 0; width: 0; }
+  to { opacity: 1; width: 120px; }
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: .75; }
+  50% { opacity: 1; }
+}
+
+@keyframes ambientFloat {
+  0%, 100% { transform: translate3d(0,0,0); }
+  50% { transform: translate3d(30px,20px,0); }
+}
+
+@keyframes ambientFloatReverse {
+  0%, 100% { transform: translate3d(0,0,0); }
+  50% { transform: translate3d(-25px,-18px,0); }
+}
+
+@keyframes cardFloat {
+  0%, 100% { box-shadow: 0 12px 28px rgba(73,53,35,.045); }
+  50% { box-shadow: 0 17px 35px rgba(73,53,35,.065); }
+}
+
+@keyframes messageIn {
+  from { opacity: 0; transform: translateY(-10px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes sectionReveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; }
+  50% { box-shadow: 0 0 0 4px rgba(162,123,80,.08); }
+}
+
+@keyframes markerPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(185,154,120,.16); }
+  50% { box-shadow: 0 0 0 7px rgba(185,154,120,.10); }
+}
+
+@keyframes emptyFloat {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-7px) rotate(-2deg); }
+}
+
+@keyframes detailReveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes timelineIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes labelIn {
+  from { opacity: 0; transform: scale(.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes mobileModalIn {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -1,9 +1,10 @@
 import {
-  Heart,
-  ShoppingBag,
-  Star,
+  CheckCircle,
+  ChevronRight,
   ChevronUp,
   LoaderCircle,
+  ShoppingBag,
+  Star,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
@@ -27,6 +28,12 @@ type Product = {
   active?: boolean;
   isBestseller?: boolean;
   stock?: number;
+
+  // Optional fields supported by the UI
+  tagline?: string;
+  promoBadge?: string;
+  availabilityBadge?: string;
+  isNew?: boolean;
 };
 
 type CartApiResponse = {
@@ -36,7 +43,8 @@ type CartApiResponse = {
 };
 
 const API_URL = String(
-  import.meta.env.VITE_API_URL || "https://jihaan-cosmetics.onrender.com/api",
+  import.meta.env.VITE_API_URL ||
+    "https://jihaan-cosmetics.onrender.com/api",
 ).replace(/\/+$/, "");
 
 const AUTH_TOKEN_KEY = "jihaan_auth_token";
@@ -87,36 +95,6 @@ const getSellingPrice = (product: Product): number => {
   return Number(product.price ?? oldPrice);
 };
 
-const getStockInfo = (
-  stockValue: number,
-): {
-  text: string;
-  className: string;
-  isOutOfStock: boolean;
-} => {
-  if (stockValue <= 0) {
-    return {
-      text: "Out of Stock",
-      className: styles.outOfStock,
-      isOutOfStock: true,
-    };
-  }
-
-  if (stockValue <= 5) {
-    return {
-      text: `Only ${stockValue} left`,
-      className: styles.lowStock,
-      isOutOfStock: false,
-    };
-  }
-
-  return {
-    text: `${stockValue} in stock`,
-    className: styles.inStock,
-    isOutOfStock: false,
-  };
-};
-
 function Bestsellers() {
   const navigate = useNavigate();
 
@@ -132,7 +110,9 @@ function Bestsellers() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(`${API_URL}/products/bestsellers`);
+        const response = await fetch(
+          `${API_URL}/products/bestsellers`,
+        );
 
         const result = await response.json().catch(() => ({}));
 
@@ -162,7 +142,9 @@ function Bestsellers() {
     [products, showAll],
   );
 
-  const handleAddToCart = async (product: Product): Promise<void> => {
+  const handleAddToCart = async (
+    product: Product,
+  ): Promise<void> => {
     const stock = Number(product.stock ?? 0);
 
     if (stock <= 0) {
@@ -231,14 +213,9 @@ function Bestsellers() {
   return (
     <section className={styles.section} id="bestsellers">
       <div className={styles.container}>
+        {/* ================= HEADER ================= */}
         <div className={styles.sectionHeader}>
-          <div className={styles.headingContent}>
-            <span className={styles.eyebrow}>
-              OUR COLLECTION
-            </span>
-
-            <h2 className={styles.title}>BESTSELLERS</h2>
-          </div>
+          <h2 className={styles.title}>BEST SELLER</h2>
 
           <button
             type="button"
@@ -248,18 +225,23 @@ function Bestsellers() {
           >
             {showAll ? (
               <>
-                Show Less <ChevronUp size={17} />
+                Show Less
+                <ChevronUp size={16} />
               </>
             ) : (
-              "View All Products"
+              <>
+                View All
+                <ChevronRight size={17} />
+              </>
             )}
           </button>
         </div>
 
+        {/* ================= STATES ================= */}
         {loading ? (
           <div className={styles.emptyState}>
-            <LoaderCircle className={styles.spin} />
-            Loading best sellers...
+            <LoaderCircle className={styles.spin} size={24} />
+            <span>Loading best sellers...</span>
           </div>
         ) : error ? (
           <div className={styles.emptyState}>{error}</div>
@@ -287,22 +269,71 @@ function Bestsellers() {
               );
 
               const rating = Number(product.rating || 0);
-
-              const stock = Math.max(
-                0,
-                Number(product.stock ?? 0),
-              );
-
-              const stockInfo = getStockInfo(stock);
+              const reviews = Number(product.reviews || 0);
+              const stock = Number(product.stock ?? 0);
 
               const isAdding =
                 addingProductId === product._id;
+
+              /*
+               * TOP LEFT LABEL
+               * Uses your actual product data where available.
+               */
+              const topLabel =
+                product.isNew || product.badge?.toLowerCase() === "new"
+                  ? "New"
+                  : product.badge || "BestSeller";
+
+              /*
+               * Optional tagline.
+               * Falls back to category instead of hardcoded
+               * product names/data.
+               */
+              const tagline =
+                product.tagline ||
+                product.category ||
+                "Beauty Essentials";
+
+              /*
+               * Back-in-stock badge.
+               * Can be controlled from backend later using
+               * availabilityBadge.
+               */
+              const showBackInStock =
+                product.availabilityBadge?.toLowerCase() ===
+                  "back in stock" ||
+                product.badge?.toLowerCase().includes("back in stock");
+
+              /*
+               * BUY4 can be changed later from backend using
+               * promoBadge.
+               */
+              const promoLabel = product.promoBadge || "BUY4";
 
               return (
                 <article
                   className={styles.productCard}
                   key={product._id}
                 >
+                  {/* ================= TOP RIBBON ================= */}
+                  <div className={styles.topRibbon}>
+                    <span
+                      className={`${styles.productType} ${
+                        topLabel.toLowerCase() === "new"
+                          ? styles.newRibbon
+                          : styles.bestRibbon
+                      }`}
+                    >
+                      {topLabel}
+                    </span>
+
+                    <span className={styles.promoRibbon}>
+                      <span className={styles.promoIcon}>%</span>
+                      {promoLabel}
+                    </span>
+                  </div>
+
+                  {/* ================= IMAGE ================= */}
                   <div
                     className={styles.imageWrapper}
                     onClick={() =>
@@ -316,7 +347,6 @@ function Bestsellers() {
                         event.key === " "
                       ) {
                         event.preventDefault();
-
                         navigate(
                           `/products/${product._id}`,
                         );
@@ -324,33 +354,11 @@ function Bestsellers() {
                     }}
                     aria-label={`View ${product.name}`}
                   >
-                    <div className={styles.badgeGroup}>
-                      {product.badge && (
-                        <span className={styles.badge}>
-                          {product.badge.toUpperCase()}
-                        </span>
-                      )}
-
-                      {discount > 0 && (
-                        <span className={styles.saveBadge}>
-                          SAVE {discount}%
-                        </span>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      className={styles.wishlistButton}
-                      onClick={(event) =>
-                        event.stopPropagation()
-                      }
-                      aria-label={`Add ${product.name} to wishlist`}
-                    >
-                      <Heart
-                        size={18}
-                        strokeWidth={1.8}
-                      />
-                    </button>
+                    {showBackInStock && (
+                      <span className={styles.stockBadge}>
+                        Back In Stock
+                      </span>
+                    )}
 
                     {image && (
                       <img
@@ -378,32 +386,18 @@ function Bestsellers() {
                       />
                     )}
 
-                    <span className={styles.demoText}>
-                      VIEW PRODUCT
-                    </span>
+                    {/* SHADES */}
+                
                   </div>
 
+                  {/* ================= PRODUCT INFO ================= */}
                   <div className={styles.productInfo}>
-                    {product.shades?.length ? (
-                      <div className={styles.shadeRow}>
-                        {product.shades
-                          .slice(0, 4)
-                          .map((shade, index) => (
-                            <span
-                              key={`${product._id}-shade-${index}`}
-                              className={styles.shadeCircle}
-                              style={{
-                                backgroundColor: shade,
-                              }}
-                            />
-                          ))}
+                    {/* TAGLINE */}
+                    <div className={styles.tagline}>
+                      <span>{tagline}</span>
+                    </div>
 
-                        <strong>
-                          +{product.shades.length} Shades
-                        </strong>
-                      </div>
-                    ) : null}
-
+                    {/* NAME */}
                     <button
                       type="button"
                       className={styles.productNameButton}
@@ -418,40 +412,34 @@ function Bestsellers() {
                       </h3>
                     </button>
 
-                    <p className={styles.category}>
-                      {product.category || "Beauty"}
-                    </p>
-
+                    {/* RATING */}
                     <div className={styles.ratingRow}>
-                      <div
-                        className={styles.ratingStars}
-                        aria-label={`${rating} out of 5 stars`}
-                      >
-                        {Array.from({ length: 5 }).map(
-                          (_, index) => (
-                            <Star
-                              key={index}
-                              size={15}
-                              fill={
-                                index < Math.round(rating)
-                                  ? "currentColor"
-                                  : "none"
-                              }
-                              strokeWidth={1.7}
-                            />
-                          ),
-                        )}
-                      </div>
+                      <span className={styles.ratingValue}>
+                        <Star
+                          size={15}
+                          fill="currentColor"
+                          strokeWidth={1.5}
+                        />
+                        {rating.toFixed(2)}
+                      </span>
 
-                      <span className={styles.reviews}>
-                        ({product.reviews || 0})
+                      <span className={styles.ratingDivider}>
+                        |
+                      </span>
+
+                      <span className={styles.verifiedReview}>
+                        <CheckCircle
+                          size={13}
+                          fill="currentColor"
+                          strokeWidth={2}
+                        />
+                        {reviews} Reviews
                       </span>
                     </div>
 
+                    {/* PRICE */}
                     <div className={styles.priceRow}>
-                      <strong
-                        className={styles.currentPrice}
-                      >
+                      <strong className={styles.currentPrice}>
                         {formatPrice(price)}
                       </strong>
 
@@ -463,24 +451,12 @@ function Bestsellers() {
 
                       {discount > 0 && (
                         <span className={styles.discount}>
-                          {discount}% Off
+                          {discount}% OFF
                         </span>
                       )}
                     </div>
 
-                    {/* STOCK STATUS */}
-                    <div
-                      className={`${styles.stockStatus} ${stockInfo.className}`}
-                      aria-label={`Stock status: ${stockInfo.text}`}
-                    >
-                      <span
-                        className={styles.stockDot}
-                        aria-hidden="true"
-                      />
-
-                      <span>{stockInfo.text}</span>
-                    </div>
-
+                    {/* ADD TO CART */}
                     <button
                       type="button"
                       className={styles.addToCart}
@@ -488,7 +464,7 @@ function Bestsellers() {
                         void handleAddToCart(product)
                       }
                       disabled={
-                        isAdding || stockInfo.isOutOfStock
+                        isAdding || stock <= 0
                       }
                     >
                       {isAdding ? (
@@ -499,16 +475,10 @@ function Bestsellers() {
                           />
                           ADDING...
                         </>
-                      ) : stockInfo.isOutOfStock ? (
+                      ) : stock <= 0 ? (
                         "OUT OF STOCK"
                       ) : (
-                        <>
-                          <ShoppingBag
-                            size={17}
-                            strokeWidth={1.8}
-                          />
-                          ADD TO CART
-                        </>
+                        "ADD TO CART"
                       )}
                     </button>
                   </div>

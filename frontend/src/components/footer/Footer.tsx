@@ -21,19 +21,19 @@ import styles from "./Footer.module.css";
 import jihaanLogo from "../../assets/images/jihaan-logo.jpeg";
 
 const shopLinks = [
-  { label: "Skincare", href: "#skincare" },
-  { label: "Makeup", href: "#makeup" },
-  { label: "Haircare", href: "#haircare" },
-  { label: "Fragrance", href: "#fragrance" },
-  { label: "Bath & Body", href: "#bath-body" },
+  { label: "Skincare", href: "/category/skin-care" },
+  { label: "Makeup", href: "/category/makeup" },
+  { label: "Haircare", href: "/category/hair-care" },
+  { label: "Fragrance", href: "/category/fragrance" },
+  { label: "Bath & Body", href: "/category/bath-body" },
 ];
 
 const quickLinks = [
-  { label: "About Us", href: "#about" },
-  { label: "Bestsellers", href: "#bestsellers" },
-  { label: "Our Brands", href: "#brands" },
-  { label: "New Arrivals", href: "#new-arrivals" },
-  { label: "Contact Us", href: "#contact" },
+  { label: "About Us", href: "/#about" },
+  { label: "Bestsellers", href: "/#bestsellers" },
+  { label: "Our Brands", href: "/#brands" },
+  { label: "New Arrivals", href: "/#new-arrivals" },
+  { label: "Contact Us", href: "/#contact" },
 ];
 
 function Footer() {
@@ -41,10 +41,11 @@ function Footer() {
 
   return (
     <footer className={styles.footer}>
+      <div className={styles.footerGlow} aria-hidden="true" />
+
       <div className={styles.footerTop}>
         <div className={styles.footerContainer}>
-
-          {/* ==================== BRAND COLUMN ==================== */}
+          {/* ==================== BRAND ==================== */}
           <div className={styles.brandColumn}>
             <Link
               to="/"
@@ -59,10 +60,14 @@ function Footer() {
 
               <span className={styles.logoText}>
                 <span className={styles.logoMain}>
-                  JINI COSMETICS
+                  JINI
                 </span>
 
                 <span className={styles.logoSub}>
+                  COSMETICS
+                </span>
+
+                <span className={styles.logoTagline}>
                   BEAUTY. CARE. CONFIDENCE.
                 </span>
               </span>
@@ -74,7 +79,6 @@ function Footer() {
               confidence.
             </p>
 
-            {/* Social Media */}
             <div className={styles.socials}>
               <a
                 href="https://www.facebook.com"
@@ -114,15 +118,18 @@ function Footer() {
             </div>
           </div>
 
-          {/* ==================== SHOP LINKS ==================== */}
+          {/* ==================== SHOP ==================== */}
           <div className={styles.linkColumn}>
             <h3>Shop</h3>
 
             {shopLinks.map((link) => (
-              <a href={link.href} key={link.label}>
-                {link.label}
+              <Link
+                to={link.href}
+                key={link.label}
+              >
+                <span>{link.label}</span>
                 <ArrowUpRight size={13} />
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -131,10 +138,13 @@ function Footer() {
             <h3>Quick Links</h3>
 
             {quickLinks.map((link) => (
-              <a href={link.href} key={link.label}>
-                {link.label}
+              <Link
+                to={link.href}
+                key={link.label}
+              >
+                <span>{link.label}</span>
                 <ArrowUpRight size={13} />
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -142,7 +152,6 @@ function Footer() {
           <div className={styles.partnerColumn}>
             <h3>Staff Login</h3>
 
-            {/* Admin Login */}
             <Link
               to="/admin/login"
               className={styles.partnerLink}
@@ -160,7 +169,6 @@ function Footer() {
               <ArrowUpRight size={14} />
             </Link>
 
-            {/* Accounts Login */}
             <Link
               to="/staff/login?role=accounts"
               className={styles.partnerLink}
@@ -178,7 +186,6 @@ function Footer() {
               <ArrowUpRight size={14} />
             </Link>
 
-            {/* Logistics Login */}
             <Link
               to="/staff/login?role=logistics"
               className={styles.partnerLink}
@@ -197,11 +204,10 @@ function Footer() {
             </Link>
           </div>
 
-          {/* ==================== CONTACT COLUMN ==================== */}
+          {/* ==================== CONTACT ==================== */}
           <div className={styles.contactColumn}>
             <h3>Get In Touch</h3>
 
-            {/* Email */}
             <a
               href="mailto:namaste@jinicosmetics.com"
               className={styles.contactItem}
@@ -213,7 +219,6 @@ function Footer() {
               <span>namaste@jinicosmetics.com</span>
             </a>
 
-            {/* Phone */}
             <a
               href="tel:+918884852372"
               className={styles.contactItem}
@@ -225,7 +230,6 @@ function Footer() {
               <span>+91 88848 52372</span>
             </a>
 
-            {/* Address */}
             <div className={styles.contactItem}>
               <span className={styles.contactIcon}>
                 <MapPin size={16} />
@@ -255,19 +259,10 @@ function Footer() {
           </p>
 
           <div className={styles.legalLinks}>
-            <a href="#privacy">
-              Privacy Policy
-            </a>
+            <Link to="/privacy">Privacy Policy</Link>
+            <Link to="/terms">Terms &amp; Conditions</Link>
+            <Link to="/shipping">Shipping Policy</Link>
 
-            <a href="#terms">
-              Terms &amp; Conditions
-            </a>
-
-            <a href="#shipping">
-              Shipping Policy
-            </a>
-
-            {/* Admin Login */}
             <Link
               to="/admin/login"
               className={styles.adminLoginLink}

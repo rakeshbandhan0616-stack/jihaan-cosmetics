@@ -148,11 +148,47 @@ const getToken = (): string => {
   }
 };
 
+const IMAGE_FALLBACK =
+  "data:image/svg+xml;charset=UTF-8," +
+  encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+      <rect width="600" height="600" fill="#f7f1eb"/>
+      <circle cx="300" cy="245" r="92" fill="#eadccf"/>
+      <path d="M190 430c22-78 72-118 110-118s88 40 110 118" fill="#d5bda8"/>
+      <text x="300" y="505" text-anchor="middle"
+        font-family="Arial,sans-serif" font-size="25" fill="#8e7763">JINI COSMETICS</text>
+    </svg>
+  `);
+
 const getImageUrl = (image?: string): string => {
-  if (!image) return "/images/product-placeholder.jpg";
-  if (image.startsWith("http://") || image.startsWith("https://")) return image;
-  if (image.startsWith("/")) return `${API_BASE_URL}${image}`;
-  return `${API_BASE_URL}/${image}`;
+  const value = String(image || "").trim();
+
+  if (!value) return IMAGE_FALLBACK;
+
+  if (/^(https?:)?\/\//i.test(value)) {
+    return value.startsWith("//") ? `https:${value}` : value;
+  }
+
+  if (/^(data:|blob:)/i.test(value)) return value;
+
+  const normalized = value.replaceAll("\\", "/");
+
+  if (normalized.startsWith("/images/")) {
+    return normalized;
+  }
+
+  return `${API_BASE_URL}/${normalized.replace(/^\/+/, "")}`;
+};
+
+const handleProductImageError = (
+  event: React.SyntheticEvent<HTMLImageElement>,
+): void => {
+  const image = event.currentTarget;
+
+  if (image.dataset.fallbackApplied === "true") return;
+
+  image.dataset.fallbackApplied = "true";
+  image.src = IMAGE_FALLBACK;
 };
 
 const formatCurrency = (amount?: number): string =>
@@ -585,9 +621,9 @@ function ProductTracking({ order }: { order: Order }) {
                 src={getImageUrl(item.image)}
                 alt={item.name || "Product"}
                 className={styles.productTrackingImage}
-                onError={(event) => {
-                  event.currentTarget.src = "/images/product-placeholder.jpg";
-                }}
+                loading="lazy"
+                decoding="async"
+                onError={handleProductImageError}
               />
               <div className={styles.productTrackingInfo}>
                 <h4>{item.name || "Product unavailable"}</h4>
@@ -664,6 +700,27 @@ export default function OrdersPage() {
   useEffect(() => {
     void fetchOrders();
   }, [fetchOrders]);
+
+  useEffect(() => {
+    if (!selectedOrder) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedOrder(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [selectedOrder]);
+
 
   const filteredOrders = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();

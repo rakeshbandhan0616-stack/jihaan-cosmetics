@@ -1,3 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=Montserrat:wght@500;600;700&display=swap");
+
+/* =========================================================
+   PROMO BANNER
+========================================================= */
+
 .section {
   width: 100%;
   padding: 58px 0 64px;
@@ -11,22 +17,35 @@
   margin: 0 auto;
 }
 
-/* Section heading */
+/* =========================================================
+   SECTION HEADING
+========================================================= */
+
 .sectionHeading {
   display: flex;
   flex-direction: column;
   align-items: center;
 
   padding: 0 24px 36px;
+
   text-align: center;
+
+  animation:
+    promoHeadingIn 0.7s
+    cubic-bezier(0.22, 1, 0.36, 1)
+    both;
 }
 
 .eyebrow {
   margin-bottom: 10px;
 
   color: #8a817b;
+
+  font-family: "Montserrat", sans-serif;
+
   font-size: 10px;
   font-weight: 700;
+
   letter-spacing: 0.2em;
   line-height: 1.2;
 }
@@ -35,78 +54,235 @@
   margin: 0;
 
   color: #171717;
+
+  font-family: "DM Sans", sans-serif;
+
   font-size: clamp(27px, 2.4vw, 38px);
   font-weight: 600;
+
   line-height: 1.15;
   letter-spacing: 0.02em;
+
   text-transform: uppercase;
 }
 
 .sectionHeading p {
   max-width: 520px;
+
   margin: 14px 0 0;
 
   color: #77716c;
+
+  font-family: "DM Sans", sans-serif;
+
   font-size: 14px;
   line-height: 1.6;
 }
 
-/* Banner grid */
+/* =========================================================
+   BANNER GRID
+========================================================= */
+
 .bannerGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
   gap: 24px;
 
   padding: 0 60px;
 }
 
-/* Individual banner */
+/* =========================================================
+   INDIVIDUAL BANNER
+========================================================= */
+
 .banner {
   position: relative;
+
   display: flex;
   align-items: stretch;
 
   min-width: 0;
   min-height: 350px;
+
   overflow: hidden;
 
-  border-radius: 4px;
+  border:
+    1px solid rgba(58, 45, 39, 0.055);
+
+  border-radius: 8px;
+
   background: #e9ded8;
+
   isolation: isolate;
+
+  box-shadow:
+    0 3px 10px rgba(48, 37, 31, 0.055),
+    0 12px 28px rgba(48, 37, 31, 0.035);
+
+  transform: translateZ(0);
+
+  transition:
+    transform 0.45s
+      cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.45s ease,
+    border-color 0.3s ease;
+
+  animation:
+    promoCardIn 0.7s
+    cubic-bezier(0.22, 1, 0.36, 1)
+    both;
 }
 
-/* Text content */
+.banner:nth-child(1) {
+  animation-delay: 0.08s;
+}
+
+.banner:nth-child(2) {
+  animation-delay: 0.17s;
+}
+
+.banner:nth-child(3) {
+  animation-delay: 0.26s;
+}
+
+.banner:hover {
+  transform: translateY(-6px);
+
+  border-color: rgba(58, 45, 39, 0.09);
+
+  box-shadow:
+    0 8px 18px rgba(48, 37, 31, 0.075),
+    0 22px 42px rgba(48, 37, 31, 0.09);
+}
+
+/* =========================================================
+   TEXT CONTENT
+========================================================= */
+
 .content {
   position: relative;
+
   z-index: 3;
 
   display: flex;
+
   flex: 1;
+
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
 
   width: 55%;
+
   padding: 34px 0 34px 32px;
 }
 
 .bannerNumber {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 52px;
+  min-height: 34px;
+
   margin-bottom: 20px;
 
-  color: rgba(55, 42, 35, 0.6);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  color: #5e514a;
+
+  transform: rotate(-2deg);
+}
+
+/*
+  Brush / handwritten badge.
+*/
+
+.badgeBrush {
+  position: relative;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 2px 13px 5px;
+
+  color: #3f332d;
+
+  font-family:
+    "Caveat",
+    "Brush Script MT",
+    "Segoe Print",
+    cursive;
+
+  font-size: 25px;
+  font-weight: 600;
+
+  line-height: 1;
+
+  letter-spacing: 0.02em;
+
+  transform: rotate(-2deg);
+
+  filter:
+    drop-shadow(
+      0 2px 2px rgba(0, 0, 0, 0.06)
+    );
+
+  transition:
+    transform 0.3s ease,
+    color 0.3s ease;
+}
+
+.badgeBrush::before {
+  position: absolute;
+
+  left: -5px;
+  right: -5px;
+  bottom: 1px;
+
+  z-index: -1;
+
+  height: 15px;
+
+  content: "";
+
+  border-radius: 50% 45% 55% 42%;
+
+  background: rgba(255, 255, 255, 0.48);
+
+  transform:
+    rotate(-1deg)
+    skewX(-12deg);
+}
+
+.banner:hover .badgeBrush {
+  color: #8d5c66;
+
+  transform:
+    rotate(-4deg)
+    translateY(-2px)
+    scale(1.05);
 }
 
 .content h3 {
   max-width: 240px;
+
   margin: 0;
 
   color: #342a25;
+
+  font-family: "DM Sans", sans-serif;
+
   font-size: clamp(22px, 2vw, 31px);
+
   font-weight: 500;
+
   line-height: 1.18;
+
   letter-spacing: -0.025em;
 }
 
@@ -116,52 +292,100 @@
 
 .content p {
   max-width: 210px;
+
   margin: 17px 0 25px;
 
   color: #76645b;
+
+  font-family: "DM Sans", sans-serif;
+
   font-size: 13px;
+
   line-height: 1.6;
 }
 
-/* Button */
+/* =========================================================
+   BUTTON
+========================================================= */
+
 .button {
   display: inline-flex;
+
   align-items: center;
   justify-content: center;
+
   gap: 10px;
 
   min-height: 42px;
+
   padding: 11px 16px;
 
   border: 1px solid #2f2722;
+
+  border-radius: 2px;
+
   background: #2f2722;
+
   color: #ffffff;
+
+  font-family: "DM Sans", sans-serif;
 
   font-size: 11px;
   font-weight: 700;
+
   letter-spacing: 0.04em;
+
   text-decoration: none;
 
+  overflow: hidden;
+
   transition:
-    background 0.25s ease,
-    color 0.25s ease,
-    transform 0.25s ease;
+    background 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s
+      cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease;
+}
+
+.button svg {
+  transition:
+    transform 0.3s
+      cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .button:hover {
   background: transparent;
+
   color: #2f2722;
-  transform: translateY(-2px);
+
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 6px 14px rgba(47, 39, 34, 0.1);
 }
 
-/* Image section */
+.button:hover svg {
+  transform: translateX(4px);
+}
+
+.button:active {
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   IMAGE
+========================================================= */
+
 .imageWrapper {
   position: absolute;
+
   inset: 0 0 0 auto;
 
-  width: 58%;
-  overflow: hidden;
   z-index: 1;
+
+  width: 58%;
+
+  overflow: hidden;
 }
 
 .image {
@@ -173,26 +397,44 @@
   object-fit: cover;
   object-position: center;
 
-  transition: transform 0.6s ease;
+  transform: scale(1.001);
+
+  transition:
+    transform 0.8s
+      cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.6s ease;
+}
+
+.banner:hover .image {
+  transform: scale(1.075);
+
+  filter: saturate(1.04);
 }
 
 .imageOverlay {
   position: absolute;
+
   inset: 0;
 
-  background: linear-gradient(
-    90deg,
-    rgba(233, 222, 216, 0.98) 0%,
-    rgba(233, 222, 216, 0.65) 12%,
-    rgba(233, 222, 216, 0) 48%
-  );
+  background:
+    linear-gradient(
+      90deg,
+      rgba(233, 222, 216, 0.98) 0%,
+      rgba(233, 222, 216, 0.65) 12%,
+      rgba(233, 222, 216, 0) 48%
+    );
+
+  transition: opacity 0.45s ease;
 }
 
-.banner:hover .image {
-  transform: scale(1.07);
+.banner:hover .imageOverlay {
+  opacity: 0.88;
 }
 
-/* Different soft color tones */
+/* =========================================================
+   SOFT COLOR TONES
+========================================================= */
+
 .banner:nth-child(1) {
   background: #e8d9d0;
 }
@@ -206,36 +448,43 @@
 }
 
 .banner:nth-child(1) .imageOverlay {
-  background: linear-gradient(
-    90deg,
-    rgba(232, 217, 208, 1) 0%,
-    rgba(232, 217, 208, 0.68) 18%,
-    rgba(232, 217, 208, 0) 55%
-  );
+  background:
+    linear-gradient(
+      90deg,
+      rgba(232, 217, 208, 1) 0%,
+      rgba(232, 217, 208, 0.68) 18%,
+      rgba(232, 217, 208, 0) 55%
+    );
 }
 
 .banner:nth-child(2) .imageOverlay {
-  background: linear-gradient(
-    90deg,
-    rgba(232, 216, 221, 1) 0%,
-    rgba(232, 216, 221, 0.68) 18%,
-    rgba(232, 216, 221, 0) 55%
-  );
+  background:
+    linear-gradient(
+      90deg,
+      rgba(232, 216, 221, 1) 0%,
+      rgba(232, 216, 221, 0.68) 18%,
+      rgba(232, 216, 221, 0) 55%
+    );
 }
 
 .banner:nth-child(3) .imageOverlay {
-  background: linear-gradient(
-    90deg,
-    rgba(220, 225, 216, 1) 0%,
-    rgba(220, 225, 216, 0.68) 18%,
-    rgba(220, 225, 216, 0) 55%
-  );
+  background:
+    linear-gradient(
+      90deg,
+      rgba(220, 225, 216, 1) 0%,
+      rgba(220, 225, 216, 0.68) 18%,
+      rgba(220, 225, 216, 0) 55%
+    );
 }
 
-/* Laptop */
+/* =========================================================
+   LAPTOP
+========================================================= */
+
 @media (max-width: 1200px) {
   .bannerGrid {
     gap: 18px;
+
     padding: 0 40px;
   }
 
@@ -245,6 +494,7 @@
 
   .content {
     width: 62%;
+
     padding-left: 25px;
   }
 
@@ -261,7 +511,10 @@
   }
 }
 
-/* Tablet */
+/* =========================================================
+   TABLET
+========================================================= */
+
 @media (max-width: 900px) {
   .section {
     padding: 42px 0 48px;
@@ -277,7 +530,9 @@
 
   .bannerGrid {
     grid-template-columns: 1fr;
+
     gap: 18px;
+
     padding: 0 24px;
   }
 
@@ -287,16 +542,19 @@
 
   .content {
     width: 54%;
+
     padding: 32px;
   }
 
   .content h3 {
     max-width: 300px;
+
     font-size: 30px;
   }
 
   .content p {
     max-width: 280px;
+
     font-size: 13px;
   }
 
@@ -305,7 +563,10 @@
   }
 }
 
-/* Mobile */
+/* =========================================================
+   MOBILE
+========================================================= */
+
 @media (max-width: 600px) {
   .section {
     padding: 34px 0 40px;
@@ -329,37 +590,51 @@
 
   .bannerGrid {
     gap: 16px;
+
     padding: 0 16px;
   }
 
   .banner {
     min-height: 285px;
+
+    border-radius: 7px;
   }
 
   .content {
     width: 67%;
+
     padding: 25px 18px;
   }
 
   .bannerNumber {
     margin-bottom: 15px;
+
     font-size: 9px;
+  }
+
+  .badgeBrush {
+    font-size: 21px;
   }
 
   .content h3 {
     max-width: 220px;
+
     font-size: 23px;
   }
 
   .content p {
     max-width: 180px;
+
     margin: 13px 0 20px;
+
     font-size: 11px;
   }
 
   .button {
     min-height: 38px;
+
     padding: 9px 12px;
+
     font-size: 10px;
   }
 
@@ -368,7 +643,10 @@
   }
 }
 
-/* Small mobile */
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
 @media (max-width: 400px) {
   .banner {
     min-height: 265px;
@@ -376,6 +654,7 @@
 
   .content {
     width: 70%;
+
     padding: 22px 15px;
   }
 
@@ -385,7 +664,12 @@
 
   .content p {
     max-width: 160px;
+
     font-size: 10px;
+  }
+
+  .badgeBrush {
+    font-size: 19px;
   }
 
   .imageWrapper {
@@ -393,16 +677,70 @@
   }
 }
 
-/* Accessibility */
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
 .button:focus-visible {
   outline: 3px solid #111111;
+
   outline-offset: 4px;
 }
 
-/* Reduced motion */
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes promoHeadingIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes promoCardIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(22px)
+      scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
 @media (prefers-reduced-motion: reduce) {
+  .sectionHeading,
+  .banner {
+    animation: none;
+  }
+
   .image,
-  .button {
+  .button,
+  .button svg,
+  .banner,
+  .badgeBrush,
+  .imageOverlay {
     transition: none;
   }
 }

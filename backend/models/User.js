@@ -8,6 +8,12 @@ const USER_ROLES = [
   "user",
 ];
 
+const AUTH_PROVIDERS = [
+  "local",
+  "google",
+  "facebook",
+];
+
 const userSchema = new mongoose.Schema(
   {
     /* =========================================================
@@ -36,9 +42,14 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        PHONE
-       
+
        Customer/user accounts require a phone number.
+
        Staff accounts can have a phone number optionally.
+
+       For social registration:
+       - phone is collected after Google/Facebook login
+       - phone verification is completed through OTP
     ========================================================= */
 
     phone: {
@@ -56,12 +67,78 @@ const userSchema = new mongoose.Schema(
     },
 
     /* =========================================================
+       AUTHENTICATION PROVIDER
+
+       local    → Normal email/phone + password registration
+       google   → Google authentication
+       facebook → Facebook authentication
+    ========================================================= */
+
+    authProvider: {
+      type: String,
+      enum: {
+        values: AUTH_PROVIDERS,
+        message:
+          "Invalid authentication provider. Allowed providers: local, google, facebook",
+      },
+      default: "local",
+      required: true,
+      lowercase: true,
+      trim: true,
+    },
+
+    /* =========================================================
+       GOOGLE ACCOUNT
+
+       Stores Google's stable user identifier.
+
+       This must NEVER contain the Google client secret.
+    ========================================================= */
+
+    googleId: {
+      type: String,
+      default: null,
+      unique: true,
+      sparse: true,
+      trim: true,
+      index: true,
+    },
+
+    /* =========================================================
+       FACEBOOK ACCOUNT
+
+       Stores Facebook's user identifier.
+
+       This must NEVER contain the Facebook app secret.
+    ========================================================= */
+
+    facebookId: {
+      type: String,
+      default: null,
+      unique: true,
+      sparse: true,
+      trim: true,
+      index: true,
+    },
+
+    /* =========================================================
        PASSWORD
+
+       Local users:
+       - Password required
+
+       Google/Facebook users:
+       - Password is not required
+
+       This allows social accounts to be created without
+       storing a local password.
     ========================================================= */
 
     password: {
       type: String,
-      required: [true, "Password is required"],
+      required: function () {
+        return this.authProvider === "local";
+      },
       minlength: [4, "Password must contain at least 4 characters"],
       select: false,
     },
@@ -117,9 +194,37 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        EMAIL VERIFICATION
+
+       For Google/Facebook:
+       Email can be considered verified only after the
+       backend verifies the provider response/token.
+
+       For local registration:
+       This remains false until your email verification
+       flow marks it true.
     ========================================================= */
 
     isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    /* =========================================================
+       PHONE VERIFICATION
+
+       Important for the new registration flow.
+
+       New Google/Facebook registration:
+
+       1. Login with Google/Facebook
+       2. Get email/name from provider
+       3. Ask for mobile number
+       4. Send OTP
+       5. Verify OTP
+       6. Create/activate customer account
+    ========================================================= */
+
+    isPhoneVerified: {
       type: Boolean,
       default: false,
     },
@@ -190,12 +295,132 @@ userSchema.methods.isLogistics = function () {
 };
 
 /* =========================================================
+   AUTHENTICATION HELPERS
+========================================================= */
+
+/**
+ * Check whether the account uses local authentication.
+ */
+userSchema.methods.isLocalAuth = function () {
+  return this.authProvider === "local";
+};
+
+/**
+ * Check whether the account uses Google authentication.
+ */
+userSchema.methods.isGoogleAuth = function () {
+  return this.authProvider === "google";
+};
+
+/**
+ * Check whether the account uses Facebook authentication.
+ */
+userSchema.methods.isFacebookAuth = function () {
+  return this.authProvider === "facebook";
+};
+
+/**
+ * Check whether the account uses social authentication.
+ */
+userSchema.methods.isSocialAuth = function () {
+  return ["google", "facebook"].includes(this.authProvider);
+};
+
+/**
+ * Check whether the customer has completed phone verification.
+ */
+userSchema.methods.isPhoneVerifiedAccount = function () {
+  return this.isPhoneVerified === true;
+};
+
+/**
+ * Check whether the account has completed the required
+ * verification for its authentication provider.
+ */
+userSchema.methods.isVerifiedAccount = function () {
+  if (this.authProvider === "google") {
+    return this.isEmailVerified === true && this.isPhoneVerified === true;
+  }
+
+  if (this.authProvider === "facebook") {
+    return this.isPhoneVerified === true;
+  }
+
+  return this.isEmailVerified === true;
+};
+
+/* =========================================================
+   VALIDATION HELPERS
+========================================================= */
+
+/**
+ * Make sure Google accounts have a Google ID.
+ */
+userSchema.pre("validate", function (next) {
+  if (this.authProvider === "google" && !this.googleId) {
+    return next(
+      new Error("Google ID is required for Google authentication"),
+    );
+  }
+
+  if (this.authProvider === "facebook" && !this.facebookId) {
+    return next(
+      new Error("Facebook ID is required for Facebook authentication"),
+    );
+  }
+
+  if (this.authProvider === "local") {
+    if (this.googleId) {
+      this.googleId = null;
+    }
+
+    if (this.facebookId) {
+      this.facebookId = null;
+    }
+  }
+
+  next();
+});
+
+/* =========================================================
    INDEXES
 
-   Do not manually add email/phone indexes here.
+   email:
+   - unique
 
-   unique: true and sparse: true above already create
-   the required indexes.
+   phone:
+   - unique + sparse
+   - staff users may not have phone
+
+   googleId:
+   - unique + sparse
+   - only Google accounts contain this field
+
+   facebookId:
+   - unique + sparse
+   - only Facebook accounts contain this field
+========================================================= */
+
+userSchema.index(
+  { googleId: 1 },
+  {
+    unique: true,
+    sparse: true,
+    name: "unique_google_id",
+  },
+);
+
+userSchema.index(
+  { facebookId: 1 },
+  {
+    unique: true,
+    sparse: true,
+    name: "unique_facebook_id",
+  },
+);
+
+/* =========================================================
+   MODEL
 ========================================================= */
 
 const User =

@@ -1,74 +1,288 @@
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=DM+Sans:wght@400;500;600;700&family=Montserrat:wght@500;600;700&display=swap");
+
+/* =========================================
+   SECTION
+========================================= */
+
 .section {
+  position: relative;
   width: 100%;
-  background: #ffffff;
-  border-top: 1px solid #ece9e6;
-  border-bottom: 1px solid #ece9e6;
+  overflow: hidden;
+
+  background: #fff;
+
+  border-top: 1px solid #eee9e5;
+  border-bottom: 1px solid #eee9e5;
+
+  font-family: "DM Sans", sans-serif;
 }
 
+/* Very subtle luxury background */
+
+.section::before {
+  position: absolute;
+  top: -100px;
+  left: 12%;
+
+  width: 260px;
+  height: 260px;
+
+  border-radius: 50%;
+
+  background: rgba(236, 207, 213, 0.13);
+
+  filter: blur(70px);
+
+  pointer-events: none;
+
+  content: "";
+}
+
+.section::after {
+  position: absolute;
+  right: 8%;
+  bottom: -120px;
+
+  width: 280px;
+  height: 280px;
+
+  border-radius: 50%;
+
+  background: rgba(241, 226, 210, 0.12);
+
+  filter: blur(80px);
+
+  pointer-events: none;
+
+  content: "";
+}
+
+/* =========================================
+   CONTAINER
+========================================= */
+
 .container {
+  position: relative;
+  z-index: 1;
+
   width: 100%;
   max-width: 1600px;
+
   margin: 0 auto;
+
   padding: 0 36px;
 }
 
+/* =========================================
+   SMALL INTRO
+========================================= */
+
+.sectionIntro {
+  display: none;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  padding-top: 14px;
+}
+
+.introAccent {
+  color: #8b7770;
+
+  font-family: "Caveat", cursive;
+
+  font-size: 17px;
+  font-weight: 600;
+
+  letter-spacing: 0.02em;
+}
+
+.introLine {
+  width: 28px;
+  height: 1px;
+
+  background: #d8cdc7;
+}
+
+/* =========================================
+   FEATURE GRID
+========================================= */
+
 .featureGrid {
   display: grid;
+
   grid-template-columns: repeat(6, minmax(0, 1fr));
+
   align-items: stretch;
 }
 
+/* =========================================
+   FEATURE CARD
+========================================= */
+
 .feature {
+  --feature-delay: 0ms;
+
   position: relative;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
+
   gap: 13px;
 
   min-width: 0;
   min-height: 112px;
+
   padding: 20px 18px;
 
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.88);
+
+  isolation: isolate;
+
+  animation: featureReveal 0.65s cubic-bezier(0.22, 1, 0.36, 1)
+    var(--feature-delay) both;
+
+  transition:
+    background 0.35s ease,
+    transform 0.35s ease;
 }
+
+/* Vertical separator */
 
 .feature:not(:last-child)::after {
   position: absolute;
+
   top: 25%;
   right: 0;
 
   width: 1px;
   height: 50%;
 
-  background: #e8e4e0;
+  background: #e9e3de;
+
   content: "";
+
+  transition:
+    background 0.35s ease,
+    height 0.35s ease;
 }
 
+/* =========================================
+   CARD HOVER
+========================================= */
+
+.feature:hover {
+  background: #fdfaf8;
+
+  transform: translateY(-2px);
+}
+
+.feature:hover::after {
+  background: #d9ccc5;
+
+  height: 60%;
+}
+
+/* =========================================
+   ICON
+========================================= */
+
 .iconWrapper {
+  position: relative;
+
   display: grid;
+
   flex: 0 0 48px;
+
   place-items: center;
 
   width: 48px;
   height: 48px;
 
-  border: 1px solid #ded7d0;
+  border: 1px solid #ded6d0;
+
   border-radius: 50%;
 
-  background: #faf8f6;
+  background: linear-gradient(
+    145deg,
+    #fff,
+    #faf7f5
+  );
+
   color: #302923;
 
+  overflow: hidden;
+
   transition:
-    background 0.25s ease,
-    color 0.25s ease,
-    border-color 0.25s ease,
-    transform 0.25s ease;
+    background 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease;
 }
 
 .icon {
+  position: relative;
+  z-index: 2;
+
   display: block;
+
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+.iconGlow {
+  position: absolute;
+
+  inset: 0;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.8),
+    rgba(221, 194, 198, 0.35)
+  );
+
+  opacity: 0;
+
+  transform: scale(0.5);
+
+  transition:
+    opacity 0.35s ease,
+    transform 0.4s ease;
+}
+
+.feature:hover .iconWrapper {
+  border-color: #302923;
+
+  background: #302923;
+
+  color: #fff;
+
+  transform: translateY(-4px) rotate(-3deg);
+
+  box-shadow:
+    0 10px 22px rgba(48, 41, 35, 0.12);
+}
+
+.feature:hover .icon {
+  transform: scale(1.08) rotate(3deg);
+}
+
+.feature:hover .iconGlow {
+  opacity: 1;
+
+  transform: scale(1);
+}
+
+/* =========================================
+   CONTENT
+========================================= */
 
 .content {
   min-width: 0;
@@ -78,31 +292,56 @@
   margin: 0;
 
   color: #211c18;
-  font-size: 12px;
+
+  font-family: "Montserrat", sans-serif;
+
+  font-size: 11px;
   font-weight: 700;
+
   line-height: 1.4;
-  letter-spacing: 0.025em;
+
+  letter-spacing: 0.055em;
+
   text-transform: uppercase;
+
+  white-space: nowrap;
+
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease;
 }
 
 .content p {
-  margin: 6px 0 0;
+  margin: 5px 0 0;
 
-  color: #847b74;
+  color: #877c75;
+
+  font-family: "DM Sans", sans-serif;
+
   font-size: 11px;
   font-weight: 400;
-  line-height: 1.5;
+
+  line-height: 1.45;
+
+  white-space: nowrap;
+
+  transition: color 0.3s ease;
 }
 
-/* Hover effect */
-.feature:hover .iconWrapper {
-  border-color: #302923;
-  background: #302923;
-  color: #ffffff;
-  transform: translateY(-2px);
+.feature:hover .content h3 {
+  color: #8b666c;
+
+  transform: translateX(2px);
 }
 
-/* Large desktop */
+.feature:hover .content p {
+  color: #655b55;
+}
+
+/* =========================================
+   LARGE DESKTOP
+========================================= */
+
 @media (max-width: 1350px) {
   .container {
     padding: 0 22px;
@@ -110,13 +349,15 @@
 
   .feature {
     gap: 10px;
+
     padding: 18px 12px;
   }
 
   .iconWrapper {
-    flex-basis: 42px;
-    width: 42px;
-    height: 42px;
+    flex-basis: 43px;
+
+    width: 43px;
+    height: 43px;
   }
 
   .content h3 {
@@ -128,7 +369,10 @@
   }
 }
 
-/* Tablet */
+/* =========================================
+   TABLET
+========================================= */
+
 @media (max-width: 1050px) {
   .featureGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -136,8 +380,10 @@
 
   .feature {
     justify-content: flex-start;
-    min-height: 100px;
-    padding: 20px 24px;
+
+    min-height: 98px;
+
+    padding: 18px 22px;
   }
 
   .feature:nth-child(3)::after,
@@ -146,31 +392,57 @@
   }
 
   .feature:nth-child(-n + 3) {
-    border-bottom: 1px solid #e8e4e0;
+    border-bottom: 1px solid #e8e2de;
+  }
+
+  .iconWrapper {
+    flex-basis: 44px;
+
+    width: 44px;
+    height: 44px;
   }
 
   .content h3 {
-    font-size: 11px;
+    font-size: 10.5px;
   }
 
   .content p {
-    font-size: 11px;
+    font-size: 10.5px;
   }
 }
 
-/* Mobile */
+/* =========================================
+   MOBILE
+========================================= */
+
 @media (max-width: 600px) {
+  .section {
+    border-top: 1px solid #eee8e4;
+  }
+
   .container {
     padding: 0;
   }
 
+  .sectionIntro {
+    display: flex;
+  }
+
   .featureGrid {
     display: flex;
+
     width: 100%;
+
     overflow-x: auto;
+    overflow-y: hidden;
+
+    padding: 4px 0 5px;
 
     scrollbar-width: none;
+
     scroll-snap-type: x mandatory;
+
+    -webkit-overflow-scrolling: touch;
   }
 
   .featureGrid::-webkit-scrollbar {
@@ -178,12 +450,21 @@
   }
 
   .feature {
-    flex: 0 0 82%;
+    flex: 0 0 78%;
+
     justify-content: flex-start;
-    min-height: 100px;
-    padding: 20px 24px;
+
+    min-height: 92px;
+
+    padding: 16px 20px;
 
     scroll-snap-align: start;
+
+    scroll-snap-stop: always;
+  }
+
+  .feature:hover {
+    transform: none;
   }
 
   .feature:not(:last-child)::after {
@@ -191,49 +472,145 @@
   }
 
   .feature:not(:last-child) {
-    border-right: 1px solid #e8e4e0;
+    border-right: 1px solid #e8e2de;
   }
 
   .iconWrapper {
-    flex-basis: 44px;
-    width: 44px;
-    height: 44px;
+    flex: 0 0 42px;
+
+    width: 42px;
+    height: 42px;
   }
 
   .content h3 {
-    font-size: 11px;
+    font-size: 10px;
+
+    letter-spacing: 0.045em;
   }
 
   .content p {
-    font-size: 11px;
+    margin-top: 4px;
+
+    font-size: 10px;
+  }
+
+  .feature:hover .iconWrapper {
+    transform: none;
+
+    box-shadow: none;
+  }
+
+  .feature:hover .icon {
+    transform: none;
   }
 }
 
-/* Small mobile */
-@media (max-width: 400px) {
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 430px) {
+  .introAccent {
+    font-size: 16px;
+  }
+
+  .feature {
+    flex-basis: 84%;
+
+    min-height: 88px;
+
+    padding: 14px 18px;
+  }
+
+  .iconWrapper {
+    flex-basis: 40px;
+
+    width: 40px;
+    height: 40px;
+  }
+
+  .icon {
+    width: 19px;
+    height: 19px;
+  }
+
+  .content h3 {
+    font-size: 9.5px;
+  }
+
+  .content p {
+    font-size: 9.5px;
+  }
+}
+
+/* =========================================
+   VERY SMALL MOBILE
+========================================= */
+
+@media (max-width: 360px) {
   .feature {
     flex-basis: 88%;
-    padding: 18px 20px;
+
+    padding: 13px 16px;
+  }
+
+  .iconWrapper {
+    flex-basis: 38px;
+
+    width: 38px;
+    height: 38px;
   }
 
   .content h3 {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .content p {
-    font-size: 10px;
+    font-size: 9px;
   }
 }
 
-/* Accessibility */
+/* =========================================
+   ENTRANCE ANIMATION
+========================================= */
+
+@keyframes featureReveal {
+  from {
+    opacity: 0;
+
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+}
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+
 .feature:focus-within .iconWrapper {
   outline: 2px solid #302923;
   outline-offset: 4px;
 }
 
-/* Reduced motion */
+/* =========================================
+   REDUCED MOTION
+========================================= */
+
 @media (prefers-reduced-motion: reduce) {
-  .iconWrapper {
+  .feature {
+    animation: none;
+  }
+
+  .iconWrapper,
+  .icon,
+  .iconGlow,
+  .content h3,
+  .content p {
     transition: none;
   }
 

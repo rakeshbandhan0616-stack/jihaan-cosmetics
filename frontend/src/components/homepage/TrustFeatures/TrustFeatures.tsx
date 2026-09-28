@@ -55,19 +55,34 @@ function TrustFeatures() {
       aria-label="Shopping benefits and services"
     >
       <div className={styles.container}>
+        <div className={styles.sectionIntro}>
+          <span className={styles.introAccent}>Why shop with us</span>
+          <span className={styles.introLine} />
+        </div>
+
         <div className={styles.featureGrid}>
-          {features.map((feature) => {
+          {features.map((feature, index) => {
             const Icon = feature.icon;
 
             return (
-              <div className={styles.feature} key={feature.title}>
+              <div
+                className={styles.feature}
+                key={feature.title}
+                style={
+                  {
+                    "--feature-delay": `${index * 80}ms`,
+                  } as React.CSSProperties
+                }
+              >
                 <div className={styles.iconWrapper}>
                   <Icon
                     className={styles.icon}
-                    size={25}
-                    strokeWidth={1.5}
+                    size={22}
+                    strokeWidth={1.6}
                     aria-hidden="true"
                   />
+
+                  <span className={styles.iconGlow} />
                 </div>
 
                 <div className={styles.content}>

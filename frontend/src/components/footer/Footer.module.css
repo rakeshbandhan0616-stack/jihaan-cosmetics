@@ -1,131 +1,360 @@
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap");
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
 .footer {
+  position: relative;
+
   width: 100%;
-  background: #171515;
-  color: #ffffff;
+
   margin-top: 80px;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 15% 0%,
+      rgba(164, 116, 127, 0.13),
+      transparent 32%
+    ),
+    #171515;
+
+  color: #ffffff;
+
+  isolation: isolate;
 }
 
+.footerGlow {
+  position: absolute;
+
+  top: -180px;
+  right: -120px;
+
+  width: 420px;
+  height: 420px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(255, 210, 220, 0.08),
+      transparent 68%
+    );
+
+  pointer-events: none;
+
+  animation: footerGlowFloat 8s ease-in-out infinite;
+}
+
+/* =========================================================
+   TOP
+========================================================= */
+
 .footerTop {
+  position: relative;
+  z-index: 1;
+
   padding: 72px 24px 64px;
 }
 
 .footerContainer {
   width: min(1240px, 100%);
+
   margin: 0 auto;
+
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 1.35fr;
+
+  grid-template-columns:
+    1.5fr 1fr 1fr 1fr 1.35fr;
+
   gap: 34px;
 }
 
-/* Brand */
+/* =========================================================
+   BRAND
+========================================================= */
 
 .brandColumn {
   max-width: 360px;
+
+  animation:
+    footerColumnIn 0.7s
+    cubic-bezier(0.22, 1, 0.36, 1)
+    both;
 }
 
 .logo {
   display: inline-flex;
+
   align-items: center;
+
   gap: 12px;
+
   color: #ffffff;
+
   text-decoration: none;
+
+  transition:
+    transform 0.35s
+    cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.logo:hover {
+  transform: translateY(-2px);
 }
 
 .logoImage {
+  display: block;
+
   width: 58px;
   height: 58px;
+
   object-fit: contain;
-  display: block;
+
+  border-radius: 50%;
+
+  box-shadow:
+    0 5px 18px rgba(0, 0, 0, 0.2);
+
+  transition:
+    transform 0.45s
+      cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.logo:hover .logoImage {
+  transform:
+    rotate(-4deg)
+    scale(1.05);
 }
 
 .logoText {
   display: flex;
+
   flex-direction: column;
-  gap: 5px;
+
+  gap: 1px;
 }
 
 .logoMain {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: 1.4px;
-  line-height: 1.1;
+  position: relative;
+
+  display: inline-block;
+
+  color: #ffffff;
+
+  font-family:
+    "Caveat",
+    "Brush Script MT",
+    "Segoe Print",
+    cursive;
+
+  font-size: 30px;
+
+  font-weight: 700;
+
+  line-height: 0.9;
+
+  letter-spacing: 0.03em;
+
+  transform: rotate(-2deg);
+}
+
+.logoMain::after {
+  position: absolute;
+
+  left: 2px;
+  right: -7px;
+  bottom: -5px;
+
+  height: 5px;
+
+  content: "";
+
+  border-radius:
+    50% 30% 50% 20%;
+
+  background:
+    rgba(213, 163, 175, 0.75);
+
+  transform:
+    rotate(-2deg)
+    skewX(-18deg);
+
+  opacity: 0.8;
 }
 
 .logoSub {
-  color: #d7c6ca;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 2.2px;
+  color: #e4d4d8;
+
+  font-family: "Montserrat", sans-serif;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  letter-spacing: 2.7px;
+
+  line-height: 1.3;
+}
+
+.logoTagline {
+  margin-top: 2px;
+
+  color: #a99b9e;
+
+  font-family: "DM Sans", sans-serif;
+
+  font-size: 7px;
+
+  font-weight: 500;
+
+  letter-spacing: 1.35px;
+
   line-height: 1.4;
 }
 
 .brandDescription {
   max-width: 340px;
+
   margin: 26px 0 28px;
+
   color: #c2b9bb;
+
+  font-family: "DM Sans", sans-serif;
+
   font-size: 14px;
+
   line-height: 1.9;
 }
 
-/* Social Links */
+/* =========================================================
+   SOCIALS
+========================================================= */
 
 .socials {
   display: flex;
+
   align-items: center;
+
   gap: 10px;
 }
 
 .socials a {
-  width: 36px;
-  height: 36px;
   display: inline-flex;
+
   align-items: center;
   justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
   border: 1px solid #4a4143;
+
   border-radius: 50%;
+
   color: #ffffff;
+
   text-decoration: none;
+
   transition:
-    background 0.25s ease,
-    border-color 0.25s ease,
-    color 0.25s ease,
-    transform 0.25s ease;
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s
+      cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease;
 }
 
 .socials a:hover {
   background: #ffffff;
+
   border-color: #ffffff;
+
   color: #171515;
-  transform: translateY(-3px);
+
+  transform:
+    translateY(-4px)
+    scale(1.04);
+
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.18);
 }
 
-/* Link Columns */
+/* =========================================================
+   COLUMNS
+========================================================= */
+
+.linkColumn,
+.partnerColumn,
+.contactColumn {
+  animation:
+    footerColumnIn 0.7s
+    cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+}
+
+.linkColumn:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.linkColumn:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.partnerColumn {
+  animation-delay: 0.24s;
+}
+
+.contactColumn {
+  animation-delay: 0.32s;
+}
 
 .linkColumn h3,
 .contactColumn h3,
 .partnerColumn h3 {
   margin: 4px 0 25px;
+
   color: #ffffff;
-  font-size: 15px;
+
+  font-family: "Montserrat", sans-serif;
+
+  font-size: 14px;
+
   font-weight: 700;
-  letter-spacing: 0.3px;
+
+  letter-spacing: 0.4px;
 }
 
 .linkColumn {
   display: flex;
+
   flex-direction: column;
+
   align-items: flex-start;
 }
 
 .linkColumn a {
   display: inline-flex;
+
   align-items: center;
+
   gap: 5px;
+
   margin-bottom: 15px;
+
   color: #c2b9bb;
+
+  font-family: "DM Sans", sans-serif;
+
   font-size: 14px;
+
   line-height: 1.5;
+
   text-decoration: none;
+
   transition:
     color 0.25s ease,
     transform 0.25s ease;
@@ -133,7 +362,10 @@
 
 .linkColumn a svg {
   opacity: 0;
-  transform: translate(-3px, 3px);
+
+  transform:
+    translate(-3px, 3px);
+
   transition:
     opacity 0.25s ease,
     transform 0.25s ease;
@@ -141,30 +373,45 @@
 
 .linkColumn a:hover {
   color: #ffffff;
-  transform: translateX(3px);
+
+  transform:
+    translateX(4px);
 }
 
 .linkColumn a:hover svg {
   opacity: 1;
-  transform: translate(0, 0);
+
+  transform:
+    translate(0, 0);
 }
 
-/* Partner Links */
+/* =========================================================
+   STAFF LINKS
+========================================================= */
 
 .partnerColumn {
   display: flex;
+
   flex-direction: column;
+
   align-items: flex-start;
 }
 
 .partnerLink {
   width: 100%;
+
   display: flex;
+
   align-items: center;
+
   gap: 11px;
+
   margin-bottom: 16px;
+
   color: #c2b9bb;
+
   text-decoration: none;
+
   transition:
     color 0.25s ease,
     transform 0.25s ease;
@@ -172,44 +419,82 @@
 
 .partnerLink:hover {
   color: #ffffff;
-  transform: translateX(3px);
+
+  transform:
+    translateX(4px);
 }
 
 .partnerIcon {
   width: 32px;
   height: 32px;
+
   flex: 0 0 32px;
+
   display: inline-flex;
+
   align-items: center;
   justify-content: center;
+
   border: 1px solid #4a4143;
+
   border-radius: 50%;
+
   color: #ffffff;
+
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.partnerLink:hover .partnerIcon {
+  background: rgba(255, 255, 255, 0.08);
+
+  border-color: #8d7279;
+
+  transform:
+    scale(1.06)
+    rotate(-4deg);
 }
 
 .partnerLinkContent {
   display: flex;
+
   flex-direction: column;
+
   gap: 3px;
 }
 
 .partnerLinkContent strong {
   color: inherit;
+
+  font-family: "DM Sans", sans-serif;
+
   font-size: 13px;
+
   font-weight: 600;
+
   line-height: 1.4;
 }
 
 .partnerLinkContent small {
   color: #9f9497;
+
+  font-family: "DM Sans", sans-serif;
+
   font-size: 11px;
+
   line-height: 1.4;
 }
 
 .partnerLink > svg {
   margin-left: auto;
+
   opacity: 0;
-  transform: translate(-3px, 3px);
+
+  transform:
+    translate(-3px, 3px);
+
   transition:
     opacity 0.25s ease,
     transform 0.25s ease;
@@ -217,117 +502,218 @@
 
 .partnerLink:hover > svg {
   opacity: 1;
-  transform: translate(0, 0);
+
+  transform:
+    translate(0, 0);
 }
 
-/* Contact */
+/* =========================================================
+   CONTACT
+========================================================= */
 
 .contactColumn {
   display: flex;
+
   flex-direction: column;
+
   align-items: flex-start;
 }
 
 .contactItem {
   display: flex;
+
   align-items: flex-start;
+
   gap: 12px;
+
   margin-bottom: 18px;
+
   color: #c2b9bb;
+
+  font-family: "DM Sans", sans-serif;
+
   font-size: 14px;
+
   line-height: 1.6;
+
   text-decoration: none;
-  transition: color 0.25s ease;
-}
 
-a.contactItem:hover {
-  color: #ffffff;
-}
-
-.contactIcon {
-  width: 30px;
-  height: 30px;
-  flex: 0 0 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  border: 1px solid #4a4143;
-  border-radius: 50%;
-}
-
-/* Admin Login */
-
-.adminLoginLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-  color: #c2b9bb;
-  font-size: 13px;
-  text-decoration: none;
   transition:
     color 0.25s ease,
     transform 0.25s ease;
 }
 
-.adminLoginLink:hover {
-  color: #b58b5a;
-  transform: translateX(3px);
+a.contactItem:hover {
+  color: #ffffff;
+
+  transform:
+    translateX(3px);
 }
 
-/* Bottom Bar */
+.contactIcon {
+  width: 30px;
+  height: 30px;
+
+  flex: 0 0 30px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+
+  border: 1px solid #4a4143;
+
+  border-radius: 50%;
+
+  transition:
+    transform 0.3s ease,
+    background 0.3s ease;
+}
+
+.contactItem:hover .contactIcon {
+  background: rgba(255, 255, 255, 0.07);
+
+  transform:
+    scale(1.05)
+    rotate(-3deg);
+}
+
+/* =========================================================
+   BOTTOM BAR
+========================================================= */
 
 .footerBottom {
+  position: relative;
+
+  z-index: 1;
+
   border-top: 1px solid #383133;
+
   padding: 23px 24px;
+
+  background:
+    rgba(0, 0, 0, 0.08);
 }
 
 .footerBottomInner {
   width: min(1240px, 100%);
+
   margin: 0 auto;
+
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
+
   gap: 24px;
 }
 
 .footerBottom p {
   margin: 0;
+
   color: #a99ea1;
+
+  font-family: "DM Sans", sans-serif;
+
   font-size: 12px;
+
   line-height: 1.6;
 }
 
 .legalLinks {
   display: flex;
+
   align-items: center;
+
   justify-content: flex-end;
+
   flex-wrap: wrap;
+
   gap: 22px;
 }
 
 .legalLinks a {
   color: #a99ea1;
+
+  font-family: "DM Sans", sans-serif;
+
   font-size: 12px;
+
   text-decoration: none;
-  transition: color 0.25s ease;
+
+  transition:
+    color 0.25s ease,
+    transform 0.25s ease;
 }
 
 .legalLinks a:hover {
   color: #ffffff;
+
+  transform:
+    translateY(-1px);
 }
 
-/* Tablet */
+.adminLoginLink {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 6px;
+}
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes footerColumnIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes footerGlowFloat {
+  0%,
+  100% {
+    transform:
+      translate3d(0, 0, 0)
+      scale(1);
+  }
+
+  50% {
+    transform:
+      translate3d(-20px, 18px, 0)
+      scale(1.06);
+  }
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
 
 @media (max-width: 1200px) {
   .footerContainer {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+
     gap: 42px 32px;
   }
 
   .brandColumn {
     max-width: 100%;
+
     grid-column: 1 / -1;
   }
 
@@ -338,7 +724,9 @@ a.contactItem:hover {
 
 @media (max-width: 900px) {
   .footerContainer {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
     gap: 38px 28px;
   }
 
@@ -351,7 +739,9 @@ a.contactItem:hover {
   }
 }
 
-/* Mobile */
+/* =========================================================
+   MOBILE
+========================================================= */
 
 @media (max-width: 700px) {
   .footer {
@@ -364,6 +754,7 @@ a.contactItem:hover {
 
   .footerContainer {
     grid-template-columns: 1fr 1fr;
+
     gap: 38px 24px;
   }
 
@@ -378,17 +769,24 @@ a.contactItem:hover {
   }
 
   .logoMain {
-    font-size: 16px;
+    font-size: 27px;
   }
 
   .logoSub {
-    font-size: 8px;
-    letter-spacing: 1.7px;
+    font-size: 9px;
+
+    letter-spacing: 2.1px;
+  }
+
+  .logoTagline {
+    font-size: 6.5px;
   }
 
   .brandDescription {
     margin: 22px 0 24px;
+
     font-size: 13px;
+
     line-height: 1.8;
   }
 
@@ -396,6 +794,7 @@ a.contactItem:hover {
   .contactColumn h3,
   .partnerColumn h3 {
     margin-bottom: 19px;
+
     font-size: 14px;
   }
 
@@ -422,21 +821,27 @@ a.contactItem:hover {
 
   .footerBottomInner {
     flex-direction: column;
+
     align-items: flex-start;
+
     gap: 14px;
   }
 
   .legalLinks {
     justify-content: flex-start;
+
     gap: 12px 18px;
   }
 }
 
-/* Small Mobile */
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
 
 @media (max-width: 420px) {
   .footerContainer {
     grid-template-columns: 1fr;
+
     gap: 30px;
   }
 
@@ -455,18 +860,42 @@ a.contactItem:hover {
   .legalLinks a {
     font-size: 11px;
   }
+
+  .logoMain {
+    font-size: 25px;
+  }
+
+  .logoSub {
+    font-size: 8px;
+
+    letter-spacing: 1.8px;
+  }
 }
 
-/* Reduced Motion */
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
+  .footerGlow,
+  .brandColumn,
+  .linkColumn,
+  .partnerColumn,
+  .contactColumn {
+    animation: none;
+  }
+
   .socials a,
+  .logo,
+  .logoImage,
   .linkColumn a,
   .linkColumn a svg,
   .partnerLink,
   .partnerLink > svg,
-  .legalLinks a,
-  .adminLoginLink {
+  .partnerIcon,
+  .contactItem,
+  .contactIcon,
+  .legalLinks a {
     transition: none;
   }
 }

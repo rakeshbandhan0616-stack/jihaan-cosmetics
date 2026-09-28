@@ -6,6 +6,8 @@ import {
 } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import MainHeader from "../../components/header/MainHeader/MainHeader";
+import Footer from "../../components/footer/Footer";
 import "./Checkout.css";
 
 type Product = {
@@ -180,25 +182,60 @@ const getProductSize = (item: CartItem): string => {
   return item.size || "Standard";
 };
 
+const IMAGE_FALLBACK =
+  "data:image/svg+xml;charset=UTF-8," +
+  encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="600" height="700" viewBox="0 0 600 700">
+      <rect width="600" height="700" fill="#f7f0ea"/>
+      <circle cx="300" cy="275" r="95" fill="#eadbd0"/>
+      <rect x="215" y="365" width="170" height="175" rx="28" fill="#e1c9ba"/>
+      <text x="300" y="610" text-anchor="middle" font-family="Arial" font-size="28" fill="#765b4b">JINI COSMETICS</text>
+    </svg>
+  `);
+
 const getProductImage = (item: CartItem): string => {
   const product = getProductObject(item);
 
-  const image =
-    item.image ||
-    product.image ||
-    product.thumbnail ||
-    product.images?.[0] ||
-    "/placeholder-product.png";
+  const candidates = [
+    item.image,
+    product.image,
+    product.thumbnail,
+    ...(Array.isArray(product.images) ? product.images : []),
+  ].filter((value): value is string => Boolean(value?.trim()));
+
+  const image = candidates[0]?.trim();
+
+  if (!image) return IMAGE_FALLBACK;
 
   if (
     image.startsWith("http://") ||
     image.startsWith("https://") ||
-    image.startsWith("/")
+    image.startsWith("//") ||
+    image.startsWith("data:") ||
+    image.startsWith("blob:")
   ) {
-    return image;
+    return image.startsWith("//") ? `https:${image}` : image;
   }
 
-  return `/${image}`;
+  // Files in Vite public/images must stay on the frontend domain.
+  if (image.startsWith("/images/")) return image;
+
+  // Backend uploads such as /uploads/products/abc.jpg.
+  const backendBase = API_BASE_URL.replace(/\/api$/i, "");
+  if (image.startsWith("/")) return `${backendBase}${image}`;
+
+  return `${backendBase}/${image.replace(/^\/+/, "")}`;
+};
+
+const handleProductImageError = (
+  event: React.SyntheticEvent<HTMLImageElement>,
+) => {
+  const image = event.currentTarget;
+
+  if (image.dataset.fallbackApplied === "true") return;
+
+  image.dataset.fallbackApplied = "true";
+  image.src = IMAGE_FALLBACK;
 };
 
 const Checkout = () => {
@@ -548,18 +585,24 @@ const Checkout = () => {
 
   if (loading) {
     return (
-      <main className="checkout-page">
-        <div className="checkout-status">
-          Loading your checkout...
-        </div>
-      </main>
+      <>
+        <MainHeader />
+        <main className="checkout-page">
+          <div className="checkout-status">
+            Loading your checkout...
+          </div>
+        </main>
+        <Footer />
+      </>
     );
   }
 
   if (!cartItems.length) {
     return (
-      <main className="checkout-page">
-        <div className="checkout-empty">
+      <>
+        <MainHeader />
+        <main className="checkout-page">
+          <div className="checkout-empty">
           <h2>Your cart is empty</h2>
 
           <p>
@@ -573,12 +616,16 @@ const Checkout = () => {
             Go to Cart
           </button>
         </div>
-      </main>
+        </main>
+        <Footer />
+      </>
     );
   }
 
   return (
-    <main className="checkout-page">
+    <>
+      <MainHeader />
+      <main className="checkout-page">
       <div className="checkout-container">
         <div className="checkout-heading">
           <span>Jini Cosmetics</span>
@@ -847,10 +894,10 @@ const Checkout = () => {
                     <img
                       src={image}
                       alt={name}
-                      onError={(event) => {
-                        event.currentTarget.src =
-                          "/placeholder-product.png";
-                      }}
+                      className="summary-product-image"
+                      loading="lazy"
+                      decoding="async"
+                      onError={handleProductImageError}
                     />
 
                     <div className="summary-product-info">
@@ -967,6 +1014,8 @@ const Checkout = () => {
         </div>
       )}
     </main>
+    <Footer />
+    </>
   );
 };
 

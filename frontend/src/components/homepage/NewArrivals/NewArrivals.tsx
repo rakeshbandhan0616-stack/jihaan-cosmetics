@@ -1,37 +1,52 @@
 import {
+  CheckCircle,
+  ChevronRight,
   ChevronUp,
-  Heart,
-  ShoppingBag,
-  Star,
   LoaderCircle,
+  Star,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
+
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-
 import "swiper/css";
+
 import styles from "./NewArrivals.module.css";
 
 type Product = {
   _id?: string;
   id?: string;
+
   name: string;
   brand?: string;
   category?: string;
+
   price?: number;
   oldPrice?: number;
+
   discountType?: "none" | "flat" | "percentage" | string;
   discountValue?: number;
+
   rating?: number;
   reviews?: number;
+
   images?: string[];
   hoverImage?: string;
+
   badge?: string;
-  shades?: string[];
+
   active?: boolean;
   isNewArrival?: boolean;
+
   stock?: number;
+
+  /*
+   * Optional tagline.
+   * If your backend doesn't provide this,
+   * category will be used automatically.
+   */
+  tagline?: string;
 };
 
 type ProductsResponse = {
@@ -49,10 +64,15 @@ type CartApiResponse = {
 };
 
 const API_URL = String(
-  import.meta.env.VITE_API_URL || "https://jihaan-cosmetics.onrender.com/api",
+  import.meta.env.VITE_API_URL ||
+    "https://jihaan-cosmetics.onrender.com/api",
 ).replace(/\/+$/, "");
 
 const AUTH_TOKEN_KEY = "jihaan_auth_token";
+
+/* =========================================================
+   HELPERS
+========================================================= */
 
 const getToken = (): string => {
   if (typeof window === "undefined") {
@@ -107,57 +127,38 @@ const getSellingPrice = (product: Product): number => {
   return Number(product.price ?? oldPrice);
 };
 
-const getDiscountLabel = (product: Product): string => {
+const getDiscount = (product: Product): number => {
   const oldPrice = Number(product.oldPrice || 0);
   const price = getSellingPrice(product);
 
   if (!oldPrice || price >= oldPrice) {
-    return "";
+    return 0;
   }
 
-  return `${Math.round(
+  return Math.round(
     ((oldPrice - price) / oldPrice) * 100,
-  )}% Off`;
+  );
 };
 
-const getStockInfo = (
-  stockValue: number,
-): {
-  text: string;
-  className: string;
-  isOutOfStock: boolean;
-} => {
-  if (stockValue <= 0) {
-    return {
-      text: "Out of Stock",
-      className: styles.outOfStock,
-      isOutOfStock: true,
-    };
-  }
-
-  if (stockValue <= 5) {
-    return {
-      text: `Only ${stockValue} left`,
-      className: styles.lowStock,
-      isOutOfStock: false,
-    };
-  }
-
-  return {
-    text: `${stockValue} in stock`,
-    className: styles.inStock,
-    isOutOfStock: false,
-  };
-};
+/* =========================================================
+   COMPONENT
+========================================================= */
 
 function NewArrivals() {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [showAll, setShowAll] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [addingProductId, setAddingProductId] = useState("");
+
+  const [addingProductId, setAddingProductId] =
+    useState("");
+
+  /* =======================================================
+     LOAD NEW ARRIVALS
+  ======================================================= */
 
   useEffect(() => {
     const loadProducts = async (): Promise<void> => {
@@ -216,11 +217,19 @@ function NewArrivals() {
     void loadProducts();
   }, []);
 
+  /* =======================================================
+     VISIBLE PRODUCTS
+  ======================================================= */
+
   const visibleProducts = useMemo(() => {
     return showAll
       ? products
-      : products.slice(0, 5);
+      : products.slice(0, 4);
   }, [products, showAll]);
+
+  /* =======================================================
+     PRODUCT NAVIGATION
+  ======================================================= */
 
   const handleProductNavigation = (
     product: Product,
@@ -237,8 +246,14 @@ function NewArrivals() {
       return;
     }
 
-    navigate(`/products/${encodeURIComponent(productId)}`);
+    navigate(
+      `/products/${encodeURIComponent(productId)}`,
+    );
   };
+
+  /* =======================================================
+     ADD TO CART
+  ======================================================= */
 
   const handleAddToCart = async (
     product: Product,
@@ -281,12 +296,15 @@ function NewArrivals() {
         `${API_URL}/cart/items`,
         {
           method: "POST",
+
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+
           credentials: "include",
+
           body: JSON.stringify({
             productId,
             quantity: 1,
@@ -306,7 +324,9 @@ function NewArrivals() {
         );
       }
 
-      alert(`${product.name} added to cart.`);
+      alert(
+        `${product.name} added to cart.`,
+      );
 
       window.dispatchEvent(
         new Event("cartUpdated"),
@@ -327,6 +347,10 @@ function NewArrivals() {
     }
   };
 
+  /* =======================================================
+     PRODUCT CARD
+  ======================================================= */
+
   const renderProductCard = (
     product: Product,
   ) => {
@@ -337,6 +361,8 @@ function NewArrivals() {
     const oldPrice = Number(
       product.oldPrice || 0,
     );
+
+    const discount = getDiscount(product);
 
     const image = getImageUrl(
       product.images?.[0],
@@ -351,23 +377,54 @@ function NewArrivals() {
       product.rating || 0,
     );
 
+    const reviews = Number(
+      product.reviews || 0,
+    );
+
     const stock = Math.max(
       0,
       Number(product.stock ?? 0),
     );
 
-    const stockInfo =
-      getStockInfo(stock);
-
     const isAdding =
       addingProductId === productId;
+
+    /*
+     * Dynamic feature/tagline.
+     *
+     * Backend tagline is used when available.
+     * Otherwise category is displayed.
+     */
+    const tagline =
+      product.tagline ||
+      product.category ||
+      "New Collection";
 
     return (
       <article
         className={styles.productCard}
-        key={productId || product.name}
+        key={
+          productId ||
+          product.name
+        }
       >
-        {/* PRODUCT IMAGE */}
+        {/* =================================================
+            TOP NEW RIBBON
+        ================================================= */}
+
+        <div className={styles.topRibbon}>
+          <span className={styles.newRibbon}>
+            New
+          </span>
+
+          {/* Intentionally no BUY4 / BUY3 badge */}
+          <span className={styles.emptyRibbon} />
+        </div>
+
+        {/* =================================================
+            PRODUCT IMAGE
+        ================================================= */}
+
         <div
           className={styles.imageWrapper}
           onClick={() =>
@@ -389,28 +446,8 @@ function NewArrivals() {
           }}
           aria-label={`View ${product.name}`}
         >
-          <span className={styles.newBadge}>
-            NEW IN
-          </span>
-
-          {/* WISHLIST */}
-          <button
-            type="button"
-            className={
-              styles.wishlistButton
-            }
-            onClick={(event) => {
-              event.stopPropagation();
-            }}
-            aria-label={`Add ${product.name} to wishlist`}
-          >
-            <Heart
-              size={21}
-              strokeWidth={1.8}
-            />
-          </button>
-
           {/* PRIMARY IMAGE */}
+
           {image && (
             <img
               src={image}
@@ -425,6 +462,7 @@ function NewArrivals() {
           )}
 
           {/* HOVER IMAGE */}
+
           {hoverImage && (
             <img
               src={hoverImage}
@@ -437,19 +475,21 @@ function NewArrivals() {
               }}
             />
           )}
-
-          <span className={styles.demoText}>
-            VIEW PRODUCT
-          </span>
         </div>
 
-        {/* PRODUCT INFO */}
+        {/* =================================================
+            PRODUCT INFORMATION
+        ================================================= */}
+
         <div className={styles.productInfo}>
-          <span className={styles.category}>
-            {product.category || "Beauty"}
-          </span>
+          {/* YELLOW FEATURE STRIP */}
+
+          <div className={styles.tagline}>
+            <span>{tagline}</span>
+          </div>
 
           {/* PRODUCT NAME */}
+
           <button
             type="button"
             className={
@@ -470,209 +510,135 @@ function NewArrivals() {
             </h3>
           </button>
 
-          {/* BRAND */}
-          {product.brand && (
-            <p className={styles.brand}>
-              {product.brand}
-            </p>
-          )}
+          {/* RATING */}
 
-          {/* META */}
-          <div className={styles.metaRow}>
-            {/* SHADES */}
-            <div className={styles.shades}>
-              {(product.shades || [])
-                .slice(0, 4)
-                .map(
-                  (
-                    shade,
-                    index,
-                  ) => (
-                    <span
-                      key={`${productId}-shade-${index}`}
-                      className={
-                        styles.shade
-                      }
-                      style={{
-                        backgroundColor:
-                          shade,
-                      }}
-                    />
-                  ),
-                )}
-            </div>
-
-            {/* RATING */}
-            <div
-              className={styles.rating}
-              aria-label={`${rating} out of 5 stars`}
-            >
-              <Star
-                size={16}
-                fill="currentColor"
-              />
-
-              <span>
-                {rating.toFixed(1)}
-              </span>
-
-              <span>
-                (
-                {product.reviews ||
-                  0}
-                )
-              </span>
-            </div>
-          </div>
-
-          {/* PRICE */}
-          <div className={styles.priceRow}>
-            {oldPrice > price && (
-              <del>
-                {formatPrice(
-                  oldPrice,
-                )}
-              </del>
-            )}
-
-            <strong>
-              {formatPrice(price)}
-            </strong>
-
-            {getDiscountLabel(
-              product,
-            ) && (
-              <span>
-                {getDiscountLabel(
-                  product,
-                )}
-              </span>
-            )}
-          </div>
-
-          {/* STOCK INFORMATION */}
-          <div
-            className={`${styles.stockStatus} ${stockInfo.className}`}
-            aria-label={`Stock status: ${stockInfo.text}`}
-          >
+          <div className={styles.ratingRow}>
             <span
               className={
-                styles.stockDot
+                styles.ratingValue
               }
-              aria-hidden="true"
-            />
+            >
+              <Star
+                size={15}
+                fill="currentColor"
+                strokeWidth={1.5}
+              />
 
-            <span>
-              {stockInfo.text}
+              {rating.toFixed(2)}
+            </span>
+
+            <span
+              className={
+                styles.ratingDivider
+              }
+            >
+              |
+            </span>
+
+            <span
+              className={
+                styles.verifiedReview
+              }
+            >
+              <CheckCircle
+                size={13}
+                fill="currentColor"
+                strokeWidth={2}
+              />
+
+              {reviews} Reviews
             </span>
           </div>
 
-          {/* ACTION BUTTONS */}
-          <div className={styles.actionRow}>
-            {/* VIEW DETAILS */}
-            <button
-              type="button"
-              className={
-                styles.selectButton
-              }
-              onClick={() =>
-                handleProductNavigation(
-                  product,
-                )
-              }
-            >
-              VIEW DETAILS
-            </button>
+          {/* PRICE */}
 
-            {/* ADD TO CART */}
-            <button
-              type="button"
+          <div className={styles.priceRow}>
+            <strong
               className={
-                styles.cartButton
-              }
-              onClick={() =>
-                void handleAddToCart(
-                  product,
-                )
-              }
-              disabled={
-                isAdding ||
-                stockInfo.isOutOfStock
-              }
-              aria-label={
-                stockInfo.isOutOfStock
-                  ? `${product.name} is out of stock`
-                  : `Add ${product.name} to cart`
+                styles.currentPrice
               }
             >
-              {isAdding ? (
+              {formatPrice(price)}
+            </strong>
+
+            {oldPrice > price && (
+              <del
+                className={
+                  styles.oldPrice
+                }
+              >
+                {formatPrice(oldPrice)}
+              </del>
+            )}
+
+            {discount > 0 && (
+              <span
+                className={
+                  styles.discount
+                }
+              >
+                {discount}% Off
+              </span>
+            )}
+          </div>
+
+          {/* ADD TO CART */}
+
+          <button
+            type="button"
+            className={
+              styles.addToCart
+            }
+            onClick={() =>
+              void handleAddToCart(
+                product,
+              )
+            }
+            disabled={
+              isAdding || stock <= 0
+            }
+          >
+            {isAdding ? (
+              <>
                 <LoaderCircle
-                  size={17}
+                  size={16}
                   className={
                     styles.spin
                   }
                 />
-              ) : stockInfo.isOutOfStock ? (
-                "OUT"
-              ) : (
-                <ShoppingBag
-                  size={17}
-                />
-              )}
-            </button>
-          </div>
+
+                ADDING...
+              </>
+            ) : stock <= 0 ? (
+              "OUT OF STOCK"
+            ) : (
+              "ADD TO CART"
+            )}
+          </button>
         </div>
       </article>
     );
   };
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
 
   return (
     <section
       className={styles.section}
       id="new-arrivals"
     >
-      {/* HERO BANNER */}
-      <div className={styles.heroBanner}>
+      <div className={styles.container}>
+        {/* =================================================
+            SECTION HEADER
+        ================================================= */}
+
         <div
           className={
-            styles.bannerContent
+            styles.sectionHeader
           }
         >
-          <span>
-            NEW COLLECTION
-          </span>
-
-          <h2>
-            Do your makeup.
-            <br />
-            <strong>
-              Your way.
-            </strong>
-          </h2>
-
-          <p>
-            Discover playful colors
-            and effortless beauty
-            essentials.
-          </p>
-        </div>
-      </div>
-
-      {/* SECTION HEADER */}
-      <div
-        className={
-          styles.sectionHeader
-        }
-      >
-        <div>
-          <span
-            className={
-              styles.eyebrow
-            }
-          >
-            FRESHLY LAUNCHED
-          </span>
-
           <h2
             className={
               styles.sectionTitle
@@ -680,145 +646,167 @@ function NewArrivals() {
           >
             NEW ARRIVALS
           </h2>
-        </div>
 
-        <button
-          type="button"
-          className={
-            styles.viewAllButton
-          }
-          onClick={() =>
-            setShowAll(
-              (value) => !value,
-            )
-          }
-          aria-expanded={showAll}
-        >
-          {showAll ? (
-            <>
-              Show Less{" "}
-              <ChevronUp
-                size={17}
-              />
-            </>
-          ) : (
-            "View All Products"
-          )}
-        </button>
-      </div>
-
-      {/* CONTENT */}
-      {loading ? (
-        <div
-          className={
-            styles.emptyState
-          }
-        >
-          <LoaderCircle
+          <button
+            type="button"
             className={
-              styles.spin
+              styles.viewAllButton
             }
-          />
+            onClick={() =>
+              setShowAll(
+                (value) => !value,
+              )
+            }
+            aria-expanded={showAll}
+          >
+            {showAll ? (
+              <>
+                Show Less
+                <ChevronUp
+                  size={16}
+                />
+              </>
+            ) : (
+              <>
+                View All
+                <ChevronRight
+                  size={17}
+                />
+              </>
+            )}
+          </button>
+        </div>
 
-          Loading new arrivals...
-        </div>
-      ) : error ? (
-        <div
-          className={
-            styles.emptyState
-          }
-        >
-          {error}
-        </div>
-      ) : products.length === 0 ? (
-        <div
-          className={
-            styles.emptyState
-          }
-        >
-          No new arrivals available.
-        </div>
-      ) : !showAll ? (
-        <div
-          className={
-            styles.productsWrapper
-          }
-        >
-          <Swiper
-            modules={[Autoplay]}
+        {/* =================================================
+            LOADING
+        ================================================= */}
+
+        {loading ? (
+          <div
             className={
-              styles.productSwiper
+              styles.emptyState
             }
-            spaceBetween={24}
-            slidesPerView={4.5}
-            loop={
-              visibleProducts.length >
-              4
+          >
+            <LoaderCircle
+              className={
+                styles.spin
+              }
+              size={23}
+            />
+
+            <span>
+              Loading new arrivals...
+            </span>
+          </div>
+        ) : error ? (
+          <div
+            className={
+              styles.emptyState
             }
-            speed={850}
-            autoplay={{
-              delay: 2800,
-              disableOnInteraction:
-                false,
-              pauseOnMouseEnter:
-                true,
-            }}
-            breakpoints={{
-              0: {
-                slidesPerView: 1.15,
-                spaceBetween: 14,
-              },
+          >
+            {error}
+          </div>
+        ) : products.length === 0 ? (
+          <div
+            className={
+              styles.emptyState
+            }
+          >
+            No new arrivals available.
+          </div>
+        ) : !showAll ? (
+          /* =================================================
+             MOBILE + DESKTOP SWIPER
+          ================================================= */
 
-              480: {
-                slidesPerView: 1.7,
-                spaceBetween: 16,
-              },
+          <div
+            className={
+              styles.productsWrapper
+            }
+          >
+            <Swiper
+              modules={[Autoplay]}
+              className={
+                styles.productSwiper
+              }
+              spaceBetween={24}
+              slidesPerView={4}
+              loop={
+                visibleProducts.length >
+                4
+              }
+              speed={750}
+              autoplay={{
+                delay: 3200,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+              }}
+              breakpoints={{
+                0: {
+                  slidesPerView: 1.45,
+                  spaceBetween: 12,
+                },
 
-              700: {
-                slidesPerView: 2.3,
-                spaceBetween: 18,
-              },
+                420: {
+                  slidesPerView: 1.7,
+                  spaceBetween: 13,
+                },
 
-              1000: {
-                slidesPerView: 3.2,
-                spaceBetween: 20,
-              },
+                600: {
+                  slidesPerView: 2.1,
+                  spaceBetween: 15,
+                },
 
-              1350: {
-                slidesPerView: 4.5,
-                spaceBetween: 24,
-              },
-            }}
+                768: {
+                  slidesPerView: 2.5,
+                  spaceBetween: 18,
+                },
+
+                1000: {
+                  slidesPerView: 3,
+                  spaceBetween: 20,
+                },
+
+                1250: {
+                  slidesPerView: 4,
+                  spaceBetween: 24,
+                },
+              }}
+            >
+              {visibleProducts.map(
+                (product) => (
+                  <SwiperSlide
+                    key={
+                      getProductId(
+                        product,
+                      ) ||
+                      product.name
+                    }
+                  >
+                    {renderProductCard(
+                      product,
+                    )}
+                  </SwiperSlide>
+                ),
+              )}
+            </Swiper>
+          </div>
+        ) : (
+          /* =================================================
+             VIEW ALL GRID
+          ================================================= */
+
+          <div
+            className={
+              styles.allProductsGrid
+            }
           >
             {visibleProducts.map(
-              (product) => (
-                <SwiperSlide
-                  key={
-                    getProductId(
-                      product,
-                    ) ||
-                    product.name
-                  }
-                >
-                  {renderProductCard(
-                    product,
-                  )}
-                </SwiperSlide>
-              ),
+              renderProductCard,
             )}
-          </Swiper>
-        </div>
-      ) : (
-        <div
-          className={
-            styles.allProductsGrid
-          }
-        >
-          {visibleProducts.map(
-            renderProductCard,
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
