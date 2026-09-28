@@ -15,6 +15,14 @@ import {
   completeSocialRegistration,
 
   /* =========================================================
+     PASSWORD RESET
+  ========================================================= */
+
+  forgotPassword,
+  verifyForgotPasswordOtp,
+  resetPassword,
+
+  /* =========================================================
      SESSION / PROFILE
   ========================================================= */
 
@@ -138,6 +146,8 @@ router.post(
         ↓
    Ask mobile number
         ↓
+   WhatsApp OTP
+        ↓
    OTP verification
         ↓
    Complete registration
@@ -178,6 +188,8 @@ router.post(
         ↓
    Ask mobile number
         ↓
+   WhatsApp OTP
+        ↓
    OTP verification
         ↓
    Complete registration
@@ -196,7 +208,8 @@ router.post(
 
    Public route.
 
-   This is used after Google/Facebook authentication.
+   Used after successful Google/Facebook
+   authentication for a new customer.
 
    Body:
 
@@ -213,16 +226,22 @@ router.post(
         ↓
    Mobile number
         ↓
-   Send OTP
+   Generate OTP
+        ↓
+   Send OTP through WhatsApp
         ↓
    Verify OTP
         ↓
    Create account
 
-   IMPORTANT:
+   Security:
 
-   The controller currently requires an actual OTP
-   provider integration before it will send/accept OTP.
+   - OTP is generated on backend
+   - OTP is hashed before storage
+   - OTP expires after 5 minutes
+   - Maximum 5 verification attempts
+   - Resend cooldown is applied
+   - OTP is never returned to frontend
 ========================================================= */
 
 router.post(
@@ -252,7 +271,7 @@ router.post(
         ↓
    Phone number submitted
         ↓
-   OTP verified
+   WhatsApp OTP verified
         ↓
    Create customer
         ↓
@@ -262,13 +281,144 @@ router.post(
 
    IMPORTANT:
 
-   The controller intentionally does not accept a fake
-   or frontend-generated OTP.
+   The controller does NOT trust any frontend
+   "verified" flag.
+
+   The OTP must match the backend-generated
+   and stored OTP hash.
 ========================================================= */
 
 router.post(
   "/social/complete",
   completeSocialRegistration,
+);
+
+/* =========================================================
+   FORGOT PASSWORD - SEND OTP
+=========================================================
+
+   POST /api/auth/forgot-password
+
+   Public route.
+
+   Customer can provide:
+
+   - Email
+   OR
+   - Mobile number
+
+   Example:
+
+   {
+     "identifier": "customer@example.com"
+   }
+
+   OR:
+
+   {
+     "identifier": "9876543210"
+   }
+
+   Flow:
+
+   Email / Mobile
+        ↓
+   Find customer account
+        ↓
+   Get registered mobile number
+        ↓
+   Generate OTP
+        ↓
+   Send OTP through WhatsApp
+        ↓
+   Verify OTP
+        ↓
+   Reset password
+
+   SECURITY:
+
+   The response is intentionally generic so that
+   the API does not reveal whether an email or
+   mobile number belongs to an account.
+========================================================= */
+
+router.post(
+  "/forgot-password",
+  forgotPassword,
+);
+
+/* =========================================================
+   FORGOT PASSWORD - VERIFY OTP
+=========================================================
+
+   POST /api/auth/forgot-password/verify-otp
+
+   Public route.
+
+   Body:
+
+   {
+     "identifier": "customer@example.com",
+     "otp": "123456"
+   }
+
+   OR:
+
+   {
+     "identifier": "9876543210",
+     "otp": "123456"
+   }
+
+   Successful verification returns a short-lived
+   password reset token.
+
+   The reset token is NOT the normal login JWT.
+========================================================= */
+
+router.post(
+  "/forgot-password/verify-otp",
+  verifyForgotPasswordOtp,
+);
+
+/* =========================================================
+   RESET PASSWORD
+=========================================================
+
+   POST /api/auth/reset-password
+
+   Public route.
+
+   Body:
+
+   {
+     "resetToken": "...",
+     "newPassword": "newpassword",
+     "confirmPassword": "newpassword"
+   }
+
+   Flow:
+
+   Verified OTP
+        ↓
+   Short-lived resetToken
+        ↓
+   New password
+        ↓
+   Hash password
+        ↓
+   Save password
+        ↓
+   Password reset successful
+
+   IMPORTANT:
+
+   The reset token is short-lived and can only be
+   used for the password reset flow.
+========================================================= */
+
+router.post(
+  "/reset-password",
+  resetPassword,
 );
 
 /* =========================================================

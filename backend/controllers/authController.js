@@ -1,5 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import mongoose from "mongoose";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/User.js";
 
@@ -30,6 +32,24 @@ const googleClient = new OAuth2Client(
 );
 
 /* =========================================================
+   OTP CONFIGURATION
+========================================================= */
+
+const OTP_LENGTH = 6;
+const OTP_EXPIRY_MINUTES = 5;
+const OTP_EXPIRY_MS =
+  OTP_EXPIRY_MINUTES * 60 * 1000;
+
+const OTP_MAX_ATTEMPTS = 5;
+
+const OTP_RESEND_COOLDOWN_SECONDS = 60;
+
+const RESET_TOKEN_EXPIRY = "10m";
+
+const OTP_COLLECTION_NAME =
+  "otpverifications";
+
+/* =========================================================
    CREATE JWT TOKEN
 ========================================================= */
 
@@ -58,10 +78,13 @@ const createToken = (user) => {
 
    This token is NOT the final login token.
 
-   It is used only between:
+   Flow:
+
    Social login
        ↓
    Mobile number
+       ↓
+   WhatsApp OTP
        ↓
    OTP verification
        ↓
@@ -358,6 +381,782 @@ const completeLogin = async (
 };
 
 /* =========================================================
+   MONGODB OTP COLLECTION
+========================================================= */
+
+const getOtpCollection = async () => {
+  if (
+    mongoose.connection.readyState !==
+    1
+  ) {
+    throw new Error(
+      "MongoDB connection is not ready",
+    );
+  }
+
+  const collection =
+    mongoose.connection.collection(
+      OTP_COLLECTION_NAME,
+    );
+
+  /*
+   * TTL index.
+   *
+   * MongoDB automatically removes documents
+   * after expiresAt.
+   */
+  try {
+    await collection.createIndex(
+      {
+        expiresAt: 1,
+      },
+      {
+        expireAfterSeconds: 0,
+        name: "otp_expiry_ttl",
+      },
+    );
+  } catch (error) {
+    /*
+     * Index may already exist.
+     * Do not break OTP requests because of
+     * an already-created index.
+     */
+    if (
+      !String(
+        error?.message || "",
+      ).includes(
+        "already exists",
+      )
+    ) {
+      console.error(
+        "OTP TTL INDEX ERROR:",
+        error,
+      );
+    }
+  }
+
+  try {
+    await collection.createIndex(
+      {
+        phone: 1,
+        purpose: 1,
+        challengeKey: 1,
+      },
+      {
+        name:
+          "otp_lookup_index",
+      },
+    );
+  } catch (error) {
+    if (
+      !String(
+        error?.message || "",
+      ).includes(
+        "already exists",
+      )
+    ) {
+      console.error(
+        "OTP LOOKUP INDEX ERROR:",
+        error,
+      );
+    }
+  }
+
+  return collection;
+};
+
+/* =========================================================
+   HASH OTP
+========================================================= */
+
+const hashOtp = (
+  otp,
+) => {
+  return crypto
+    .createHash("sha256")
+    .update(
+      String(otp),
+    )
+    .digest("hex");
+};
+
+/* =========================================================
+   GENERATE OTP
+========================================================= */
+
+const generateOtp = () => {
+  const minimum =
+    10 **
+      (OTP_LENGTH - 1);
+
+  const maximum =
+    10 ** OTP_LENGTH;
+
+  return String(
+    crypto.randomInt(
+      minimum,
+      maximum,
+    ),
+  );
+};
+
+/* =========================================================
+   HASH CHALLENGE KEY
+
+   Prevent storing social tokens directly
+   inside OTP records.
+========================================================= */
+
+const hashChallengeKey = (
+  value,
+) => {
+  return crypto
+    .createHash("sha256")
+    .update(
+      String(value),
+    )
+    .digest("hex");
+};
+
+/* =========================================================
+   WHATSAPP PHONE FORMAT
+========================================================= */
+
+const formatWhatsAppPhone = (
+  phone,
+) => {
+  const normalized =
+    normalizePhone(phone);
+
+  if (
+    !isValidPhone(normalized)
+  ) {
+    throw new Error(
+      "Invalid Indian phone number",
+    );
+  }
+
+  return `91${normalized}`;
+};
+
+/* =========================================================
+   SEND WHATSAPP OTP
+
+   Meta WhatsApp Cloud API
+
+   Required backend environment variables:
+
+   WHATSAPP_ACCESS_TOKEN
+   WHATSAPP_PHONE_NUMBER_ID
+   WHATSAPP_GRAPH_VERSION
+   WHATSAPP_OTP_TEMPLATE_NAME
+   WHATSAPP_OTP_LANGUAGE_CODE
+========================================================= */
+
+const sendWhatsAppOtp = async ({
+  phone,
+  otp,
+}) => {
+  const accessToken =
+    process.env
+      .WHATSAPP_ACCESS_TOKEN;
+
+  const phoneNumberId =
+    process.env
+      .WHATSAPP_PHONE_NUMBER_ID;
+
+  const graphVersion =
+    process.env
+      .WHATSAPP_GRAPH_VERSION ||
+    "v24.0";
+
+  const templateName =
+    process.env
+      .WHATSAPP_OTP_TEMPLATE_NAME;
+
+  const languageCode =
+    process.env
+      .WHATSAPP_OTP_LANGUAGE_CODE ||
+    "en_US";
+
+  if (!accessToken) {
+    throw new Error(
+      "WHATSAPP_ACCESS_TOKEN is not configured",
+    );
+  }
+
+  if (!phoneNumberId) {
+    throw new Error(
+      "WHATSAPP_PHONE_NUMBER_ID is not configured",
+    );
+  }
+
+  if (!templateName) {
+    throw new Error(
+      "WHATSAPP_OTP_TEMPLATE_NAME is not configured",
+    );
+  }
+
+  const recipient =
+    formatWhatsAppPhone(phone);
+
+  const url =
+    `https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`;
+
+  /*
+   * This expects an Authentication/OTP
+   * WhatsApp template that accepts the OTP
+   * as a body parameter and has a Copy Code
+   * authentication button.
+   */
+  const payload = {
+    messaging_product:
+      "whatsapp",
+
+    to: recipient,
+
+    type: "template",
+
+    template: {
+      name: templateName,
+
+      language: {
+        code: languageCode,
+      },
+
+      components: [
+        {
+          type: "body",
+
+          parameters: [
+            {
+              type: "text",
+              text: String(otp),
+            },
+          ],
+        },
+
+        {
+          type: "button",
+
+          sub_type:
+            "copy_code",
+
+          index: "0",
+
+          parameters: [
+            {
+              type: "text",
+              text: String(otp),
+            },
+          ],
+        },
+      ],
+    },
+  };
+
+  const response =
+    await fetch(
+      url,
+      {
+        method: "POST",
+
+        headers: {
+          Authorization:
+            `Bearer ${accessToken}`,
+
+          "Content-Type":
+            "application/json",
+        },
+
+        body: JSON.stringify(
+          payload,
+        ),
+      },
+    );
+
+  const data =
+    await response
+      .json()
+      .catch(
+        () => ({}),
+      );
+
+  if (!response.ok) {
+    console.error(
+      "WHATSAPP API ERROR:",
+      JSON.stringify(
+        data,
+        null,
+        2,
+      ),
+    );
+
+    const errorMessage =
+      data?.error?.message ||
+      "WhatsApp OTP could not be sent";
+
+    throw new Error(
+      errorMessage,
+    );
+  }
+
+  return {
+    success: true,
+
+    messageId:
+      data?.messages?.[0]?.id ||
+      null,
+
+    recipient,
+  };
+};
+
+/* =========================================================
+   INVALIDATE EXISTING OTP
+========================================================= */
+
+const invalidateExistingOtp = async ({
+  phone,
+  purpose,
+  challengeKey,
+}) => {
+  const collection =
+    await getOtpCollection();
+
+  await collection.updateMany(
+    {
+      phone,
+      purpose,
+      challengeKey,
+      consumedAt: null,
+      expiresAt: {
+        $gt: new Date(),
+      },
+    },
+    {
+      $set: {
+        consumedAt:
+          new Date(),
+      },
+    },
+  );
+};
+
+/* =========================================================
+   CHECK RESEND COOLDOWN
+========================================================= */
+
+const getResendCooldown = (
+  record,
+) => {
+  if (
+    !record?.lastSentAt
+  ) {
+    return 0;
+  }
+
+  const elapsed =
+    Date.now() -
+    new Date(
+      record.lastSentAt,
+    ).getTime();
+
+  const remaining =
+    OTP_RESEND_COOLDOWN_SECONDS *
+      1000 -
+    elapsed;
+
+  if (remaining <= 0) {
+    return 0;
+  }
+
+  return Math.ceil(
+    remaining / 1000,
+  );
+};
+
+/* =========================================================
+   CREATE OTP CHALLENGE
+========================================================= */
+
+const createOtpChallenge = async ({
+  phone,
+  purpose,
+  challengeKey,
+  userId = null,
+}) => {
+  const collection =
+    await getOtpCollection();
+
+  const existing =
+    await collection
+      .findOne(
+        {
+          phone,
+          purpose,
+          challengeKey,
+          consumedAt: null,
+          expiresAt: {
+            $gt: new Date(),
+          },
+        },
+        {
+          sort: {
+            createdAt: -1,
+          },
+        },
+      );
+
+  const cooldown =
+    getResendCooldown(
+      existing,
+    );
+
+  if (cooldown > 0) {
+    const error =
+      new Error(
+        "Please wait before requesting another OTP",
+      );
+
+    error.code =
+      "OTP_RESEND_COOLDOWN";
+
+    error.retryAfter =
+      cooldown;
+
+    throw error;
+  }
+
+  /*
+   * Invalidate older OTP.
+   */
+  if (existing) {
+    await collection.updateMany(
+      {
+        phone,
+        purpose,
+        challengeKey,
+        consumedAt: null,
+      },
+      {
+        $set: {
+          consumedAt:
+            new Date(),
+        },
+      },
+    );
+  }
+
+  const otp =
+    generateOtp();
+
+  const otpHash =
+    hashOtp(otp);
+
+  const now =
+    new Date();
+
+  const expiresAt =
+    new Date(
+      now.getTime() +
+        OTP_EXPIRY_MS,
+    );
+
+  const record = {
+    phone,
+
+    purpose,
+
+    challengeKey,
+
+    userId:
+      userId
+        ? new mongoose.Types.ObjectId(
+            userId,
+          )
+        : null,
+
+    otpHash,
+
+    attempts: 0,
+
+    maxAttempts:
+      OTP_MAX_ATTEMPTS,
+
+    createdAt: now,
+
+    lastSentAt: now,
+
+    expiresAt,
+
+    consumedAt: null,
+
+    whatsappMessageId:
+      null,
+  };
+
+  const insertResult =
+    await collection.insertOne(
+      record,
+    );
+
+  /*
+   * Send OTP only after creating the
+   * challenge. If WhatsApp fails, invalidate
+   * the challenge.
+   */
+  try {
+    const whatsappResult =
+      await sendWhatsAppOtp({
+        phone,
+        otp,
+      });
+
+    await collection.updateOne(
+      {
+        _id:
+          insertResult.insertedId,
+      },
+      {
+        $set: {
+          whatsappMessageId:
+            whatsappResult.messageId,
+        },
+      },
+    );
+  } catch (error) {
+    await collection.updateOne(
+      {
+        _id:
+          insertResult.insertedId,
+      },
+      {
+        $set: {
+          consumedAt:
+            new Date(),
+        },
+      },
+    );
+
+    throw error;
+  }
+
+  return {
+    challengeId:
+      insertResult.insertedId.toString(),
+
+    expiresIn:
+      OTP_EXPIRY_MINUTES *
+      60,
+
+    resendAfter:
+      OTP_RESEND_COOLDOWN_SECONDS,
+  };
+};
+
+/* =========================================================
+   VERIFY OTP CHALLENGE
+========================================================= */
+
+const verifyOtpChallenge = async ({
+  phone,
+  purpose,
+  challengeKey,
+  otp,
+}) => {
+  const collection =
+    await getOtpCollection();
+
+  const record =
+    await collection.findOne(
+      {
+        phone,
+        purpose,
+        challengeKey,
+        consumedAt: null,
+        expiresAt: {
+          $gt: new Date(),
+        },
+      },
+      {
+        sort: {
+          createdAt: -1,
+        },
+      },
+    );
+
+  if (!record) {
+    return {
+      success: false,
+      code:
+        "OTP_INVALID_OR_EXPIRED",
+      message:
+        "OTP is invalid or has expired.",
+    };
+  }
+
+  if (
+    record.attempts >=
+    record.maxAttempts
+  ) {
+    await collection.updateOne(
+      {
+        _id: record._id,
+      },
+      {
+        $set: {
+          consumedAt:
+            new Date(),
+        },
+      },
+    );
+
+    return {
+      success: false,
+      code:
+        "OTP_MAX_ATTEMPTS",
+      message:
+        "Too many incorrect OTP attempts. Please request a new OTP.",
+    };
+  }
+
+  const submittedHash =
+    hashOtp(otp);
+
+  if (
+    submittedHash !==
+    record.otpHash
+  ) {
+    const newAttempts =
+      (record.attempts || 0) +
+      1;
+
+    const update = {
+      $set: {
+        attempts:
+          newAttempts,
+      },
+    };
+
+    if (
+      newAttempts >=
+      record.maxAttempts
+    ) {
+      update.$set.consumedAt =
+        new Date();
+    }
+
+    await collection.updateOne(
+      {
+        _id: record._id,
+      },
+      update,
+    );
+
+    return {
+      success: false,
+      code:
+        "OTP_INCORRECT",
+      message:
+        newAttempts >=
+        record.maxAttempts
+          ? "Too many incorrect OTP attempts. Please request a new OTP."
+          : "Incorrect OTP.",
+    };
+  }
+
+  await collection.updateOne(
+    {
+      _id: record._id,
+    },
+    {
+      $set: {
+        consumedAt:
+          new Date(),
+        verifiedAt:
+          new Date(),
+      },
+    },
+  );
+
+  return {
+    success: true,
+    record,
+  };
+};
+
+/* =========================================================
+   CREATE PASSWORD RESET TOKEN
+========================================================= */
+
+const createPasswordResetToken = ({
+  userId,
+  challengeId,
+}) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error(
+      "JWT_SECRET is missing in the .env file",
+    );
+  }
+
+  return jwt.sign(
+    {
+      type:
+        "password-reset",
+
+      userId:
+        userId.toString(),
+
+      challengeId:
+        challengeId.toString(),
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn:
+        RESET_TOKEN_EXPIRY,
+    },
+  );
+};
+
+/* =========================================================
+   VERIFY PASSWORD RESET TOKEN
+========================================================= */
+
+const verifyPasswordResetToken = (
+  token,
+) => {
+  if (!token) {
+    throw new Error(
+      "Password reset token is required",
+    );
+  }
+
+  if (!process.env.JWT_SECRET) {
+    throw new Error(
+      "JWT_SECRET is missing in the .env file",
+    );
+  }
+
+  const decoded =
+    jwt.verify(
+      token,
+      process.env.JWT_SECRET,
+    );
+
+  if (
+    decoded.type !==
+    "password-reset"
+  ) {
+    throw new Error(
+      "Invalid password reset token",
+    );
+  }
+
+  return decoded;
+};
+
+/* =========================================================
    STAFF LOGIN
 
    POST /api/auth/admin-login
@@ -470,7 +1269,9 @@ export const adminLogin =
           staff.password,
         );
 
-      if (!isPasswordValid) {
+      if (
+        !isPasswordValid
+      ) {
         return res.status(401).json({
           success: false,
           message:
@@ -521,13 +1322,6 @@ export const adminLogin =
 
 /* =========================================================
    USER REGISTRATION
-
-   Normal/local registration:
-
-   name
-   email
-   phone
-   password
 
    POST /api/auth/register
 ========================================================= */
@@ -707,6 +1501,11 @@ export const registerUser =
           isEmailVerified:
             false,
 
+          /*
+           * Kept false because the current
+           * local-registration frontend does not
+           * use the social OTP flow.
+           */
           isPhoneVerified:
             false,
         });
@@ -758,11 +1557,7 @@ export const registerUser =
 /* =========================================================
    USER LOGIN
 
-   Local accounts:
-   email/phone + password
-
-   Social accounts cannot use this endpoint unless
-   they have a local password.
+   POST /api/auth/login
 ========================================================= */
 
 export const userLogin =
@@ -894,7 +1689,9 @@ export const userLogin =
           user.password,
         );
 
-      if (!isPasswordValid) {
+      if (
+        !isPasswordValid
+      ) {
         return res.status(401).json({
           success: false,
           message:
@@ -925,19 +1722,6 @@ export const userLogin =
    GOOGLE LOGIN
 
    POST /api/auth/google
-
-   Expected body:
-
-   {
-     credential: "GOOGLE_ID_TOKEN"
-   }
-
-   New user:
-   → returns requiresPhone: true
-   → returns socialToken
-
-   Existing user:
-   → logs in directly
 ========================================================= */
 
 export const googleLogin =
@@ -1047,9 +1831,9 @@ export const googleLogin =
         });
       }
 
-      /* -----------------------------------------------------
-         FIND BY GOOGLE ID
-      ----------------------------------------------------- */
+      /*
+       * FIND BY GOOGLE ID
+       */
 
       let user =
         await User.findOne({
@@ -1076,9 +1860,9 @@ export const googleLogin =
         );
       }
 
-      /* -----------------------------------------------------
-         FIND BY EMAIL
-      ----------------------------------------------------- */
+      /*
+       * FIND BY EMAIL
+       */
 
       user =
         await User.findOne({
@@ -1088,10 +1872,8 @@ export const googleLogin =
 
       if (user) {
         /*
-         * Do not silently attach a Google account to an
-         * existing local/Facebook account.
-         *
-         * This prevents unintended account linking.
+         * Do not silently attach a Google
+         * account to another provider.
          */
 
         if (
@@ -1140,13 +1922,14 @@ export const googleLogin =
         );
       }
 
-      /* -----------------------------------------------------
-         NEW SOCIAL USER
-
-         Do NOT create the account yet.
-
-         First collect mobile number and verify OTP.
-      ----------------------------------------------------- */
+      /*
+       * NEW SOCIAL USER
+       *
+       * Do not create the account yet.
+       *
+       * First collect phone and verify
+       * WhatsApp OTP.
+       */
 
       const socialToken =
         createSocialPendingToken(
@@ -1230,18 +2013,6 @@ export const googleLogin =
    FACEBOOK LOGIN
 
    POST /api/auth/facebook
-
-   Expected body:
-
-   {
-     accessToken: "FACEBOOK_ACCESS_TOKEN"
-   }
-
-   The backend verifies the Facebook token by calling
-   Facebook Graph API.
-
-   IMPORTANT:
-   FACEBOOK_APP_SECRET must remain on backend.
 ========================================================= */
 
 export const facebookLogin =
@@ -1275,7 +2046,8 @@ export const facebookLogin =
       }
 
       const graphVersion =
-        process.env.FACEBOOK_GRAPH_VERSION;
+        process.env
+          .FACEBOOK_GRAPH_VERSION;
 
       if (!graphVersion) {
         return res.status(500).json({
@@ -1285,12 +2057,9 @@ export const facebookLogin =
         });
       }
 
-      /* -----------------------------------------------------
-         VERIFY ACCESS TOKEN
-
-         app access token =
-         APP_ID|APP_SECRET
-      ----------------------------------------------------- */
+      /*
+       * VERIFY ACCESS TOKEN
+       */
 
       const appAccessToken =
         `${process.env.FACEBOOK_APP_ID}|${process.env.FACEBOOK_APP_SECRET}`;
@@ -1368,11 +2137,9 @@ export const facebookLogin =
         });
       }
 
-      /* -----------------------------------------------------
-         GET FACEBOOK PROFILE
-
-         email + public_profile
-      ----------------------------------------------------- */
+      /*
+       * GET FACEBOOK PROFILE
+       */
 
       const profileUrl =
         `https://graph.facebook.com/${graphVersion}/${facebookId}` +
@@ -1419,11 +2186,6 @@ export const facebookLogin =
           ?.data?.url ||
         "";
 
-      /*
-       * The requested registration flow requires email
-       * to come from Facebook.
-       */
-
       if (!facebookEmail) {
         return res.status(400).json({
           success: false,
@@ -1436,9 +2198,9 @@ export const facebookLogin =
         });
       }
 
-      /* -----------------------------------------------------
-         FIND BY FACEBOOK ID
-      ----------------------------------------------------- */
+      /*
+       * FIND BY FACEBOOK ID
+       */
 
       let user =
         await User.findOne({
@@ -1462,9 +2224,9 @@ export const facebookLogin =
         );
       }
 
-      /* -----------------------------------------------------
-         FIND BY EMAIL
-      ----------------------------------------------------- */
+      /*
+       * FIND BY EMAIL
+       */
 
       user =
         await User.findOne({
@@ -1473,11 +2235,6 @@ export const facebookLogin =
         });
 
       if (user) {
-        /*
-         * Don't automatically link another provider to an
-         * existing account.
-         */
-
         if (
           user.authProvider !==
           "facebook"
@@ -1521,9 +2278,9 @@ export const facebookLogin =
         );
       }
 
-      /* -----------------------------------------------------
-         NEW FACEBOOK USER
-      ----------------------------------------------------- */
+      /*
+       * NEW FACEBOOK USER
+       */
 
       const socialToken =
         createSocialPendingToken(
@@ -1604,23 +2361,7 @@ export const facebookLogin =
      phone
    }
 
-   IMPORTANT:
-
-   This controller intentionally does NOT fake an OTP.
-
-   You must connect your SMS/WhatsApp provider here.
-
-   Recommended flow:
-
-   social login
-        ↓
-   socialToken
-        ↓
-   phone
-        ↓
-   send OTP
-        ↓
-   store OTP/hash + expiry
+   WhatsApp OTP is sent here.
 ========================================================= */
 
 export const sendSocialOtp =
@@ -1658,7 +2399,7 @@ export const sendSocialOtp =
           verifySocialPendingToken(
             socialToken,
           );
-      } catch (tokenError) {
+      } catch {
         return res.status(401).json({
           success: false,
           message:
@@ -1707,21 +2448,33 @@ export const sendSocialOtp =
         });
       }
 
-      /*
-       * OTP provider integration goes here.
-       *
-       * Do NOT accept the request as verified until the
-       * actual provider confirms delivery/verification.
-       */
+      const challengeKey =
+        hashChallengeKey(
+          `${decoded.provider}:${decoded.providerId}:${normalizedPhone}`,
+        );
 
-      return res.status(501).json({
-        success: false,
+      const result =
+        await createOtpChallenge({
+          phone:
+            normalizedPhone,
 
-        code:
-          "OTP_PROVIDER_NOT_CONFIGURED",
+          purpose:
+            "social-registration",
+
+          challengeKey,
+        });
+
+      return res.status(200).json({
+        success: true,
 
         message:
-          "OTP service is not configured yet. Connect your SMS/WhatsApp OTP provider before enabling social registration.",
+          "OTP sent successfully to your WhatsApp number.",
+
+        expiresIn:
+          result.expiresIn,
+
+        resendAfter:
+          result.resendAfter,
       });
     } catch (error) {
       console.error(
@@ -1729,10 +2482,35 @@ export const sendSocialOtp =
         error,
       );
 
+      if (
+        error?.code ===
+        "OTP_RESEND_COOLDOWN"
+      ) {
+        return res.status(429).json({
+          success: false,
+
+          code:
+            "OTP_RESEND_COOLDOWN",
+
+          message:
+            error.message,
+
+          retryAfter:
+            error.retryAfter,
+        });
+      }
+
       return res.status(500).json({
         success: false,
+
         message:
           "Unable to send OTP",
+
+        error:
+          process.env.NODE_ENV ===
+          "development"
+            ? error.message
+            : undefined,
       });
     }
   };
@@ -1749,12 +2527,6 @@ export const sendSocialOtp =
      phone,
      otp
    }
-
-   This function should only create the account after
-   the OTP has been genuinely verified.
-
-   Until an OTP provider is connected, it deliberately
-   refuses to create an account.
 ========================================================= */
 
 export const completeSocialRegistration =
@@ -1794,6 +2566,25 @@ export const completeSocialRegistration =
         });
       }
 
+      const normalizedOtp =
+        String(otp)
+          .replace(
+            /\D/g,
+            "",
+          )
+          .trim();
+
+      if (
+        normalizedOtp.length !==
+        OTP_LENGTH
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please enter a valid 6-digit OTP",
+        });
+      }
+
       let decoded;
 
       try {
@@ -1801,7 +2592,7 @@ export const completeSocialRegistration =
           verifySocialPendingToken(
             socialToken,
           );
-      } catch (tokenError) {
+      } catch {
         return res.status(401).json({
           success: false,
           message:
@@ -1836,24 +2627,175 @@ export const completeSocialRegistration =
         });
       }
 
+      const existingPhone =
+        await User.findOne({
+          phone:
+            normalizedPhone,
+        });
+
+      if (existingPhone) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "This mobile number is already registered. Please login using your existing account.",
+        });
+      }
+
+      const challengeKey =
+        hashChallengeKey(
+          `${decoded.provider}:${decoded.providerId}:${normalizedPhone}`,
+        );
+
+      const verification =
+        await verifyOtpChallenge({
+          phone:
+            normalizedPhone,
+
+          purpose:
+            "social-registration",
+
+          challengeKey,
+
+          otp:
+            normalizedOtp,
+        });
+
+      if (
+        !verification.success
+      ) {
+        const status =
+          verification.code ===
+          "OTP_MAX_ATTEMPTS"
+            ? 429
+            : 400;
+
+        return res.status(
+          status,
+        ).json({
+          success: false,
+
+          code:
+            verification.code,
+
+          message:
+            verification.message,
+        });
+      }
+
       /*
-       * SECURITY:
-       *
-       * Never create an account merely because the frontend
-       * sends "verified": true or any arbitrary OTP.
-       *
-       * Connect the actual OTP provider here.
+       * Re-check email/social account
+       * immediately before creation.
        */
+      const existingSocial =
+        decoded.provider ===
+        "google"
+          ? await User.findOne({
+              googleId:
+                decoded.providerId,
+            })
+          : await User.findOne({
+              facebookId:
+                decoded.providerId,
+            });
 
-      return res.status(501).json({
-        success: false,
+      if (existingSocial) {
+        return completeLogin(
+          existingSocial,
+          res,
+          `${decoded.provider === "google" ? "Google" : "Facebook"} login successful`,
+        );
+      }
 
-        code:
-          "OTP_PROVIDER_NOT_CONFIGURED",
+      const existingEmail =
+        await User.findOne({
+          email:
+            String(
+              decoded.email || "",
+            )
+              .trim()
+              .toLowerCase(),
+        });
 
-        message:
-          "OTP verification is not configured yet. Connect your SMS/WhatsApp OTP provider before completing registration.",
-      });
+      if (existingEmail) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "An account already exists with this email. Please login using your existing login method.",
+        });
+      }
+
+      const userData = {
+        name:
+          normalizeName(
+            decoded.name ||
+              `${decoded.provider} User`,
+          ),
+
+        email:
+          String(
+            decoded.email || "",
+          )
+            .trim()
+            .toLowerCase(),
+
+        phone:
+          normalizedPhone,
+
+        password:
+          undefined,
+
+        authProvider:
+          decoded.provider,
+
+        profileImage:
+          decoded.profileImage ||
+          "",
+
+        role:
+          CUSTOMER_ROLE,
+
+        isActive:
+          true,
+
+        isBlocked:
+          false,
+
+        isEmailVerified:
+          decoded.provider ===
+          "google"
+            ? true
+            : false,
+
+        isPhoneVerified:
+          true,
+      };
+
+      if (
+        decoded.provider ===
+        "google"
+      ) {
+        userData.googleId =
+          decoded.providerId;
+      }
+
+      if (
+        decoded.provider ===
+        "facebook"
+      ) {
+        userData.facebookId =
+          decoded.providerId;
+      }
+
+      const user =
+        await User.create(
+          userData,
+        );
+
+      return completeLogin(
+        user,
+        res,
+        `${decoded.provider === "google" ? "Google" : "Facebook"} registration successful`,
+      );
     } catch (error) {
       console.error(
         "COMPLETE SOCIAL REGISTRATION ERROR:",
@@ -1875,6 +2817,668 @@ export const completeSocialRegistration =
         success: false,
         message:
           "Unable to complete social registration",
+        error:
+          process.env.NODE_ENV ===
+          "development"
+            ? error.message
+            : undefined,
+      });
+    }
+  };
+
+/* =========================================================
+   FORGOT PASSWORD - SEND OTP
+
+   POST /api/auth/forgot-password
+
+   Body:
+
+   {
+     identifier: "email or phone"
+   }
+
+   IMPORTANT:
+   Response intentionally does not reveal whether
+   an account exists.
+========================================================= */
+
+export const forgotPassword =
+  async (
+    req,
+    res,
+  ) => {
+    try {
+      const identifier =
+        String(
+          req.body?.identifier ??
+            req.body?.email ??
+            req.body?.phone ??
+            "",
+        ).trim();
+
+      /*
+       * Always return a generic response.
+       */
+      const genericResponse = () =>
+        res.status(200).json({
+          success: true,
+          message:
+            "If an account exists with these details, a password reset OTP has been sent to the registered WhatsApp number.",
+        });
+
+      if (!identifier) {
+        return genericResponse();
+      }
+
+      let user = null;
+
+      if (
+        identifier.includes("@")
+      ) {
+        const normalizedEmail =
+          identifier
+            .toLowerCase();
+
+        if (
+          !isValidEmail(
+            normalizedEmail,
+          )
+        ) {
+          return genericResponse();
+        }
+
+        user =
+          await User.findOne({
+            email:
+              normalizedEmail,
+
+            role:
+              CUSTOMER_ROLE,
+          });
+      } else {
+        const normalizedPhone =
+          normalizePhone(
+            identifier,
+          );
+
+        if (
+          !isValidPhone(
+            normalizedPhone,
+          )
+        ) {
+          return genericResponse();
+        }
+
+        user =
+          await User.findOne({
+            phone:
+              normalizedPhone,
+
+            role:
+              CUSTOMER_ROLE,
+          });
+      }
+
+      if (!user) {
+        return genericResponse();
+      }
+
+      if (
+        user.isBlocked === true ||
+        user.isActive === false
+      ) {
+        return genericResponse();
+      }
+
+      /*
+       * Social-only accounts do not have a
+       * password to reset.
+       *
+       * We deliberately keep the response
+       * generic to avoid account enumeration.
+       */
+      if (!user.password) {
+        return genericResponse();
+      }
+
+      if (
+        !user.phone ||
+        !isValidPhone(
+          normalizePhone(
+            user.phone,
+          ),
+        )
+      ) {
+        return genericResponse();
+      }
+
+      const normalizedPhone =
+        normalizePhone(
+          user.phone,
+        );
+
+      const challengeKey =
+        hashChallengeKey(
+          `forgot-password:${user._id.toString()}`,
+        );
+
+      try {
+        await createOtpChallenge({
+          phone:
+            normalizedPhone,
+
+          purpose:
+            "forgot-password",
+
+          challengeKey,
+
+          userId:
+            user._id,
+        });
+      } catch (error) {
+        if (
+          error?.code ===
+          "OTP_RESEND_COOLDOWN"
+        ) {
+          /*
+           * Keep generic response.
+           * Do not reveal whether account exists.
+           */
+          return genericResponse();
+        }
+
+        throw error;
+      }
+
+      return genericResponse();
+    } catch (error) {
+      console.error(
+        "FORGOT PASSWORD ERROR:",
+        error,
+      );
+
+      /*
+       * Do not reveal internal details
+       * through this endpoint.
+       */
+      return res.status(200).json({
+        success: true,
+        message:
+          "If an account exists with these details, a password reset OTP has been sent to the registered WhatsApp number.",
+      });
+    }
+  };
+
+/* =========================================================
+   FORGOT PASSWORD - VERIFY OTP
+
+   POST /api/auth/forgot-password/verify-otp
+
+   Body:
+
+   {
+     identifier,
+     otp
+   }
+
+   Returns a short-lived reset token.
+========================================================= */
+
+export const verifyForgotPasswordOtp =
+  async (
+    req,
+    res,
+  ) => {
+    try {
+      const identifier =
+        String(
+          req.body?.identifier ??
+            req.body?.email ??
+            req.body?.phone ??
+            "",
+        ).trim();
+
+      const otp =
+        String(
+          req.body?.otp ??
+            "",
+        )
+          .replace(
+            /\D/g,
+            "",
+          )
+          .trim();
+
+      if (!identifier) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Email or mobile number is required",
+        });
+      }
+
+      if (
+        otp.length !==
+        OTP_LENGTH
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please enter a valid 6-digit OTP",
+        });
+      }
+
+      let user = null;
+
+      if (
+        identifier.includes("@")
+      ) {
+        const normalizedEmail =
+          identifier
+            .toLowerCase();
+
+        if (
+          !isValidEmail(
+            normalizedEmail,
+          )
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Please enter a valid email address",
+          });
+        }
+
+        user =
+          await User.findOne({
+            email:
+              normalizedEmail,
+
+            role:
+              CUSTOMER_ROLE,
+          });
+      } else {
+        const normalizedPhone =
+          normalizePhone(
+            identifier,
+          );
+
+        if (
+          !isValidPhone(
+            normalizedPhone,
+          )
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Please enter a valid mobile number",
+          });
+        }
+
+        user =
+          await User.findOne({
+            phone:
+              normalizedPhone,
+
+            role:
+              CUSTOMER_ROLE,
+          });
+      }
+
+      if (!user) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid or expired OTP",
+        });
+      }
+
+      if (
+        user.isBlocked === true ||
+        user.isActive === false
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid or expired OTP",
+        });
+      }
+
+      if (!user.password) {
+        return res.status(400).json({
+          success: false,
+          code:
+            "SOCIAL_ACCOUNT",
+          message:
+            "This account uses social login. Please continue with Google or Facebook.",
+        });
+      }
+
+      const normalizedPhone =
+        normalizePhone(
+          user.phone,
+        );
+
+      const challengeKey =
+        hashChallengeKey(
+          `forgot-password:${user._id.toString()}`,
+        );
+
+      const verification =
+        await verifyOtpChallenge({
+          phone:
+            normalizedPhone,
+
+          purpose:
+            "forgot-password",
+
+          challengeKey,
+
+          otp,
+        });
+
+      if (
+        !verification.success
+      ) {
+        return res.status(400).json({
+          success: false,
+
+          code:
+            verification.code,
+
+          message:
+            verification.message,
+        });
+      }
+
+      const resetToken =
+        createPasswordResetToken({
+          userId:
+            user._id,
+
+          challengeId:
+            verification.record
+              ._id,
+        });
+
+      return res.status(200).json({
+        success: true,
+
+        message:
+          "OTP verified successfully. You can now reset your password.",
+
+        resetToken,
+
+        expiresIn:
+          10 * 60,
+      });
+    } catch (error) {
+      console.error(
+        "VERIFY FORGOT PASSWORD OTP ERROR:",
+        error,
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to verify OTP",
+      });
+    }
+  };
+
+/* =========================================================
+   RESET PASSWORD
+
+   POST /api/auth/reset-password
+
+   Body:
+
+   {
+     resetToken,
+     newPassword,
+     confirmPassword
+   }
+========================================================= */
+
+export const resetPassword =
+  async (
+    req,
+    res,
+  ) => {
+    try {
+      const {
+        resetToken,
+        newPassword,
+        confirmPassword,
+      } =
+        req.body || {};
+
+      if (!resetToken) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Password reset token is required",
+        });
+      }
+
+      if (
+        !newPassword ||
+        !confirmPassword
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "New password and confirmation are required",
+        });
+      }
+
+      if (
+        String(
+          newPassword,
+        ).length < 4
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Password must contain at least 4 characters",
+        });
+      }
+
+      if (
+        newPassword !==
+        confirmPassword
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Passwords do not match",
+        });
+      }
+
+      let decoded;
+
+      try {
+        decoded =
+          verifyPasswordResetToken(
+            resetToken,
+          );
+      } catch {
+        return res.status(401).json({
+          success: false,
+          message:
+            "Password reset session has expired. Please request a new OTP.",
+        });
+      }
+
+      const user =
+        await User.findById(
+          decoded.userId,
+        ).select(
+          "+password",
+        );
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message:
+            "Password reset session is invalid",
+        });
+      }
+
+      if (
+        !checkAccountStatus(
+          user,
+          res,
+        )
+      ) {
+        return;
+      }
+
+      /*
+       * Make sure this reset token is tied
+       * to an actual verified OTP challenge.
+       */
+      const collection =
+        await getOtpCollection();
+
+      let challengeId;
+
+      try {
+        challengeId =
+          new mongoose.Types.ObjectId(
+            decoded.challengeId,
+          );
+      } catch {
+        return res.status(401).json({
+          success: false,
+          message:
+            "Password reset session is invalid",
+        });
+      }
+
+      const challenge =
+        await collection.findOne({
+          _id:
+            challengeId,
+
+          purpose:
+            "forgot-password",
+
+          userId:
+            user._id,
+
+          verifiedAt: {
+            $exists: true,
+          },
+
+          consumedAt: {
+            $exists: true,
+            $ne: null,
+          },
+
+          expiresAt: {
+            $gt: new Date(),
+          },
+        });
+
+      /*
+       * Important:
+       *
+       * The OTP challenge is marked consumed
+       * when OTP verification succeeds.
+       *
+       * verifiedAt proves that the challenge
+       * was actually verified.
+       */
+      if (
+        !challenge ||
+        !challenge.verifiedAt
+      ) {
+        return res.status(401).json({
+          success: false,
+          message:
+            "Password reset session is invalid or expired",
+        });
+      }
+
+      /*
+       * Prevent reusing the same challenge.
+       */
+      if (
+        challenge.passwordResetCompletedAt
+      ) {
+        return res.status(401).json({
+          success: false,
+          message:
+            "This password reset session has already been used",
+        });
+      }
+
+      /*
+       * Prevent changing a social-only account
+       * through the password-reset flow unless
+       * it already has a local password.
+       */
+      if (!user.password) {
+        return res.status(400).json({
+          success: false,
+          code:
+            "SOCIAL_ACCOUNT",
+          message:
+            "This account uses social login and does not have a local password.",
+        });
+      }
+
+      const isSamePassword =
+        await bcrypt.compare(
+          newPassword,
+          user.password,
+        );
+
+      if (isSamePassword) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "New password must be different from your current password",
+        });
+      }
+
+      user.password =
+        await bcrypt.hash(
+          newPassword,
+          12,
+        );
+
+      await user.save();
+
+      await collection.updateOne(
+        {
+          _id:
+            challengeId,
+        },
+        {
+          $set: {
+            passwordResetCompletedAt:
+              new Date(),
+          },
+        },
+      );
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "Password reset successfully. Please login with your new password.",
+      });
+    } catch (error) {
+      console.error(
+        "RESET PASSWORD ERROR:",
+        error,
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to reset password",
       });
     }
   };
@@ -1977,9 +3581,9 @@ export const updateProfile =
         });
       }
 
-      /* -----------------------------------------------------
-         NAME
-      ----------------------------------------------------- */
+      /*
+       * NAME
+       */
 
       if (
         name !== undefined
@@ -2013,9 +3617,9 @@ export const updateProfile =
           normalizedName;
       }
 
-      /* -----------------------------------------------------
-         PHONE
-      ----------------------------------------------------- */
+      /*
+       * PHONE
+       */
 
       if (
         phone !== undefined
@@ -2057,8 +3661,8 @@ export const updateProfile =
         }
 
         /*
-         * If phone is changed, require phone verification
-         * again.
+         * If phone changes, phone must be
+         * verified again.
          */
 
         if (
@@ -2073,9 +3677,9 @@ export const updateProfile =
           normalizedPhone;
       }
 
-      /* -----------------------------------------------------
-         PROFILE IMAGE
-      ----------------------------------------------------- */
+      /*
+       * PROFILE IMAGE
+       */
 
       if (req.file) {
         user.profileImage =
@@ -2171,9 +3775,9 @@ export const updateStaffProfile =
         });
       }
 
-      /* -----------------------------------------------------
-         NAME
-      ----------------------------------------------------- */
+      /*
+       * NAME
+       */
 
       if (
         name !== undefined
@@ -2207,9 +3811,9 @@ export const updateStaffProfile =
           normalizedName;
       }
 
-      /* -----------------------------------------------------
-         EMAIL
-      ----------------------------------------------------- */
+      /*
+       * EMAIL
+       */
 
       if (
         email !== undefined
@@ -2331,9 +3935,6 @@ export const updateStaffProfile =
    PUT /api/auth/staff/change-password
 
    Works for local-password accounts.
-
-   Social-only accounts cannot use current-password
-   authentication because they don't have a local password.
 ========================================================= */
 
 export const changePassword =
@@ -2409,7 +4010,8 @@ export const changePassword =
       }
 
       /*
-       * Social accounts do not have a local password.
+       * Social accounts do not have a
+       * local password.
        */
 
       if (!user.password) {
@@ -2459,14 +4061,6 @@ export const changePassword =
           newPassword,
           12,
         );
-
-      /*
-       * Once a social user explicitly creates a local
-       * password, they can use local authentication too.
-       *
-       * We intentionally do not change authProvider here.
-       * The provider remains the original provider.
-       */
 
       await user.save();
 

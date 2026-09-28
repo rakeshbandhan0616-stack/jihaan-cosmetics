@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap");
+
 .page {
   position: relative;
   min-height: 100vh;
@@ -7,17 +9,29 @@
   justify-content: center;
   padding: 48px 20px;
   background:
-    radial-gradient(circle at top left, #f9e9dc 0%, transparent 35%),
-    radial-gradient(circle at bottom right, #f4e4d9 0%, transparent 34%),
+    radial-gradient(
+      circle at top left,
+      #f9e9dc 0%,
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      #f4e4d9 0%,
+      transparent 34%
+    ),
     #fffaf7;
+  font-family: "DM Sans", sans-serif;
+  animation: pageFadeIn 0.8s ease both;
 }
 
 .backgroundShapeOne,
-.backgroundShapeTwo {
+.backgroundShapeTwo,
+.backgroundOrbOne,
+.backgroundOrbTwo {
   position: absolute;
   border-radius: 50%;
   pointer-events: none;
-  filter: blur(1px);
+  z-index: 0;
 }
 
 .backgroundShapeOne {
@@ -26,6 +40,8 @@
   width: 420px;
   height: 420px;
   background: rgba(221, 174, 139, 0.16);
+  filter: blur(1px);
+  animation: floatShapeOne 10s ease-in-out infinite;
 }
 
 .backgroundShapeTwo {
@@ -34,6 +50,28 @@
   width: 440px;
   height: 440px;
   background: rgba(185, 133, 96, 0.12);
+  filter: blur(1px);
+  animation: floatShapeTwo 12s ease-in-out infinite;
+}
+
+.backgroundOrbOne {
+  top: 22%;
+  right: 8%;
+  width: 110px;
+  height: 110px;
+  background: rgba(208, 158, 123, 0.08);
+  filter: blur(3px);
+  animation: floatingOrb 8s ease-in-out infinite;
+}
+
+.backgroundOrbTwo {
+  bottom: 20%;
+  left: 8%;
+  width: 80px;
+  height: 80px;
+  background: rgba(169, 120, 87, 0.07);
+  filter: blur(2px);
+  animation: floatingOrb 9s ease-in-out infinite reverse;
 }
 
 .pageContent {
@@ -41,12 +79,14 @@
   z-index: 1;
   width: 100%;
   max-width: 470px;
+  animation: contentReveal 0.8s 0.1s ease both;
 }
 
 .brand {
   display: flex;
   justify-content: center;
   margin-bottom: 30px;
+  animation: brandReveal 0.8s 0.15s ease both;
 }
 
 .logo {
@@ -55,12 +95,19 @@
   gap: 12px;
   color: #201b18;
   text-decoration: none;
+  transition: transform 0.3s ease;
+}
+
+.logo:hover {
+  transform: translateY(-2px);
 }
 
 .logoImage {
   width: 58px;
   height: 58px;
   object-fit: contain;
+  border-radius: 12px;
+  animation: logoFloat 5s ease-in-out infinite;
 }
 
 .logoText {
@@ -71,8 +118,9 @@
 
 .logoMain {
   color: #201b18;
-  font-size: 18px;
-  font-weight: 800;
+  font-family: "Playfair Display", serif;
+  font-size: 19px;
+  font-weight: 600;
   letter-spacing: 0.08em;
   line-height: 1.1;
 }
@@ -88,10 +136,23 @@
 .loginCard {
   padding: 42px;
   border: 1px solid rgba(202, 170, 147, 0.35);
-  border-radius: 18px;
+  border-radius: 22px;
   background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 24px 70px rgba(75, 44, 25, 0.09);
-  backdrop-filter: blur(10px);
+  box-shadow:
+    0 24px 70px rgba(75, 44, 25, 0.09),
+    0 8px 30px rgba(100, 64, 40, 0.04);
+  backdrop-filter: blur(14px);
+  animation: cardReveal 0.8s 0.2s cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+  transition:
+    box-shadow 0.4s ease,
+    transform 0.4s ease;
+}
+
+.loginCard:hover {
+  box-shadow:
+    0 30px 80px rgba(75, 44, 25, 0.11),
+    0 10px 35px rgba(100, 64, 40, 0.05);
 }
 
 .cardHeader {
@@ -106,32 +167,40 @@
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.2em;
+  animation: fadeUp 0.7s 0.4s ease both;
 }
 
 .cardHeader h1 {
   margin: 0;
   color: #201b18;
+  font-family: "Playfair Display", serif;
   font-size: clamp(27px, 4vw, 34px);
   font-weight: 600;
   letter-spacing: -0.04em;
   line-height: 1.15;
+  animation: fadeUp 0.7s 0.5s ease both;
 }
 
 .intro {
-  max-width: 330px;
+  max-width: 350px;
   margin: 14px auto 0;
   color: #81766e;
   font-size: 13px;
   line-height: 1.7;
+  animation: fadeUp 0.7s 0.6s ease both;
 }
 
 .success,
 .error {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
   margin: 0 0 20px;
   padding: 12px 14px;
-  border-radius: 8px;
+  border-radius: 9px;
   font-size: 12px;
   line-height: 1.5;
+  animation: messageReveal 0.35s ease both;
 }
 
 .success {
@@ -150,6 +219,7 @@
   display: flex;
   flex-direction: column;
   gap: 22px;
+  animation: formReveal 0.6s 0.25s ease both;
 }
 
 .field {
@@ -177,7 +247,9 @@
   font-size: 11px;
   font-weight: 600;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .forgotLink:hover {
@@ -192,19 +264,27 @@
   min-height: 52px;
   padding: 0 15px;
   border: 1px solid #e4d8cf;
-  border-radius: 8px;
+  border-radius: 9px;
   background: #fffdfb;
   color: #9b887a;
   transition:
     border-color 0.25s ease,
     box-shadow 0.25s ease,
-    background 0.25s ease;
+    background 0.25s ease,
+    transform 0.25s ease;
+}
+
+.inputWrapper:hover {
+  border-color: #d7c1b1;
 }
 
 .inputWrapper:focus-within {
   border-color: #bd9271;
   background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(189, 146, 113, 0.12);
+  box-shadow:
+    0 0 0 4px rgba(189, 146, 113, 0.12),
+    0 5px 20px rgba(100, 64, 40, 0.04);
+  transform: translateY(-1px);
 }
 
 .inputWrapper input {
@@ -235,12 +315,14 @@
   border-radius: 5px;
   transition:
     background 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .passwordToggle:hover {
   background: #f4ebe4;
   color: #6c4933;
+  transform: scale(1.05);
 }
 
 .submitButton {
@@ -252,7 +334,7 @@
   min-height: 52px;
   margin-top: 2px;
   border: 1px solid #28211c;
-  border-radius: 8px;
+  border-radius: 9px;
   background: #28211c;
   color: #ffffff;
   cursor: pointer;
@@ -262,13 +344,19 @@
   transition:
     background 0.25s ease,
     border-color 0.25s ease,
-    transform 0.25s ease;
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .submitButton:hover:not(:disabled) {
   border-color: #b17e59;
   background: #b17e59;
   transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(177, 126, 89, 0.22);
+}
+
+.submitButton:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .submitButton:disabled {
@@ -293,22 +381,203 @@
   color: #8aaa82;
 }
 
-.divider {
+.divider,
+.socialDivider {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 28px 0 20px;
   color: #9b8c81;
-  font-size: 11px;
+  font-size: 10px;
+  font-weight: 600;
   text-align: center;
 }
 
+.divider {
+  margin: 28px 0 20px;
+}
+
+.socialDivider {
+  margin: 22px 0;
+}
+
 .divider::before,
-.divider::after {
+.divider::after,
+.socialDivider::before,
+.socialDivider::after {
   content: "";
   height: 1px;
   flex: 1;
   background: #eadfd7;
+}
+
+.socialButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+
+.socialButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid #ded4cd;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #302923;
+  cursor: pointer;
+  font-family: "DM Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.socialButton:hover:not(:disabled) {
+  border-color: #c7afa0;
+  background: #fffaf7;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(75, 44, 25, 0.07);
+}
+
+.socialButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.googleButtonWrapper {
+  position: relative;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 9px;
+}
+
+.googleButton {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  justify-content: center;
+}
+
+.googleButton > div {
+  width: 100% !important;
+}
+
+.socialLoading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.88);
+  color: #6c4933;
+  font-size: 11px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.googleG {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: #4285f4;
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.socialAccount {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px;
+  border: 1px solid #eadfd7;
+  border-radius: 11px;
+  background: #fffaf7;
+  animation: fadeUp 0.5s ease both;
+}
+
+.socialAccountIcon {
+  display: grid;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #6c4933;
+  box-shadow: 0 4px 12px rgba(75, 44, 25, 0.08);
+}
+
+.socialAccount > div:last-child {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.socialAccount strong {
+  overflow: hidden;
+  color: #302923;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.socialAccount span {
+  overflow: hidden;
+  color: #95867b;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resendButton {
+  border: 0;
+  background: transparent;
+  color: #a87552;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.resendButton:hover:not(:disabled) {
+  color: #68432e;
+  text-decoration: underline;
+}
+
+.resendButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.backButton {
+  border: 0;
+  background: transparent;
+  color: #8f6245;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.backButton:hover {
+  color: #68432e;
+  text-decoration: underline;
 }
 
 .registerButton {
@@ -326,18 +595,23 @@
   transition:
     background 0.25s ease,
     border-color 0.25s ease,
-    color 0.25s ease;
+    color 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .registerButton:hover {
   border-color: #28211c;
   background: #28211c;
   color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(40, 33, 28, 0.14);
 }
 
 .footer {
   margin-top: 30px;
   text-align: center;
+  animation: fadeUp 0.8s 0.45s ease both;
 }
 
 .footerLinks {
@@ -351,11 +625,14 @@
   color: #8e7d70;
   font-size: 11px;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .footerLinks a:hover {
   color: #a87552;
+  transform: translateY(-1px);
 }
 
 .footer p {
@@ -364,6 +641,142 @@
   font-size: 10px;
   line-height: 1.5;
 }
+
+/* ---------------------------------------------------------
+   Animations
+--------------------------------------------------------- */
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes contentReveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes brandReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(25px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes formReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes messageReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatShapeOne {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate3d(25px, 20px, 0) rotate(5deg);
+  }
+}
+
+@keyframes floatShapeTwo {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate3d(-20px, -25px, 0) rotate(-5deg);
+  }
+}
+
+@keyframes floatingOrb {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: translateY(-20px) scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes logoFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* ---------------------------------------------------------
+   Responsive
+--------------------------------------------------------- */
 
 @media (max-width: 520px) {
   .page {
@@ -393,7 +806,7 @@
 
   .loginCard {
     padding: 30px 22px;
-    border-radius: 14px;
+    border-radius: 16px;
   }
 
   .cardHeader h1 {
@@ -409,15 +822,73 @@
   .footerLinks {
     gap: 13px;
   }
+
+  .backgroundShapeOne {
+    width: 300px;
+    height: 300px;
+  }
+
+  .backgroundShapeTwo {
+    width: 320px;
+    height: 320px;
+  }
+
+  .backgroundOrbOne,
+  .backgroundOrbTwo {
+    display: none;
+  }
 }
 
+@media (max-width: 380px) {
+  .loginCard {
+    padding: 26px 18px;
+  }
+
+  .cardHeader h1 {
+    font-size: 25px;
+  }
+
+  .intro {
+    font-size: 12px;
+  }
+
+  .socialButton {
+    font-size: 11px;
+  }
+}
+
+/* ---------------------------------------------------------
+   Reduced motion
+--------------------------------------------------------- */
+
 @media (prefers-reduced-motion: reduce) {
+  .page,
+  .pageContent,
+  .brand,
+  .loginCard,
+  .eyebrow,
+  .cardHeader h1,
+  .intro,
+  .form,
+  .socialButtons,
+  .socialAccount,
+  .footer,
+  .backgroundShapeOne,
+  .backgroundShapeTwo,
+  .backgroundOrbOne,
+  .backgroundOrbTwo,
+  .logoImage {
+    animation: none !important;
+  }
+
   .inputWrapper,
   .forgotLink,
   .passwordToggle,
   .submitButton,
   .registerButton,
-  .footerLinks a {
-    transition: none;
+  .footerLinks a,
+  .socialButton,
+  .logo {
+    transition: none !important;
   }
 }
