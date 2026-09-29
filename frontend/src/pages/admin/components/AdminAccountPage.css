@@ -1,0 +1,928 @@
+/* =========================================================
+   ADMIN ACCOUNT PAGE
+   Jihaan Cosmetics Admin Panel
+========================================================= */
+
+.adminAccountPage {
+  min-height: 100%;
+  width: 100%;
+  padding: 32px;
+  background: #f7f4ef;
+  color: #2d241f;
+  box-sizing: border-box;
+}
+
+.adminAccountContainer {
+  width: 100%;
+  max-width: 1380px;
+  margin: 0 auto;
+}
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.adminAccountPageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.adminAccountBreadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #9b8c82;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.adminAccountBreadcrumb strong {
+  color: #6f5547;
+  font-weight: 600;
+}
+
+.adminAccountPageHeader h1 {
+  margin: 0;
+  color: #30251f;
+  font-size: 30px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.adminAccountPageHeader p {
+  margin: 8px 0 0;
+  color: #8b7d74;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.adminAccountHeaderIcon {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #e7ddd5;
+  border-radius: 16px;
+  background: #fffdfb;
+  color: #8a6250;
+  box-shadow: 0 6px 20px rgba(73, 48, 35, 0.06);
+}
+
+/* =========================================================
+   ALERTS
+========================================================= */
+
+.adminAccountAlert {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 13px 16px;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  box-sizing: border-box;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.adminAccountAlert svg {
+  flex-shrink: 0;
+}
+
+.adminAccountAlertSuccess {
+  border-color: #cfe5d5;
+  background: #f1f9f3;
+  color: #2d6b3d;
+}
+
+.adminAccountAlertError {
+  border-color: #efd0cb;
+  background: #fff4f2;
+  color: #a4483c;
+}
+
+/* =========================================================
+   MAIN GRID
+========================================================= */
+
+.adminAccountGrid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+/* =========================================================
+   PROFILE CARD
+========================================================= */
+
+.adminAccountProfileCard {
+  overflow: hidden;
+  border: 1px solid #e8ddd5;
+  border-radius: 20px;
+  background: #fffdfb;
+  box-shadow: 0 8px 28px rgba(68, 45, 31, 0.06);
+}
+
+.adminAccountProfileTop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 24px 26px;
+  text-align: center;
+  border-bottom: 1px solid #eee5de;
+}
+
+.adminAccountLargeAvatar {
+  width: 86px;
+  height: 86px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  border: 4px solid #f5e9df;
+  border-radius: 50%;
+  background: linear-gradient(
+    145deg,
+    #9a705b,
+    #6f4c3c
+  );
+  color: #fff;
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  box-shadow:
+    0 8px 20px rgba(104, 72, 55, 0.18);
+}
+
+.adminAccountProfileTop h2 {
+  margin: 0;
+  color: #30251f;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.adminAccountProfileTop p {
+  max-width: 100%;
+  margin: 7px 0 14px;
+  overflow: hidden;
+  color: #8b7c72;
+  font-size: 13px;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adminRoleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border: 1px solid #eadbd0;
+  border-radius: 999px;
+  background: #faf3ed;
+  color: #795541;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.adminAccountProfileDetails {
+  padding: 7px 22px 12px;
+}
+
+.adminProfileDetail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0e9e4;
+}
+
+.adminProfileDetail:last-child {
+  border-bottom: 0;
+}
+
+.adminProfileDetail span {
+  color: #95867c;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.adminProfileDetail strong {
+  color: #4b3b31;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.statusActive,
+.statusInactive {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statusActive {
+  color: #31764a !important;
+}
+
+.statusInactive {
+  color: #ad4e43 !important;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  display: inline-block;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* =========================================================
+   FORM CARD
+========================================================= */
+
+.adminAccountFormCard {
+  min-width: 0;
+  border: 1px solid #e8ddd5;
+  border-radius: 20px;
+  background: #fffdfb;
+  box-shadow: 0 8px 28px rgba(68, 45, 31, 0.06);
+}
+
+.adminAccountCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 26px 28px;
+  border-bottom: 1px solid #eee5de;
+}
+
+.adminAccountCardHeader h2 {
+  margin: 0;
+  color: #30251f;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.adminAccountCardHeader p {
+  max-width: 620px;
+  margin: 7px 0 0;
+  color: #8c7e75;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.adminAccountCardIcon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: #f8eee8;
+  color: #825c49;
+}
+
+.adminAccountForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  padding: 28px;
+}
+
+.adminFormGroup {
+  min-width: 0;
+}
+
+.adminFormGroup label {
+  display: block;
+  margin-bottom: 8px;
+  color: #54443a;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.adminInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  border: 1px solid #ddd1c8;
+  border-radius: 11px;
+  background: #fff;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.adminInputWrapper > svg {
+  margin-left: 14px;
+  flex-shrink: 0;
+  color: #a18f83;
+}
+
+.adminInputWrapper:focus-within {
+  border-color: #9b715b;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(155, 113, 91, 0.09);
+}
+
+.adminInputWrapper input {
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  padding: 0 14px 0 11px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #332821;
+  font-family: inherit;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.adminInputWrapper input::placeholder {
+  color: #b1a49c;
+}
+
+.adminInputWrapper input:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* =========================================================
+   READONLY ROLE
+========================================================= */
+
+.adminInputReadonly {
+  background: #f8f5f2;
+}
+
+.adminInputReadonly input {
+  color: #69584d;
+  cursor: default;
+}
+
+.readonlyBadge {
+  flex-shrink: 0;
+  margin-right: 10px;
+  padding: 5px 8px;
+  border: 1px solid #e5d7cd;
+  border-radius: 7px;
+  background: #eee8e3;
+  color: #816c5f;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+.adminFormGroup small {
+  display: block;
+  margin-top: 7px;
+  color: #a09289;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   FORM ACTIONS
+========================================================= */
+
+.adminFormActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  grid-column: 1 / -1;
+  padding-top: 4px;
+  margin-top: 2px;
+  border-top: 1px solid #eee6e0;
+}
+
+.adminSaveButton {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 10px;
+  background: #775441;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 5px 14px rgba(92, 62, 46, 0.14);
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.adminSaveButton:hover:not(:disabled) {
+  background: #644434;
+  transform: translateY(-1px);
+  box-shadow: 0 7px 17px rgba(92, 62, 46, 0.2);
+}
+
+.adminSaveButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.adminSaveButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* =========================================================
+   LOGIN ACTIVITY
+========================================================= */
+
+.adminLoginActivityCard {
+  margin-top: 24px;
+  padding: 25px 28px;
+  border: 1px solid #e8ddd5;
+  border-radius: 20px;
+  background: #fffdfb;
+  box-shadow: 0 8px 28px rgba(68, 45, 31, 0.06);
+}
+
+.adminLoginActivityHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee5de;
+}
+
+.adminLoginActivityTitle {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.adminLoginActivityIcon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: #f8eee8;
+  color: #805a46;
+}
+
+.adminLoginActivityTitle h2 {
+  margin: 0;
+  color: #30251f;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.adminLoginActivityTitle p {
+  margin: 5px 0 0;
+  color: #908178;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.adminLoginActivityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 7px 10px;
+  border: 1px solid #d4e8d8;
+  border-radius: 999px;
+  background: #f1f9f3;
+  color: #39734a;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.adminLoginActivityGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding-top: 20px;
+}
+
+.adminLoginActivityItem {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  padding: 17px;
+  border: 1px solid #eee5df;
+  border-radius: 13px;
+  background: #faf8f5;
+}
+
+.adminLoginActivityItemIcon {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #fff;
+  color: #86604c;
+  box-shadow: 0 2px 8px rgba(77, 50, 37, 0.06);
+}
+
+.adminLoginActivityItem > div:last-child {
+  min-width: 0;
+}
+
+.adminLoginActivityItem span {
+  display: block;
+  margin-bottom: 5px;
+  color: #978980;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.adminLoginActivityItem strong {
+  display: block;
+  overflow: hidden;
+  color: #43342b;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adminLoginActivityNotice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 11px 13px;
+  border-radius: 9px;
+  background: #faf5ef;
+  color: #907667;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.adminLoginActivityNotice svg {
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   SECURITY CARD
+========================================================= */
+
+.adminSecurityCard {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  margin-top: 24px;
+  padding: 22px 25px;
+  border: 1px solid #e8ddd5;
+  border-radius: 18px;
+  background: #fffdfb;
+  box-shadow: 0 8px 28px rgba(68, 45, 31, 0.05);
+}
+
+.adminSecurityIcon {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: #f5eee8;
+  color: #795642;
+}
+
+.adminSecurityContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.adminSecurityContent h2 {
+  margin: 0 0 5px;
+  color: #382b24;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.adminSecurityContent p {
+  max-width: 750px;
+  margin: 0;
+  color: #8d7e74;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.adminSecurityStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 7px 11px;
+  border: 1px solid #d5e7d8;
+  border-radius: 999px;
+  background: #f1f9f3;
+  color: #3d754b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.adminAccountLoading {
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  color: #88786d;
+}
+
+.adminAccountLoading p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.adminAccountSpinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid #e5dcd5;
+  border-top-color: #795541;
+  border-radius: 50%;
+  animation: adminAccountSpin 0.8s linear infinite;
+}
+
+@keyframes adminAccountSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+  .adminAccountPage {
+    padding: 25px;
+  }
+
+  .adminAccountGrid {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+
+  .adminAccountForm {
+    gap: 18px;
+    padding: 24px;
+  }
+
+  .adminAccountCardHeader {
+    padding: 23px 24px;
+  }
+
+  .adminLoginActivityCard {
+    padding: 23px 24px;
+  }
+}
+
+/* =========================================================
+   SMALL TABLET
+========================================================= */
+
+@media (max-width: 850px) {
+  .adminAccountGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .adminAccountProfileCard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .adminAccountProfileTop {
+    border-right: 1px solid #eee5de;
+    border-bottom: 0;
+  }
+
+  .adminAccountProfileDetails {
+    padding: 12px 22px;
+    align-self: center;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 650px) {
+  .adminAccountPage {
+    padding: 18px 14px;
+  }
+
+  .adminAccountPageHeader {
+    margin-bottom: 20px;
+  }
+
+  .adminAccountPageHeader h1 {
+    font-size: 25px;
+  }
+
+  .adminAccountPageHeader p {
+    font-size: 12px;
+  }
+
+  .adminAccountHeaderIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 13px;
+  }
+
+  .adminAccountGrid {
+    gap: 18px;
+  }
+
+  .adminAccountProfileCard {
+    display: block;
+  }
+
+  .adminAccountProfileTop {
+    border-right: 0;
+    border-bottom: 1px solid #eee5de;
+  }
+
+  .adminAccountProfileDetails {
+    padding: 7px 20px 12px;
+  }
+
+  .adminAccountCardHeader {
+    padding: 20px;
+  }
+
+  .adminAccountCardHeader h2 {
+    font-size: 17px;
+  }
+
+  .adminAccountCardHeader p {
+    font-size: 12px;
+  }
+
+  .adminAccountForm {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 20px;
+  }
+
+  .adminFormActions {
+    grid-column: auto;
+  }
+
+  .adminSaveButton {
+    width: 100%;
+  }
+
+  .adminLoginActivityCard {
+    padding: 20px;
+    margin-top: 18px;
+  }
+
+  .adminLoginActivityHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 13px;
+  }
+
+  .adminLoginActivityGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .adminSecurityCard {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-top: 18px;
+    padding: 20px;
+  }
+
+  .adminSecurityStatus {
+    margin-left: 63px;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 430px) {
+  .adminAccountPage {
+    padding: 14px 11px;
+  }
+
+  .adminAccountPageHeader {
+    align-items: flex-start;
+  }
+
+  .adminAccountHeaderIcon {
+    width: 43px;
+    height: 43px;
+  }
+
+  .adminAccountPageHeader h1 {
+    font-size: 23px;
+  }
+
+  .adminAccountLargeAvatar {
+    width: 76px;
+    height: 76px;
+    font-size: 24px;
+  }
+
+  .adminProfileDetail {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .adminProfileDetail strong {
+    text-align: left;
+  }
+
+  .adminAccountCardHeader {
+    gap: 12px;
+  }
+
+  .adminAccountCardIcon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .adminInputWrapper {
+    min-height: 46px;
+  }
+
+  .adminInputWrapper input {
+    height: 44px;
+    font-size: 13px;
+  }
+
+  .readonlyBadge {
+    display: none;
+  }
+
+  .adminLoginActivityItem {
+    padding: 14px;
+  }
+
+  .adminLoginActivityItem strong {
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .adminSecurityStatus {
+    margin-left: 0;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .adminAccountSpinner {
+    animation: none;
+  }
+
+  .adminSaveButton,
+  .adminInputWrapper {
+    transition: none;
+  }
+}

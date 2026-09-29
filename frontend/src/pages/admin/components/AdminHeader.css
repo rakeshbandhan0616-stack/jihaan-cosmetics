@@ -10,24 +10,32 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
 
+  gap: 24px;
   width: 100%;
   min-height: 82px;
+
   padding: 18px 32px;
 
   border-bottom: 1px solid #eadfd7;
+
   background: rgba(255, 253, 251, 0.97);
+
   backdrop-filter: blur(14px);
+
   box-sizing: border-box;
 }
 
-/* Left side */
+/* =========================================
+   LEFT SIDE
+========================================= */
 
 .adminHeaderLeft {
   display: flex;
   align-items: center;
+
   gap: 16px;
+
   min-width: 0;
 }
 
@@ -37,12 +45,16 @@
 
 .adminHeaderLeft h1 {
   overflow: hidden;
+
   margin: 0;
 
   color: #30251f;
+
   font-size: 24px;
   font-weight: 800;
+
   line-height: 1.25;
+
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -51,152 +63,91 @@
   margin: 6px 0 0;
 
   color: #a18e82;
+
   font-size: 12px;
   font-weight: 500;
 }
 
-/* Mobile menu button */
+/* =========================================
+   MOBILE MENU BUTTON
+========================================= */
 
 .mobileMenuButton {
   display: none;
+
   align-items: center;
   justify-content: center;
 
   width: 42px;
   height: 42px;
+
   flex-shrink: 0;
 
   border: 1px solid #eadfd7;
   border-radius: 12px;
+
   background: #ffffff;
   color: #806b5d;
 
   cursor: pointer;
+
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .mobileMenuButton:hover {
   border-color: #c9a78e;
   background: #f8eee7;
   color: #a66b45;
+
+  transform: translateY(-1px);
 }
 
-/* Right side */
+/* =========================================
+   RIGHT SIDE
+========================================= */
 
 .adminHeaderRight {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+
   min-width: 0;
 }
 
-/* Search */
+/* =========================================
+   PROFILE CONTAINER
+========================================= */
 
-.adminSearchBox {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  width: 240px;
-  height: 42px;
-  padding: 0 13px;
-
-  border: 1px solid #e5d8ce;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #a18e82;
-
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.adminSearchBox:focus-within {
-  border-color: #b47b55;
-  box-shadow: 0 0 0 3px rgba(180, 123, 85, 0.12);
-}
-
-.adminSearchBox input {
-  width: 100%;
-  min-width: 0;
-
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #30251f;
-
-  font-family: inherit;
-  font-size: 13px;
-}
-
-.adminSearchBox input::placeholder {
-  color: #b3a095;
-}
-
-/* Header icon button */
-
-.headerIconButton {
+.adminProfileContainer {
   position: relative;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 42px;
-  height: 42px;
-  flex-shrink: 0;
-
-  border: 1px solid #eadfd7;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #806b5d;
-
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
 }
 
-.headerIconButton:hover {
-  border-color: #c9a78e;
-  background: #f8eee7;
-  color: #a66b45;
-}
-
-.notificationDot {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-
-  width: 7px;
-  height: 7px;
-
-  border: 2px solid #ffffff;
-  border-radius: 50%;
-  background: #c76b58;
-}
-
-/* Profile button */
+/* =========================================
+   PROFILE BUTTON
+========================================= */
 
 .adminProfileButton {
   display: inline-flex;
   align-items: center;
+
   gap: 9px;
 
-  min-height: 42px;
-  padding: 0 13px;
+  min-height: 44px;
+
+  padding: 4px 10px 4px 5px;
 
   border: 1px solid #eadfd7;
   border-radius: 12px;
+
   background: #ffffff;
   color: #806b5d;
 
   cursor: pointer;
+
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
@@ -204,36 +155,429 @@
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .adminProfileButton:hover {
   border-color: #c9a78e;
   background: #f8eee7;
   color: #a66b45;
+
+  transform: translateY(-1px);
 }
 
-.adminProfileButton svg {
+.adminProfileButton:focus-visible {
+  outline: 2px solid #b47b55;
+  outline-offset: 3px;
+}
+
+/* =========================================
+   ADMIN AVATAR
+========================================= */
+
+.adminAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
   flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #30251f;
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: 0.4px;
+
+  text-transform: uppercase;
 }
 
-/* Tablet */
+.adminProfileName {
+  max-width: 170px;
+
+  overflow: hidden;
+
+  color: #30251f;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileChevron {
+  flex-shrink: 0;
+
+  color: #a18e82;
+
+  transition: transform 0.2s ease;
+}
+
+.profileChevronOpen {
+  transform: rotate(90deg);
+}
+
+/* =========================================
+   PROFILE DROPDOWN
+========================================= */
+
+.adminProfileDropdown {
+  position: absolute;
+
+  top: calc(100% + 12px);
+  right: 0;
+
+  z-index: 1500;
+
+  width: 360px;
+
+  max-height: calc(100vh - 110px);
+
+  overflow-y: auto;
+
+  border: 1px solid #eadfd7;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 24px 65px rgba(48, 37, 31, 0.16);
+
+  animation: adminProfileDropdownIn 0.22s
+    cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  scrollbar-width: thin;
+  scrollbar-color: #d8c7ba transparent;
+}
+
+.adminProfileDropdown::-webkit-scrollbar {
+  width: 5px;
+}
+
+.adminProfileDropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.adminProfileDropdown::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: #d8c7ba;
+}
+
+/* =========================================
+   PROFILE HEADER
+========================================= */
+
+.profileDropdownHeader {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 18px;
+
+  border-bottom: 1px solid #eee3dc;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fffaf6 0%,
+      #f8eee7 100%
+    );
+}
+
+.largeAdminAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 48px;
+  height: 48px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #30251f;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+}
+
+.profileHeaderInfo {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  flex: 1;
+}
+
+.profileHeaderInfo strong {
+  overflow: hidden;
+
+  color: #30251f;
+
+  font-size: 15px;
+  font-weight: 800;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileHeaderInfo span {
+  margin-top: 4px;
+
+  color: #a18e82;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  text-transform: capitalize;
+}
+
+.profileCloseButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+
+  flex-shrink: 0;
+
+  padding: 0;
+
+  border: 1px solid transparent;
+  border-radius: 8px;
+
+  background: transparent;
+  color: #806b5d;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.profileCloseButton:hover {
+  border-color: #eadfd7;
+  background: #ffffff;
+  color: #30251f;
+}
+
+/* =========================================
+   ADMIN INFORMATION
+========================================= */
+
+.adminInfoSection {
+  padding: 14px 18px 10px;
+}
+
+.adminInfoTitle {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  margin-bottom: 7px;
+
+  color: #30251f;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: 0.2px;
+}
+
+.adminInfoTitle svg {
+  color: #a66b45;
+}
+
+.adminInfoItem {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  padding: 11px 0;
+
+  border-bottom: 1px solid #f0e8e2;
+}
+
+.adminInfoItem:last-child {
+  border-bottom: none;
+}
+
+.adminInfoItem > svg {
+  flex-shrink: 0;
+
+  color: #a66b45;
+}
+
+.adminInfoItem > div {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+}
+
+.adminInfoItem span {
+  color: #a18e82;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.adminInfoItem strong {
+  margin-top: 3px;
+
+  overflow: hidden;
+
+  color: #30251f;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================
+   PROFILE ACTIONS
+========================================= */
+
+.profileDropdownActions {
+  padding: 12px 18px 16px;
+
+  border-top: 1px solid #eee3dc;
+}
+
+.myAccountButton,
+.profileLogoutButton {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  min-height: 43px;
+
+  gap: 9px;
+
+  border-radius: 9px;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.myAccountButton {
+  padding: 0 12px;
+
+  border: 1px solid #eadfd7;
+
+  background: #fffaf6;
+  color: #30251f;
+}
+
+.myAccountButton:hover {
+  border-color: #c9a78e;
+  background: #f8eee7;
+
+  transform: translateY(-1px);
+}
+
+.myAccountButton span {
+  flex: 1;
+
+  text-align: left;
+}
+
+.myAccountButton > svg:first-child {
+  color: #a66b45;
+}
+
+.profileLogoutButton {
+  justify-content: center;
+
+  margin-top: 8px;
+
+  border: 1px solid #eadfd7;
+
+  background: #ffffff;
+  color: #a64b3d;
+}
+
+.profileLogoutButton:hover {
+  border-color: #edcbc5;
+  background: #fff6f4;
+}
+
+/* =========================================
+   ANIMATION
+========================================= */
+
+@keyframes adminProfileDropdownIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(-7px)
+      scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* =========================================
+   TABLET
+========================================= */
 
 @media (max-width: 1100px) {
   .adminHeader {
     padding: 18px 24px;
   }
 
-  .adminSearchBox {
-    width: 190px;
+  .adminHeaderLeft h1 {
+    font-size: 22px;
+  }
+
+  .adminProfileName {
+    max-width: 135px;
   }
 }
 
-/* Mobile */
+/* =========================================
+   MOBILE
+========================================= */
 
 @media (max-width: 850px) {
   .adminHeader {
     min-height: 72px;
+
     padding: 15px 20px;
   }
 
@@ -241,18 +585,35 @@
     display: inline-flex;
   }
 
+  .adminHeaderLeft {
+    gap: 12px;
+  }
+
   .adminHeaderLeft h1 {
     font-size: 20px;
   }
 
-  .adminSearchBox {
-    display: none;
+  .adminProfileDropdown {
+    position: fixed;
+
+    top: 78px;
+    right: 14px;
+    left: 14px;
+
+    width: auto;
+
+    max-height: calc(100vh - 92px);
   }
 }
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
 
 @media (max-width: 480px) {
   .adminHeader {
     gap: 12px;
+
     padding: 14px 16px;
   }
 
@@ -262,6 +623,7 @@
 
   .adminHeaderLeft h1 {
     max-width: 190px;
+
     font-size: 18px;
   }
 
@@ -271,11 +633,62 @@
 
   .adminProfileButton {
     width: 42px;
+    height: 42px;
+
     padding: 0;
+
     justify-content: center;
+
+    border-radius: 12px;
   }
 
-  .adminProfileButton span {
+  .adminProfileName,
+  .profileChevron {
     display: none;
+  }
+
+  .adminProfileDropdown {
+    top: 70px;
+    right: 8px;
+    left: 8px;
+
+    max-height: calc(100vh - 82px);
+
+    border-radius: 13px;
+  }
+
+  .profileDropdownHeader {
+    padding: 15px;
+  }
+
+  .adminInfoSection {
+    padding: 12px 15px 8px;
+  }
+
+  .profileDropdownActions {
+    padding: 10px 15px 14px;
+  }
+}
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+
+.adminHeader button:focus-visible {
+  outline: 2px solid #b47b55;
+  outline-offset: 2px;
+}
+
+/* =========================================
+   REDUCED MOTION
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .adminHeader *,
+  .adminHeader *::before,
+  .adminHeader *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -4,7 +4,7 @@ import {
   LoaderCircle,
   Search,
   ShoppingBag,
-  Sparkles,
+  Bell,
   UserRound,
   LogOut,
   User,
@@ -88,6 +88,25 @@ type CartResponse = {
     }>;
     totalItems?: number;
   };
+};
+
+type NotificationItem = {
+  _id: string;
+  title: string;
+  message: string;
+  link?: string;
+  isActive?: boolean;
+  isRead?: boolean;
+  createdAt: string;
+};
+
+type NotificationResponse = {
+  success?: boolean;
+  message?: string;
+  notifications?: NotificationItem[];
+  data?: NotificationItem[];
+  count?: number;
+  unreadCount?: number;
 };
 
 /* =========================================================
@@ -182,6 +201,9 @@ function MainHeader() {
   const accountRef =
     useRef<HTMLDivElement | null>(null);
 
+  const notificationRef =
+    useRef<HTMLDivElement | null>(null);
+
   const searchRequestRef =
     useRef<AbortController | null>(null);
 
@@ -222,6 +244,22 @@ function MainHeader() {
     useState<CurrentUser | null>(null);
 
   const [isAccountOpen, setIsAccountOpen] =
+    useState(false);
+
+  /* -------------------------------------------------------
+     NOTIFICATION STATE
+  ------------------------------------------------------- */
+
+  const [notifications, setNotifications] =
+    useState<NotificationItem[]>([]);
+
+  const [notificationCount, setNotificationCount] =
+    useState(0);
+
+  const [isNotificationOpen, setIsNotificationOpen] =
+    useState(false);
+
+  const [notificationsLoading, setNotificationsLoading] =
     useState(false);
 
   /* -------------------------------------------------------
@@ -680,6 +718,250 @@ function MainHeader() {
     };
 
   /* =======================================================
+     NOTIFICATIONS
+  ======================================================= */
+
+  const fetchNotifications = async (
+    showList = false,
+  ) => {
+    const token = localStorage.getItem(
+      AUTH_TOKEN_STORAGE_KEY,
+    );
+
+    if (!token) {
+      setNotifications([]);
+      setNotificationCount(0);
+      return;
+    }
+
+    try {
+      if (showList) {
+        setNotificationsLoading(true);
+      }
+
+      const [countResponse, listResponse] =
+        await Promise.all([
+          fetch(
+            `${API_BASE_URL}/notifications/unread-count`,
+            {
+              method: "GET",
+              headers: {
+                Accept: "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              credentials: "include",
+            },
+          ),
+          showList
+            ? fetch(
+                `${API_BASE_URL}/notifications`,
+                {
+                  method: "GET",
+                  headers: {
+                    Accept:
+                      "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  credentials: "include",
+                },
+              )
+            : Promise.resolve(null),
+        ]);
+
+      const countData =
+        (await countResponse
+          .json()
+          .catch(() => ({}))) as NotificationResponse;
+
+      if (countResponse.ok) {
+        setNotificationCount(
+          Number(
+            countData.unreadCount ??
+              countData.count ??
+              0,
+          ),
+        );
+      }
+
+      if (listResponse) {
+        const listData =
+          (await listResponse
+            .json()
+            .catch(() => ({}))) as NotificationResponse;
+
+        if (listResponse.ok) {
+          const received =
+            Array.isArray(
+              listData.notifications,
+            )
+              ? listData.notifications
+              : Array.isArray(listData.data)
+                ? listData.data
+                : [];
+
+          setNotifications(
+            received.filter(
+              (notification) =>
+                notification.isActive !== false,
+            ),
+          );
+        }
+      }
+    } catch (error) {
+      console.error(
+        "Notification fetch error:",
+        error,
+      );
+    } finally {
+      if (showList) {
+        setNotificationsLoading(false);
+      }
+    }
+  };
+
+  const toggleNotifications = async () => {
+    if (!currentUser) {
+      navigate("/login");
+      return;
+    }
+
+    const nextOpen =
+      !isNotificationOpen;
+
+    setIsNotificationOpen(nextOpen);
+    setIsAccountOpen(false);
+
+    if (nextOpen) {
+      await fetchNotifications(true);
+    }
+  };
+
+  const markNotificationAsRead = async (
+    notification: NotificationItem,
+  ) => {
+    const token = localStorage.getItem(
+      AUTH_TOKEN_STORAGE_KEY,
+    );
+
+    if (!token) {
+      return;
+    }
+
+    try {
+      if (!notification.isRead) {
+        await fetch(
+          `${API_BASE_URL}/notifications/${notification._id}/read`,
+          {
+            method: "PATCH",
+            headers: {
+              Accept: "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            credentials: "include",
+          },
+        );
+
+        setNotifications((previous) =>
+          previous.map((item) =>
+            item._id === notification._id
+              ? {
+                  ...item,
+                  isRead: true,
+                }
+              : item,
+          ),
+        );
+
+        setNotificationCount(
+          (previous) =>
+            Math.max(0, previous - 1),
+        );
+      }
+
+      setIsNotificationOpen(false);
+
+      if (notification.link?.trim()) {
+        const link =
+          notification.link.trim();
+
+        if (/^https?:\/\//i.test(link)) {
+          window.location.href = link;
+        } else {
+          navigate(link);
+        }
+      }
+    } catch (error) {
+      console.error(
+        "Notification read error:",
+        error,
+      );
+    }
+  };
+
+  const markAllNotificationsAsRead =
+    async () => {
+      const token = localStorage.getItem(
+        AUTH_TOKEN_STORAGE_KEY,
+      );
+
+      if (!token || notificationCount === 0) {
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/notifications/read-all`,
+          {
+            method: "PATCH",
+            headers: {
+              Accept: "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            credentials: "include",
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "Unable to mark notifications as read.",
+          );
+        }
+
+        setNotifications((previous) =>
+          previous.map((item) => ({
+            ...item,
+            isRead: true,
+          })),
+        );
+
+        setNotificationCount(0);
+      } catch (error) {
+        console.error(
+          "Mark all notifications error:",
+          error,
+        );
+      }
+    };
+
+  const formatNotificationDate = (
+    value: string,
+  ) => {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    return date.toLocaleDateString(
+      "en-IN",
+      {
+        day: "2-digit",
+        month: "short",
+      },
+    );
+  };
+
+  /* =======================================================
      LOGOUT
   ======================================================= */
 
@@ -723,7 +1005,10 @@ function MainHeader() {
 
         setCurrentUser(null);
         setCartCount(0);
+        setNotifications([]);
+        setNotificationCount(0);
         setIsAccountOpen(false);
+        setIsNotificationOpen(false);
 
         navigate("/login", {
           replace: true,
@@ -739,11 +1024,13 @@ function MainHeader() {
     loadCurrentUser();
 
     void updateCartCount();
+    void fetchNotifications();
 
     const handleStorage =
       () => {
         loadCurrentUser();
         void updateCartCount();
+        void fetchNotifications();
       };
 
     const handleCartUpdated =
@@ -800,6 +1087,15 @@ function MainHeader() {
           )
         ) {
           setIsAccountOpen(false);
+        }
+
+        if (
+          notificationRef.current &&
+          !notificationRef.current.contains(
+            target,
+          )
+        ) {
+          setIsNotificationOpen(false);
         }
       };
 
@@ -1202,22 +1498,219 @@ function MainHeader() {
             />
           </button>
 
-          <button
-            type="button"
-            className={
-              styles.iconButton
-            }
-            onClick={() =>
-              navigate("/offers")
-            }
-            aria-label="Offers"
-            title="Offers"
+          {/* NOTIFICATIONS */}
+
+          <div
+            className={styles.notificationContainer}
+            ref={notificationRef}
           >
-            <Sparkles
-              size={22}
-              strokeWidth={1.7}
-            />
-          </button>
+            <button
+              type="button"
+              className={styles.iconButton}
+              onClick={() =>
+                void toggleNotifications()
+              }
+              aria-label={
+                currentUser
+                  ? `Notifications${
+                      notificationCount > 0
+                        ? `, ${notificationCount} unread`
+                        : ""
+                    }`
+                  : "Login to view notifications"
+              }
+              title={
+                currentUser
+                  ? "Notifications"
+                  : "Login to view notifications"
+              }
+              aria-expanded={
+                isNotificationOpen
+              }
+            >
+              <span
+                className={
+                  styles.notificationIconWrapper
+                }
+              >
+                <Bell
+                  size={22}
+                  strokeWidth={1.7}
+                />
+
+                {currentUser &&
+                  notificationCount > 0 && (
+                    <span
+                      className={
+                        styles.notificationBadge
+                      }
+                    >
+                      {notificationCount > 99
+                        ? "99+"
+                        : notificationCount}
+                    </span>
+                  )}
+              </span>
+            </button>
+
+            {isNotificationOpen &&
+              currentUser && (
+                <div
+                  className={
+                    styles.notificationDropdown
+                  }
+                >
+                  <div
+                    className={
+                      styles.notificationDropdownHeader
+                    }
+                  >
+                    <div>
+                      <strong>
+                        Notifications
+                      </strong>
+
+                      <span>
+                        {notificationCount > 0
+                          ? `${notificationCount} unread`
+                          : "All caught up"}
+                      </span>
+                    </div>
+
+                    {notificationCount > 0 && (
+                      <button
+                        type="button"
+                        className={
+                          styles.markAllReadButton
+                        }
+                        onClick={() =>
+                          void markAllNotificationsAsRead()
+                        }
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+
+                  <div
+                    className={
+                      styles.notificationList
+                    }
+                  >
+                    {notificationsLoading ? (
+                      <div
+                        className={
+                          styles.notificationState
+                        }
+                      >
+                        <LoaderCircle
+                          size={19}
+                          className={
+                            styles.loadingIcon
+                          }
+                        />
+                        Loading notifications...
+                      </div>
+                    ) : notifications.length ===
+                      0 ? (
+                      <div
+                        className={
+                          styles.notificationState
+                        }
+                      >
+                        <Bell size={24} />
+                        <span>
+                          No notifications
+                        </span>
+                      </div>
+                    ) : (
+                      notifications.map(
+                        (notification) => (
+                          <button
+                            type="button"
+                            key={
+                              notification._id
+                            }
+                            className={`${styles.notificationItem} ${
+                              notification.isRead
+                                ? styles.notificationRead
+                                : styles.notificationUnread
+                            }`}
+                            onClick={() =>
+                              void markNotificationAsRead(
+                                notification,
+                              )
+                            }
+                          >
+                            <span
+                              className={
+                                styles.notificationItemIcon
+                              }
+                            >
+                              <Bell
+                                size={16}
+                              />
+                            </span>
+
+                            <span
+                              className={
+                                styles.notificationItemContent
+                              }
+                            >
+                              <strong>
+                                {
+                                  notification.title
+                                }
+                              </strong>
+
+                              <span>
+                                {
+                                  notification.message
+                                }
+                              </span>
+
+                              <small>
+                                {formatNotificationDate(
+                                  notification.createdAt,
+                                )}
+                              </small>
+                            </span>
+
+                            {!notification.isRead && (
+                              <span
+                                className={
+                                  styles.notificationUnreadDot
+                                }
+                              />
+                            )}
+                          </button>
+                        ),
+                      )
+                    )}
+                  </div>
+
+                  <div
+                    className={
+                      styles.notificationDropdownFooter
+                    }
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsNotificationOpen(
+                          false,
+                        );
+                        navigate(
+                          "/notifications",
+                        );
+                      }}
+                    >
+                      View notifications
+                    </button>
+                  </div>
+                </div>
+              )}
+          </div>
 
           {/* ACCOUNT */}
 

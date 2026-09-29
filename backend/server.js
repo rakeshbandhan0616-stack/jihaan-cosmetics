@@ -73,6 +73,13 @@ import analyticsRoutes from "./routes/analyticsRoutes.js";
 import salesReportRoutes from "./routes/salesReportRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 
+
+//notification
+import notificationRoutes from "./routes/notificationRoutes.js";
+
+//accounts admin 
+import adminAccountRoutes from "./routes/adminAccountRoutes.js";
+
 // --------------------------------------------------
 // DNS configuration
 // --------------------------------------------------
@@ -292,6 +299,19 @@ app.use(
   adminUserRoutes,
 );
 
+
+//notification
+app.use(
+  "/api/notifications",
+  notificationRoutes,
+);
+
+
+//accomnts admin 
+app.use(
+  "/api/admin/account",
+  adminAccountRoutes,
+);
 // ==================================================
 // Partners
 // ==================================================

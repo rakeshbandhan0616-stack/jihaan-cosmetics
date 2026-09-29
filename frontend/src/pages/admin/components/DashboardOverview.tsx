@@ -61,6 +61,8 @@ interface ApiResponse {
   orders?: unknown[];
   data?: unknown;
   result?: unknown;
+
+  [key: string]: unknown;
 }
 
 interface StatCardProps {
@@ -143,14 +145,16 @@ const extractArray = (
   response: ApiResponse,
   keys: string[],
 ): unknown[] => {
+  // Check response directly.
   for (const key of keys) {
-    const directValue = response[key as keyof ApiResponse];
+    const directValue = response[key];
 
     if (Array.isArray(directValue)) {
       return directValue;
     }
   }
 
+  // Check response.data.
   const dataObject = getObject(response.data);
 
   for (const key of keys) {
@@ -159,6 +163,7 @@ const extractArray = (
     }
   }
 
+  // Check response.result.
   const resultObject = getObject(response.result);
 
   for (const key of keys) {
@@ -212,7 +217,10 @@ function StatCard({
           <Icon size={22} />
         </div>
 
-        <TrendingUp size={18} className="statTrendIcon" />
+        <TrendingUp
+          size={18}
+          className="statTrendIcon"
+        />
       </div>
 
       <div className="statCardBody">
@@ -298,7 +306,6 @@ export default function DashboardOverview({
 
         if (overviewResponse.status === "fulfilled") {
           const response = overviewResponse.value;
-
           const overview = getObject(response.overview);
 
           totalOrders = toNumber(
@@ -319,7 +326,9 @@ export default function DashboardOverview({
               overview.totalSales,
           );
 
-          subtotal = toNumber(overview.subtotal);
+          subtotal = toNumber(
+            overview.subtotal,
+          );
 
           shipping = toNumber(
             overview.shipping ??
@@ -352,7 +361,9 @@ export default function DashboardOverview({
         if (inventoryResponse.status === "fulfilled") {
           const response = inventoryResponse.value;
 
-          const summary = getObject(response.summary);
+          const summary = getObject(
+            response.summary,
+          );
 
           const products = extractArray(response, [
             "products",
@@ -380,14 +391,16 @@ export default function DashboardOverview({
 
           lowStockProducts = toNumber(
             summary.lowStockProducts ??
-              response.lowStockProducts?.length ??
-              0,
+              getArray(
+                response.lowStockProducts,
+              ).length,
           );
 
           outOfStockProducts = toNumber(
             summary.outOfStockProducts ??
-              response.outOfStockProducts?.length ??
-              0,
+              getArray(
+                response.outOfStockProducts,
+              ).length,
           );
         }
 
@@ -400,15 +413,20 @@ export default function DashboardOverview({
         let totalCategories = 0;
 
         if (categoriesResponse.status === "fulfilled") {
-          const response = categoriesResponse.value;
+          const response =
+            categoriesResponse.value;
 
-          const categories = extractArray(response, [
-            "categories",
-            "data",
-            "items",
-          ]);
+          const categories = extractArray(
+            response,
+            [
+              "categories",
+              "data",
+              "items",
+            ],
+          );
 
-          totalCategories = categories.length;
+          totalCategories =
+            categories.length;
         }
 
         /*
@@ -420,13 +438,17 @@ export default function DashboardOverview({
         let totalBrands = 0;
 
         if (brandsResponse.status === "fulfilled") {
-          const response = brandsResponse.value;
+          const response =
+            brandsResponse.value;
 
-          const brands = extractArray(response, [
-            "brands",
-            "data",
-            "items",
-          ]);
+          const brands = extractArray(
+            response,
+            [
+              "brands",
+              "data",
+              "items",
+            ],
+          );
 
           totalBrands = brands.length;
         }
@@ -440,22 +462,28 @@ export default function DashboardOverview({
         let activeOffers = 0;
 
         if (offersResponse.status === "fulfilled") {
-          const response = offersResponse.value;
+          const response =
+            offersResponse.value;
 
-          const offers = extractArray(response, [
-            "offers",
-            "data",
-            "items",
-          ]);
+          const offers = extractArray(
+            response,
+            [
+              "offers",
+              "data",
+              "items",
+            ],
+          );
 
-          activeOffers = offers.filter((offer) => {
-            const item = getObject(offer);
+          activeOffers = offers.filter(
+            (offer) => {
+              const item = getObject(offer);
 
-            return (
-              item.active === true ||
-              item.isActive === true
-            );
-          }).length;
+              return (
+                item.active === true ||
+                item.isActive === true
+              );
+            },
+          ).length;
         }
 
         /*
@@ -463,37 +491,44 @@ export default function DashboardOverview({
          * ORDERS
          * ---------------------------------------------------------
          *
-         * This endpoint is optional. If your backend does not
-         * expose /admin/orders, pendingOrders safely remains 0.
+         * This endpoint is optional.
+         * If /admin/orders is unavailable,
+         * pendingOrders remains 0.
          */
 
         let pendingOrders = 0;
 
         if (ordersResponse.status === "fulfilled") {
-          const response = ordersResponse.value;
+          const response =
+            ordersResponse.value;
 
-          const orders = extractArray(response, [
-            "orders",
-            "data",
-            "items",
-          ]);
+          const orders = extractArray(
+            response,
+            [
+              "orders",
+              "data",
+              "items",
+            ],
+          );
 
-          pendingOrders = orders.filter((order) => {
-            const item = getObject(order);
+          pendingOrders = orders.filter(
+            (order) => {
+              const item = getObject(order);
 
-            const status = String(
-              item.orderStatus ??
-                item.status ??
-                "",
-            ).toLowerCase();
+              const status = String(
+                item.orderStatus ??
+                  item.status ??
+                  "",
+              ).toLowerCase();
 
-            return [
-              "pending",
-              "processing",
-              "confirmed",
-              "placed",
-            ].includes(status);
-          }).length;
+              return [
+                "pending",
+                "processing",
+                "confirmed",
+                "placed",
+              ].includes(status);
+            },
+          ).length;
         }
 
         /*
@@ -501,22 +536,28 @@ export default function DashboardOverview({
          * FALLBACK TO PROPS
          * ---------------------------------------------------------
          *
-         * Existing parent stats will be used only when a backend
-         * endpoint does not return that particular value.
+         * Parent stats are used only when the
+         * backend does not return a value.
          */
 
         setBackendStats({
           totalOrders:
             totalOrders ||
-            Number(stats?.totalOrders || 0),
+            Number(
+              stats?.totalOrders || 0,
+            ),
 
           totalCustomers:
             totalCustomers ||
-            Number(stats?.totalCustomers || 0),
+            Number(
+              stats?.totalCustomers || 0,
+            ),
 
           revenue:
             revenue ||
-            Number(stats?.totalRevenue || 0),
+            Number(
+              stats?.totalRevenue || 0,
+            ),
 
           subtotal,
           shipping,
@@ -526,7 +567,9 @@ export default function DashboardOverview({
 
           totalProducts:
             totalProducts ||
-            Number(stats?.totalProducts || 0),
+            Number(
+              stats?.totalProducts || 0,
+            ),
 
           totalStock,
           inventoryValue,
@@ -536,29 +579,45 @@ export default function DashboardOverview({
 
           totalCategories:
             totalCategories ||
-            Number(stats?.totalCategories || 0),
+            Number(
+              stats?.totalCategories || 0,
+            ),
 
           totalBrands:
             totalBrands ||
-            Number(stats?.totalBrands || 0),
+            Number(
+              stats?.totalBrands || 0,
+            ),
 
           activeOffers:
             activeOffers ||
-            Number(stats?.activeOffers || 0),
+            Number(
+              stats?.activeOffers || 0,
+            ),
 
           pendingOrders:
             pendingOrders ||
-            Number(stats?.pendingOrders || 0),
+            Number(
+              stats?.pendingOrders || 0,
+            ),
         });
 
         /*
-         * Only show a global error when the important overview
-         * endpoint itself fails.
+         * ---------------------------------------------------------
+         * GLOBAL ERROR
+         * ---------------------------------------------------------
+         *
+         * Only show an error when the important
+         * overview endpoint itself fails.
          */
 
-        if (overviewResponse.status === "rejected") {
+        if (
+          overviewResponse.status ===
+          "rejected"
+        ) {
           setError(
-            overviewResponse.reason instanceof Error
+            overviewResponse.reason instanceof
+              Error
               ? overviewResponse.reason.message
               : "Unable to load dashboard overview.",
           );
@@ -588,30 +647,63 @@ export default function DashboardOverview({
 
   const dashboardStats = useMemo(
     () => ({
-      totalProducts: backendStats.totalProducts,
-      totalCategories: backendStats.totalCategories,
-      totalBrands: backendStats.totalBrands,
-      totalOrders: backendStats.totalOrders,
-      totalCustomers: backendStats.totalCustomers,
-      totalRevenue: backendStats.revenue,
-      activeOffers: backendStats.activeOffers,
-      pendingOrders: backendStats.pendingOrders,
+      totalProducts:
+        backendStats.totalProducts,
 
-      totalStock: backendStats.totalStock,
-      inventoryValue: backendStats.inventoryValue,
-      lowStockProducts: backendStats.lowStockProducts,
-      outOfStockProducts: backendStats.outOfStockProducts,
-      averageOrderValue: backendStats.averageOrderValue,
+      totalCategories:
+        backendStats.totalCategories,
+
+      totalBrands:
+        backendStats.totalBrands,
+
+      totalOrders:
+        backendStats.totalOrders,
+
+      totalCustomers:
+        backendStats.totalCustomers,
+
+      totalRevenue:
+        backendStats.revenue,
+
+      activeOffers:
+        backendStats.activeOffers,
+
+      pendingOrders:
+        backendStats.pendingOrders,
+
+      totalStock:
+        backendStats.totalStock,
+
+      inventoryValue:
+        backendStats.inventoryValue,
+
+      lowStockProducts:
+        backendStats.lowStockProducts,
+
+      outOfStockProducts:
+        backendStats.outOfStockProducts,
+
+      averageOrderValue:
+        backendStats.averageOrderValue,
     }),
     [backendStats],
   );
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(Number.isFinite(amount) ? amount : 0);
+  const formatCurrency = (
+    amount: number,
+  ) => {
+    return new Intl.NumberFormat(
+      "en-IN",
+      {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+      },
+    ).format(
+      Number.isFinite(amount)
+        ? amount
+        : 0,
+    );
   };
 
   const handleRefresh = () => {
@@ -633,26 +725,31 @@ export default function DashboardOverview({
           <h2>Welcome back, Admin</h2>
 
           <p>
-            Here is what is happening with your beauty
-            store today.
+            Here is what is happening
+            with your beauty store today.
           </p>
         </div>
 
         <div className="dashboardWelcomeRight">
           <div className="dashboardDate">
-            {new Date().toLocaleDateString("en-IN", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
+            {new Date().toLocaleDateString(
+              "en-IN",
+              {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              },
+            )}
           </div>
 
           <button
             type="button"
             className="dashboardRefreshButton"
             onClick={handleRefresh}
-            disabled={loading || refreshing}
+            disabled={
+              loading || refreshing
+            }
             title="Refresh dashboard"
           >
             <RefreshCw
@@ -664,7 +761,9 @@ export default function DashboardOverview({
               }
             />
 
-            {refreshing ? "Refreshing..." : "Refresh"}
+            {refreshing
+              ? "Refreshing..."
+              : "Refresh"}
           </button>
         </div>
       </div>
@@ -678,7 +777,10 @@ export default function DashboardOverview({
           <AlertTriangle size={18} />
 
           <div>
-            <strong>Dashboard data could not be fully loaded</strong>
+            <strong>
+              Dashboard data could not
+              be fully loaded
+            </strong>
 
             <span>{error}</span>
           </div>
@@ -699,7 +801,9 @@ export default function DashboardOverview({
       <div className="dashboardStatsGrid">
         <StatCard
           title="Total Products"
-          value={dashboardStats.totalProducts}
+          value={
+            dashboardStats.totalProducts
+          }
           description="Products in your store"
           icon={Package}
           className="statProducts"
@@ -708,7 +812,9 @@ export default function DashboardOverview({
 
         <StatCard
           title="Total Orders"
-          value={dashboardStats.totalOrders}
+          value={
+            dashboardStats.totalOrders
+          }
           description="Orders received"
           icon={ShoppingBag}
           className="statOrders"
@@ -717,7 +823,9 @@ export default function DashboardOverview({
 
         <StatCard
           title="Total Customers"
-          value={dashboardStats.totalCustomers}
+          value={
+            dashboardStats.totalCustomers
+          }
           description="Customers with orders"
           icon={Users}
           className="statCustomers"
@@ -737,7 +845,9 @@ export default function DashboardOverview({
 
         <StatCard
           title="Categories"
-          value={dashboardStats.totalCategories}
+          value={
+            dashboardStats.totalCategories
+          }
           description="Available categories"
           icon={Box}
           className="statCategories"
@@ -746,7 +856,9 @@ export default function DashboardOverview({
 
         <StatCard
           title="Active Offers"
-          value={dashboardStats.activeOffers}
+          value={
+            dashboardStats.activeOffers
+          }
           description="Currently running offers"
           icon={BadgePercent}
           className="statOffers"
@@ -789,7 +901,8 @@ export default function DashboardOverview({
               <h3>Order Summary</h3>
 
               <p>
-                Current order and inventory activity
+                Current order and inventory
+                activity
               </p>
             </div>
 
@@ -817,7 +930,9 @@ export default function DashboardOverview({
           </div>
 
           <div className="orderSummaryRow">
-            <span>Average Order Value</span>
+            <span>
+              Average Order Value
+            </span>
 
             <strong>
               {loading
@@ -846,10 +961,13 @@ export default function DashboardOverview({
         <div className="dashboardInfoCard">
           <div className="infoCardHeader">
             <div>
-              <h3>Store Information</h3>
+              <h3>
+                Store Information
+              </h3>
 
               <p>
-                Overview of your store catalog
+                Overview of your store
+                catalog
               </p>
             </div>
 
@@ -877,7 +995,9 @@ export default function DashboardOverview({
           </div>
 
           <div className="orderSummaryRow">
-            <span>Total Categories</span>
+            <span>
+              Total Categories
+            </span>
 
             <strong>
               {loading
@@ -905,7 +1025,8 @@ export default function DashboardOverview({
               <h3>Inventory Health</h3>
 
               <p>
-                Products that need attention
+                Products that need
+                attention
               </p>
             </div>
 
@@ -963,7 +1084,8 @@ export default function DashboardOverview({
       <div className="dashboardHealthGrid">
         <div
           className={`dashboardHealthCard ${
-            dashboardStats.lowStockProducts > 0
+            dashboardStats.lowStockProducts >
+            0
               ? "healthWarning"
               : "healthGood"
           }`}
@@ -973,7 +1095,9 @@ export default function DashboardOverview({
           </div>
 
           <div>
-            <span>Low Stock Products</span>
+            <span>
+              Low Stock Products
+            </span>
 
             <strong>
               {loading
@@ -982,7 +1106,8 @@ export default function DashboardOverview({
             </strong>
 
             <small>
-              {dashboardStats.lowStockProducts > 0
+              {dashboardStats.lowStockProducts >
+              0
                 ? "Products need restocking"
                 : "Inventory level looks good"}
             </small>
@@ -991,7 +1116,8 @@ export default function DashboardOverview({
 
         <div
           className={`dashboardHealthCard ${
-            dashboardStats.outOfStockProducts > 0
+            dashboardStats.outOfStockProducts >
+            0
               ? "healthDanger"
               : "healthGood"
           }`}
@@ -1010,7 +1136,8 @@ export default function DashboardOverview({
             </strong>
 
             <small>
-              {dashboardStats.outOfStockProducts > 0
+              {dashboardStats.outOfStockProducts >
+              0
                 ? "Products currently unavailable"
                 : "All products have stock"}
             </small>

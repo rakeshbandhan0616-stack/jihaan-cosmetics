@@ -1,0 +1,858 @@
+.notificationsManager {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 4px 0 40px;
+  color: #1d1d1f;
+}
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.notificationsPageHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 26px;
+}
+
+.notificationsEyebrow,
+.notificationFormEyebrow {
+  display: block;
+  margin-bottom: 7px;
+  color: #9a6b35;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.notificationsPageHeader h2 {
+  margin: 0;
+  font-size: clamp(25px, 3vw, 34px);
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+  font-weight: 750;
+}
+
+.notificationsPageHeader p {
+  margin: 9px 0 0;
+  color: #777;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.notificationsHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.notificationRefreshButton,
+.notificationCreateButton,
+.notificationCancelButton,
+.notificationSaveButton {
+  min-height: 42px;
+  border: 0;
+  border-radius: 11px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.notificationRefreshButton {
+  background: #fff;
+  color: #454545;
+  border: 1px solid #e5e5e5;
+}
+
+.notificationRefreshButton:hover:not(:disabled) {
+  background: #fafafa;
+  border-color: #d5d5d5;
+}
+
+.notificationCreateButton {
+  background: #171717;
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+}
+
+.notificationCreateButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.17);
+}
+
+.notificationRefreshButton:disabled,
+.notificationCreateButton:disabled,
+.notificationCancelButton:disabled,
+.notificationSaveButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   ALERTS
+========================================================= */
+
+.notificationAlert {
+  min-height: 48px;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.notificationAlert span {
+  flex: 1;
+}
+
+.notificationAlert button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.notificationAlertError {
+  background: #fff2f2;
+  color: #a92f2f;
+  border: 1px solid #ffd7d7;
+}
+
+.notificationAlertSuccess {
+  background: #effaf3;
+  color: #267546;
+  border: 1px solid #d3efdc;
+}
+
+/* =========================================================
+   SUMMARY
+========================================================= */
+
+.notificationSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+  margin-bottom: 22px;
+}
+
+.notificationSummaryCard {
+  min-height: 92px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid #ebebeb;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.035);
+}
+
+.notificationSummaryIcon {
+  width: 45px;
+  height: 45px;
+  flex: 0 0 45px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #f5f0ea;
+  color: #95632f;
+}
+
+.notificationActiveIcon {
+  background: #edf8f1;
+  color: #2c8b50;
+}
+
+.notificationInactiveIcon {
+  background: #f4f4f4;
+  color: #777;
+}
+
+.notificationSummaryCard span {
+  display: block;
+  margin-bottom: 5px;
+  color: #777;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.notificationSummaryCard strong {
+  color: #222;
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* =========================================================
+   FORM CARD
+========================================================= */
+
+.notificationFormCard {
+  margin-bottom: 24px;
+  padding: 24px;
+  border: 1px solid #e9e9e9;
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.045);
+}
+
+.notificationFormHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.notificationFormHeader h3 {
+  margin: 0;
+  color: #1d1d1f;
+  font-size: 20px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.notificationFormHeader p {
+  margin: 7px 0 0;
+  color: #777;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.notificationCloseButton {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e8e8e8;
+  border-radius: 9px;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.notificationCloseButton:hover {
+  background: #f5f5f5;
+  color: #111;
+}
+
+.notificationFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.notificationFieldFull {
+  grid-column: 1 / -1;
+}
+
+.notificationField label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 8px;
+  color: #303030;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.notificationField label span {
+  color: #c43838;
+}
+
+.notificationInputWrapper,
+.notificationTextareaWrapper {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+}
+
+.notificationInputWrapper svg,
+.notificationTextareaWrapper svg {
+  position: absolute;
+  left: 13px;
+  top: 14px;
+  color: #999;
+  pointer-events: none;
+}
+
+.notificationInputWrapper input,
+.notificationTextareaWrapper textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dfdfdf;
+  border-radius: 11px;
+  outline: none;
+  background: #fff;
+  color: #222;
+  font-family: inherit;
+  font-size: 13px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.notificationInputWrapper input {
+  height: 46px;
+  padding: 0 14px 0 40px;
+}
+
+.notificationTextareaWrapper textarea {
+  min-height: 112px;
+  padding: 13px 14px 13px 40px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.notificationInputWrapper input:focus,
+.notificationTextareaWrapper textarea:focus {
+  border-color: #a87843;
+  box-shadow: 0 0 0 3px rgba(168, 120, 67, 0.1);
+}
+
+.notificationInputWrapper input::placeholder,
+.notificationTextareaWrapper textarea::placeholder {
+  color: #aaa;
+}
+
+.notificationField small {
+  display: block;
+  margin-top: 6px;
+  color: #999;
+  font-size: 11px;
+}
+
+/* =========================================================
+   TOGGLE
+========================================================= */
+
+.notificationToggleField {
+  grid-column: 1 / -1;
+  min-height: 66px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 1px solid #ebebeb;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.notificationToggleField strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #292929;
+  font-size: 13px;
+}
+
+.notificationToggleField span {
+  display: block;
+  color: #888;
+  font-size: 12px;
+}
+
+.notificationToggle {
+  width: 46px;
+  height: 26px;
+  flex: 0 0 46px;
+  padding: 3px;
+  border: 0;
+  border-radius: 30px;
+  background: #d5d5d5;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.notificationToggle span {
+  width: 20px;
+  height: 20px;
+  display: block;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16);
+  transform: translateX(0);
+  transition: transform 0.2s ease;
+}
+
+.notificationToggle.toggleActive {
+  background: #3b9159;
+}
+
+.notificationToggle.toggleActive span {
+  transform: translateX(20px);
+}
+
+/* =========================================================
+   FORM ACTIONS
+========================================================= */
+
+.notificationFormActions {
+  margin-top: 24px;
+  padding-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #eeeeee;
+}
+
+.notificationCancelButton {
+  background: #f4f4f4;
+  color: #444;
+}
+
+.notificationCancelButton:hover:not(:disabled) {
+  background: #eaeaea;
+}
+
+.notificationSaveButton {
+  background: #171717;
+  color: #fff;
+}
+
+.notificationSaveButton:hover:not(:disabled) {
+  background: #292929;
+}
+
+/* =========================================================
+   LIST CARD
+========================================================= */
+
+.notificationListCard {
+  overflow: hidden;
+  border: 1px solid #e9e9e9;
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.035);
+}
+
+.notificationListHeader {
+  min-height: 82px;
+  padding: 20px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #ededed;
+}
+
+.notificationListHeader h3 {
+  margin: 0;
+  color: #202020;
+  font-size: 18px;
+  font-weight: 750;
+}
+
+.notificationListHeader p {
+  margin: 5px 0 0;
+  color: #888;
+  font-size: 12px;
+}
+
+.notificationListCount {
+  padding: 7px 11px;
+  border-radius: 30px;
+  background: #f5f1ec;
+  color: #8c6238;
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.notificationTableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.notificationTable {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: collapse;
+}
+
+.notificationTable th {
+  padding: 13px 18px;
+  background: #fafafa;
+  border-bottom: 1px solid #e9e9e9;
+  color: #888;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.notificationTable td {
+  padding: 17px 18px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.notificationTable tbody tr {
+  transition: background 0.15s ease;
+}
+
+.notificationTable tbody tr:hover {
+  background: #fcfcfc;
+}
+
+.notificationTable tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.notificationTableTitle {
+  min-width: 270px;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.notificationTableIcon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #f6f0e9;
+  color: #95652f;
+}
+
+.notificationTableTitle strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #252525;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.notificationTableTitle p {
+  max-width: 310px;
+  margin: 0;
+  overflow: hidden;
+  color: #888;
+  font-size: 12px;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notificationLinkPreview {
+  max-width: 190px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #795a3b;
+  text-decoration: none;
+  font-size: 11px;
+}
+
+.notificationLinkPreview span {
+  max-width: 145px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notificationLinkPreview:hover {
+  text-decoration: underline;
+}
+
+.notificationNoLink {
+  color: #aaa;
+  font-size: 12px;
+}
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.notificationStatusBadge {
+  min-width: 78px;
+  height: 30px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 30px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.notificationStatusBadge span {
+  width: 6px;
+  height: 6px;
+  display: block;
+  border-radius: 50%;
+}
+
+.statusActive {
+  background: #edf8f1;
+  color: #287747;
+}
+
+.statusActive span {
+  background: #3e9b61;
+}
+
+.statusInactive {
+  background: #f2f2f2;
+  color: #777;
+}
+
+.statusInactive span {
+  background: #999;
+}
+
+/* =========================================================
+   DATE
+========================================================= */
+
+.notificationDate {
+  color: #777;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.notificationActions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.notificationActionButton {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.notificationEditButton {
+  color: #76572f;
+}
+
+.notificationEditButton:hover {
+  background: #f8f3ed;
+  border-color: #e4d5c3;
+}
+
+.notificationDeleteButton {
+  color: #b23b3b;
+}
+
+.notificationDeleteButton:hover:not(:disabled) {
+  background: #fff2f2;
+  border-color: #efcaca;
+}
+
+.notificationActionButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   EMPTY / LOADING
+========================================================= */
+
+.notificationLoadingState,
+.notificationEmptyState {
+  min-height: 280px;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.notificationLoadingState {
+  gap: 12px;
+  color: #888;
+  font-size: 13px;
+}
+
+.notificationEmptyIcon {
+  width: 65px;
+  height: 65px;
+  margin-bottom: 15px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #f7f1eb;
+  color: #966735;
+}
+
+.notificationEmptyState h3 {
+  margin: 0;
+  color: #292929;
+  font-size: 17px;
+}
+
+.notificationEmptyState p {
+  max-width: 430px;
+  margin: 8px 0 18px;
+  color: #888;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+.notificationSpin {
+  animation: notificationSpin 0.9s linear infinite;
+}
+
+@keyframes notificationSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1000px) {
+  .notificationsPageHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .notificationsHeaderActions {
+    width: 100%;
+  }
+
+  .notificationRefreshButton,
+  .notificationCreateButton {
+    flex: 1;
+  }
+
+  .notificationSummaryGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .notificationsManager {
+    padding-bottom: 25px;
+  }
+
+  .notificationFormCard {
+    padding: 18px;
+  }
+
+  .notificationFormGrid {
+    grid-template-columns: 1fr;
+    gap: 17px;
+  }
+
+  .notificationFieldFull,
+  .notificationToggleField {
+    grid-column: auto;
+  }
+
+  .notificationFormActions {
+    flex-direction: column-reverse;
+  }
+
+  .notificationCancelButton,
+  .notificationSaveButton {
+    width: 100%;
+  }
+
+  .notificationListHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .notificationListCount {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .notificationsPageHeader h2 {
+    font-size: 25px;
+  }
+
+  .notificationsHeaderActions {
+    flex-direction: column;
+  }
+
+  .notificationRefreshButton,
+  .notificationCreateButton {
+    width: 100%;
+    flex: none;
+  }
+
+  .notificationSummaryCard {
+    min-height: 82px;
+    padding: 15px;
+  }
+
+  .notificationSummaryIcon {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .notificationFormCard {
+    padding: 15px;
+    border-radius: 13px;
+  }
+
+  .notificationToggleField {
+    align-items: flex-start;
+  }
+}

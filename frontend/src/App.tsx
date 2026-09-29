@@ -29,6 +29,7 @@ import Checkout from "./pages/checkout/Checkout";
 
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminAccountPage from "./pages/admin/components/AdminAccountPage";
 
 import SellerLoginPage from "./pages/SellerAuth/SellerLoginPage";
 import SellerRegisterPage from "./pages/SellerAuth/SellerRegisterPage";
@@ -423,6 +424,11 @@ function App() {
           <Route
             path="/admin/dashboard"
             element={<AdminDashboardPage />}
+          />
+
+          <Route
+            path="/admin/account"
+            element={<AdminAccountPage />}
           />
 
           {/* =================================================

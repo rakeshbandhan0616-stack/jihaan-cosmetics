@@ -3,6 +3,7 @@ import type { ElementType } from "react";
 import {
   BarChart3,
   BadgePercent,
+  Bell,
   ChevronLeft,
   ClipboardList,
   Image,
@@ -30,11 +31,14 @@ export type AdminSection =
   | "customers"
   | "contact"
   | "analytics"
+  | "notifications"
   | "settings";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
-  onSectionChange: (section: AdminSection) => void;
+  onSectionChange: (
+    section: AdminSection,
+  ) => void;
   isOpen?: boolean;
   onClose?: () => void;
   collapsed?: boolean;
@@ -54,48 +58,67 @@ const menuItems: MenuItem[] = [
     label: "Dashboard Overview",
     icon: LayoutDashboard,
   },
+
   {
     id: "products",
     label: "Products",
     icon: Package,
   },
+
   {
     id: "categories",
     label: "Categories",
     icon: Tags,
   },
+
   {
     id: "hero",
     label: "Hero Banners",
     icon: Image,
   },
+
   {
     id: "offers",
     label: "Offers",
     icon: BadgePercent,
   },
+
   {
     id: "orders",
     label: "Orders",
-    description: "Manage orders, payments and tracking",
+    description:
+      "Manage orders, payments and tracking",
     icon: ClipboardList,
   },
+
   {
     id: "customers",
     label: "User Management",
     icon: Users,
   },
+
   {
     id: "contact",
     label: "Contact Messages",
-    description: "Manage customer enquiries and replies",
+    description:
+      "Manage customer enquiries and replies",
     icon: Mail,
   },
+
   {
     id: "analytics",
     label: "Analytics",
     icon: BarChart3,
   },
+
+  {
+    id: "notifications",
+    label: "Notifications",
+    description:
+      "Manage customer notifications",
+    icon: Bell,
+  },
+
   {
     id: "settings",
     label: "Settings",
@@ -111,7 +134,9 @@ export default function AdminSidebar({
   collapsed = false,
   onToggleCollapse,
 }: AdminSidebarProps) {
-  const handleSectionChange = (section: AdminSection) => {
+  const handleSectionChange = (
+    section: AdminSection,
+  ) => {
     onSectionChange(section);
     onClose?.();
   };
@@ -119,9 +144,12 @@ export default function AdminSidebar({
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("token");
-    localStorage.removeItem("jihaan_auth_token");
+    localStorage.removeItem(
+      "jihaan_auth_token",
+    );
 
-    window.location.href = "/admin/login";
+    window.location.href =
+      "/admin/login";
   };
 
   return (
@@ -138,19 +166,34 @@ export default function AdminSidebar({
       <aside
         className={[
           "adminSidebar",
-          isOpen ? "sidebarOpen" : "sidebarClosed",
-          collapsed ? "sidebarCollapsed" : "",
+          isOpen
+            ? "sidebarOpen"
+            : "sidebarClosed",
+          collapsed
+            ? "sidebarCollapsed"
+            : "",
         ]
           .filter(Boolean)
           .join(" ")}
       >
+        {/* -------------------------------------------------------
+            BRAND
+        ------------------------------------------------------- */}
+
         <div className="sidebarBrand">
-          <div className="brandLogo">V</div>
+          <div className="brandLogo">
+            V
+          </div>
 
           {!collapsed && (
             <div className="brandText">
-              <strong>Jini Cosmetics</strong>
-              <span>Admin Panel</span>
+              <strong>
+                Jini Cosmetics
+              </strong>
+
+              <span>
+                Admin Panel
+              </span>
             </div>
           )}
 
@@ -164,12 +207,25 @@ export default function AdminSidebar({
           </button>
         </div>
 
-        <nav className="sidebarNavigation" aria-label="Admin navigation">
-          {!collapsed && <p className="sidebarLabel">MAIN MENU</p>}
+        {/* -------------------------------------------------------
+            NAVIGATION
+        ------------------------------------------------------- */}
+
+        <nav
+          className="sidebarNavigation"
+          aria-label="Admin navigation"
+        >
+          {!collapsed && (
+            <p className="sidebarLabel">
+              MAIN MENU
+            </p>
+          )}
 
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeSection === item.id;
+
+            const isActive =
+              activeSection === item.id;
 
             return (
               <button
@@ -177,13 +233,27 @@ export default function AdminSidebar({
                 type="button"
                 className={[
                   "sidebarMenuItem",
-                  isActive ? "active" : "",
-                  item.id === "orders" ? "ordersMenuItem" : "",
-                  item.id === "contact" ? "contactMenuItem" : "",
+                  isActive
+                    ? "active"
+                    : "",
+                  item.id === "orders"
+                    ? "ordersMenuItem"
+                    : "",
+                  item.id === "contact"
+                    ? "contactMenuItem"
+                    : "",
+                  item.id ===
+                  "notifications"
+                    ? "notificationsMenuItem"
+                    : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
-                onClick={() => handleSectionChange(item.id)}
+                onClick={() =>
+                  handleSectionChange(
+                    item.id,
+                  )
+                }
                 title={
                   collapsed
                     ? item.description
@@ -191,23 +261,38 @@ export default function AdminSidebar({
                       : item.label
                     : undefined
                 }
-                aria-current={isActive ? "page" : undefined}
+                aria-current={
+                  isActive
+                    ? "page"
+                    : undefined
+                }
               >
                 <Icon size={20} />
 
                 {!collapsed && (
                   <span className="sidebarMenuContent">
-                    <span className="sidebarMenuLabel">{item.label}</span>
+                    <span className="sidebarMenuLabel">
+                      {item.label}
+                    </span>
 
-                    {item.id === "orders" && (
+                    {item.id ===
+                      "orders" && (
                       <span className="sidebarMenuDescription">
                         Orders & Tracking
                       </span>
                     )}
 
-                    {item.id === "contact" && (
+                    {item.id ===
+                      "contact" && (
                       <span className="sidebarMenuDescription">
                         Customer Enquiries
+                      </span>
+                    )}
+
+                    {item.id ===
+                      "notifications" && (
+                      <span className="sidebarMenuDescription">
+                        Customer Alerts
                       </span>
                     )}
                   </span>
@@ -217,23 +302,43 @@ export default function AdminSidebar({
           })}
         </nav>
 
+        {/* -------------------------------------------------------
+            BOTTOM ACTIONS
+        ------------------------------------------------------- */}
+
         <div className="sidebarBottom">
           {onToggleCollapse && (
             <button
               type="button"
               className="sidebarMenuItem collapseButton"
-              onClick={onToggleCollapse}
-              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              onClick={
+                onToggleCollapse
+              }
+              title={
+                collapsed
+                  ? "Expand sidebar"
+                  : "Collapse sidebar"
+              }
               aria-label={
-                collapsed ? "Expand sidebar" : "Collapse sidebar"
+                collapsed
+                  ? "Expand sidebar"
+                  : "Collapse sidebar"
               }
             >
               <ChevronLeft
                 size={20}
-                className={collapsed ? "rotateIcon" : ""}
+                className={
+                  collapsed
+                    ? "rotateIcon"
+                    : ""
+                }
               />
 
-              {!collapsed && <span>Collapse Sidebar</span>}
+              {!collapsed && (
+                <span>
+                  Collapse Sidebar
+                </span>
+              )}
             </button>
           )}
 
@@ -245,7 +350,9 @@ export default function AdminSidebar({
           >
             <LogOut size={20} />
 
-            {!collapsed && <span>Logout</span>}
+            {!collapsed && (
+              <span>Logout</span>
+            )}
           </button>
         </div>
       </aside>
