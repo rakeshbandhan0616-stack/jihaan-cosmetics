@@ -43,12 +43,13 @@ const userSchema = new mongoose.Schema(
     /* =========================================================
        PHONE
 
-       Customer accounts require a phone number.
+       Customer:
+       - Phone required
 
-       Staff accounts can have a phone number optionally.
+       Staff:
+       - Phone optional
 
-       Social registration:
-       Google/Facebook → phone → WhatsApp OTP → account
+       Customer can edit their phone number from profile.
     ========================================================= */
 
     phone: {
@@ -71,24 +72,12 @@ const userSchema = new mongoose.Schema(
     /* =========================================================
        AUTHENTICATION PROVIDER
 
-       local    → Email/phone + password
-       google   → Google authentication
-       facebook → Facebook authentication
+       local
+       google
+       facebook
 
-       IMPORTANT:
-
-       A local account can also have googleId/facebookId linked
-       to the same account.
-
-       Example:
-
-       authProvider: "local"
-       googleId: "123456789"
-       password: "hashed-password"
-
-       This allows an existing local user to later sign in
-       using Google without changing their original password
-       authentication provider.
+       Existing local users can also have a Google/Facebook
+       account linked to them.
     ========================================================= */
 
     authProvider: {
@@ -108,15 +97,6 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        GOOGLE ACCOUNT
-
-       Google's stable user ID.
-
-       Never store:
-       - Google client secret
-       - OAuth access token
-       - OAuth refresh token
-
-       This field is only Google's user identifier.
     ========================================================= */
 
     googleId: {
@@ -130,10 +110,6 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        FACEBOOK ACCOUNT
-
-       Facebook's stable user ID.
-
-       Never store the Facebook app secret here.
     ========================================================= */
 
     facebookId: {
@@ -148,17 +124,16 @@ const userSchema = new mongoose.Schema(
     /* =========================================================
        PASSWORD
 
-       Local users:
-       - Password required
+       IMPORTANT:
 
-       Google/Facebook-only users:
-       - Password not required
+       select:false means normal queries do not return the
+       password.
 
-       select:false prevents the password from being returned
-       by normal queries.
+       This is intentional for security.
 
-       Login explicitly uses:
-       .select("+password")
+       Do NOT check `this.password` inside the pre-validation
+       middleware because existing users loaded using
+       User.findById() do not contain the password field.
     ========================================================= */
 
     password: {
@@ -178,6 +153,8 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        PROFILE IMAGE
+
+       Customer can update this field from profile.
     ========================================================= */
 
     profileImage: {
@@ -188,6 +165,9 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        USER ROLE
+
+       IMPORTANT:
+       Role cannot be changed through customer profile update.
     ========================================================= */
 
     role: {
@@ -207,6 +187,9 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        ACCOUNT STATUS
+
+       These fields are controlled by the backend/admin.
+       Customer profile update does not modify them.
     ========================================================= */
 
     isActive: {
@@ -221,6 +204,8 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        EMAIL VERIFICATION
+
+       Controlled by authentication/verification flow.
     ========================================================= */
 
     isEmailVerified: {
@@ -231,13 +216,8 @@ const userSchema = new mongoose.Schema(
     /* =========================================================
        PHONE VERIFICATION
 
-       For new social registrations:
-
-       1. Google/Facebook login
-       2. Collect phone
-       3. Send WhatsApp OTP
-       4. Verify OTP
-       5. Create customer account
+       If a customer changes their phone number, the controller
+       should set this to false and require verification again.
     ========================================================= */
 
     isPhoneVerified: {
@@ -336,14 +316,14 @@ userSchema.methods.isFacebookAuth = function () {
 };
 
 /**
- * Check whether this user uses a social provider.
+ * Check whether this user uses social authentication.
  */
 userSchema.methods.isSocialAuth = function () {
   return ["google", "facebook"].includes(this.authProvider);
 };
 
 /**
- * Check whether the phone has been verified.
+ * Check whether the phone is verified.
  */
 userSchema.methods.isPhoneVerifiedAccount = function () {
   return this.isPhoneVerified === true;
@@ -372,80 +352,79 @@ userSchema.methods.isVerifiedAccount = function () {
    VALIDATION
 ========================================================= */
 
-/**
- * Validate authentication-provider-specific fields.
+/*
+ * IMPORTANT
  *
- * IMPORTANT:
+ * Do NOT use:
  *
- * This is intentionally written WITHOUT `next`.
+ * userSchema.pre("validate", function (next) {})
  *
- * This prevents:
+ * with next() here.
+ *
+ * Your previous Render error was:
  *
  * TypeError: next is not a function
  *
- * which was occurring during user.save() on Render.
+ * This middleware intentionally uses the synchronous style.
  *
- * Existing local accounts may have Google/Facebook IDs linked
- * to them, so we DO NOT remove googleId/facebookId merely
- * because authProvider is "local".
+ * Also:
+ *
+ * DO NOT validate this.password here.
+ *
+ * password has select:false, therefore an existing user loaded
+ * using User.findById() will normally not contain password.
+ *
+ * Profile update:
+ *
+ * name
+ * phone
+ * profileImage
+ *
+ * must therefore be allowed to save without loading password.
  */
+
 userSchema.pre("validate", function () {
   /* ---------------------------------------------------------
-     GOOGLE AUTHENTICATION
+     GOOGLE ACCOUNT
   --------------------------------------------------------- */
 
-  if (this.authProvider === "google" && !this.googleId) {
+  if (
+    this.authProvider === "google" &&
+    !this.googleId
+  ) {
     throw new Error(
       "Google ID is required for Google authentication",
     );
   }
 
   /* ---------------------------------------------------------
-     FACEBOOK AUTHENTICATION
+     FACEBOOK ACCOUNT
   --------------------------------------------------------- */
 
-  if (this.authProvider === "facebook" && !this.facebookId) {
+  if (
+    this.authProvider === "facebook" &&
+    !this.facebookId
+  ) {
     throw new Error(
       "Facebook ID is required for Facebook authentication",
     );
   }
 
-  /* ---------------------------------------------------------
-     LOCAL AUTHENTICATION
-     
-     A local account must have a password.
-
-     Do NOT clear googleId/facebookId here.
-
-     An existing local account can have:
-     
-     authProvider = "local"
-     googleId = "..."
-     facebookId = "..."
-     
-     This allows the user to use multiple login methods.
-  --------------------------------------------------------- */
-
-  if (this.authProvider === "local" && !this.password) {
-    throw new Error(
-      "Password is required for local authentication",
-    );
-  }
+  /*
+   * No password validation here.
+   *
+   * The schema-level `required` validator handles password
+   * requirements during document creation/appropriate
+   * validation.
+   */
 });
 
 /* =========================================================
    INDEXES
 ========================================================= */
 
-/**
+/*
  * Google ID
- *
- * Allows:
- *
- * User.findOne({ googleId })
- *
- * and prevents two accounts from being linked to the same
- * Google account.
  */
 userSchema.index(
   { googleId: 1 },
@@ -456,14 +435,8 @@ userSchema.index(
   },
 );
 
-/**
+/*
  * Facebook ID
- *
- * Allows:
- *
- * User.findOne({ facebookId })
- *
- * and prevents duplicate Facebook account linking.
  */
 userSchema.index(
   { facebookId: 1 },
