@@ -961,7 +961,6 @@ const verifyPasswordResetToken = (
 
   return decoded;
 };
-
 /* =========================================================
    STAFF LOGIN
 
@@ -1359,7 +1358,8 @@ export const registerUser =
       });
     }
   };
-  /* =========================================================
+
+/* =========================================================
    USER LOGIN
 
    POST /api/auth/login
@@ -1677,39 +1677,19 @@ export const googleLogin =
 
       if (user) {
         /*
-         * Do not silently attach a Google
-         * account to another provider.
+         * UPDATED BEHAVIOR:
+         *
+         * If an existing account already uses
+         * this verified email, attach the Google
+         * account and login immediately.
+         *
+         * The existing authProvider is preserved.
+         *
+         * Therefore an old local account keeps
+         * its password login.
+         *
+         * NO OTP.
          */
-
-        if (
-          user.authProvider !==
-          "google"
-        ) {
-          return res.status(409).json({
-            success: false,
-
-            accountExists:
-              true,
-
-            requiresExistingLogin:
-              true,
-
-            message:
-              "An account already exists with this email. Please log in using your existing login method.",
-          });
-        }
-
-        if (
-          !user.googleId
-        ) {
-          user.googleId =
-            googleId;
-
-          user.isEmailVerified =
-            true;
-
-          await user.save();
-        }
 
         if (
           !checkAccountStatus(
@@ -1719,6 +1699,44 @@ export const googleLogin =
         ) {
           return;
         }
+
+        user.googleId =
+          googleId;
+
+        user.isEmailVerified =
+          true;
+
+        /*
+         * Do not replace an existing profile image.
+         * Only use Google's image if the account
+         * doesn't already have one.
+         */
+
+        if (
+          !user.profileImage &&
+          googleImage
+        ) {
+          user.profileImage =
+            googleImage;
+        }
+
+        /*
+         * IMPORTANT:
+         *
+         * Do NOT change:
+         *
+         * authProvider: "local"
+         *
+         * to:
+         *
+         * authProvider: "google"
+         *
+         * for an existing local account.
+         *
+         * This preserves the old password login.
+         */
+
+        await user.save();
 
         return completeLogin(
           user,
@@ -2056,39 +2074,17 @@ export const facebookLogin =
 
       if (user) {
         /*
-         * Do not silently attach Facebook
-         * to another authentication provider.
+         * UPDATED BEHAVIOR:
+         *
+         * Existing account with the same email
+         * can login using Facebook immediately.
+         *
+         * The existing authProvider is preserved.
+         *
+         * Existing password is NOT removed.
+         *
+         * NO OTP.
          */
-
-        if (
-          user.authProvider !==
-          "facebook"
-        ) {
-          return res.status(409).json({
-            success: false,
-
-            accountExists:
-              true,
-
-            requiresExistingLogin:
-              true,
-
-            message:
-              "An account already exists with this email. Please log in using your existing login method.",
-          });
-        }
-
-        if (
-          !user.facebookId
-        ) {
-          user.facebookId =
-            facebookId;
-
-          user.isEmailVerified =
-            true;
-
-          await user.save();
-        }
 
         if (
           !checkAccountStatus(
@@ -2098,6 +2094,37 @@ export const facebookLogin =
         ) {
           return;
         }
+
+        user.facebookId =
+          facebookId;
+
+        user.isEmailVerified =
+          true;
+
+        /*
+         * Keep an existing profile image.
+         */
+
+        if (
+          !user.profileImage &&
+          facebookImage
+        ) {
+          user.profileImage =
+            facebookImage;
+        }
+
+        /*
+         * IMPORTANT:
+         *
+         * Do not change the existing
+         * authProvider.
+         *
+         * This means a local account remains
+         * capable of logging in with its old
+         * email/mobile + password.
+         */
+
+        await user.save();
 
         return completeLogin(
           user,
@@ -3085,8 +3112,7 @@ export const verifyForgotPasswordOtp =
       });
     }
   };
-
-/* =========================================================
+  /* =========================================================
    RESET PASSWORD
 
    POST /api/auth/reset-password
@@ -3304,7 +3330,8 @@ export const resetPassword =
       });
     }
   };
-  /* =========================================================
+
+/* =========================================================
    LOGOUT
 
    POST /api/auth/logout
