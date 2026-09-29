@@ -3,7 +3,6 @@ import {
   ChevronRight,
   ChevronUp,
   LoaderCircle,
-  ShoppingBag,
   Star,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -104,6 +103,22 @@ function Bestsellers() {
   const [error, setError] = useState("");
   const [addingProductId, setAddingProductId] = useState("");
 
+  type CartAnimationPhase =
+    | "idle"
+    | "fold"
+    | "bag"
+    | "puff"
+    | "tag"
+    | "flip"
+    | "check"
+    | "return";
+
+  const [cartAnimation, setCartAnimation] =
+    useState<{
+      productId: string;
+      phase: CartAnimationPhase;
+    } | null>(null);
+
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -145,31 +160,45 @@ function Bestsellers() {
   const handleAddToCart = async (
     product: Product,
   ): Promise<void> => {
-    const stock = Number(product.stock ?? 0);
+    const productId = product._id;
+    const stock = Math.max(
+      0,
+      Number(product.stock ?? 0),
+    );
 
     if (stock <= 0) {
-      alert("This product is currently out of stock.");
+      alert(
+        "This product is currently out of stock.",
+      );
       return;
     }
 
     const token = getToken();
 
     if (!token) {
-      alert("Please login to add products to your cart.");
+      alert(
+        "Please login to add products to your cart.",
+      );
+
       navigate("/login");
       return;
     }
 
-    if (!product._id) {
-      alert("Product ID is missing.");
+    if (!productId || addingProductId) {
+      if (!productId) {
+        alert("Product ID is missing.");
+      }
       return;
     }
 
-    try {
-      setAddingProductId(product._id);
-      setError("");
+    const wait = (ms: number) =>
+      new Promise<void>((resolve) =>
+        window.setTimeout(resolve, ms),
+      );
 
-      const response = await fetch(`${API_URL}/cart/items`, {
+    const apiPromise = fetch(
+      `${API_URL}/cart/items`,
+      {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -178,35 +207,114 @@ function Bestsellers() {
         },
         credentials: "include",
         body: JSON.stringify({
-          productId: product._id,
+          productId,
           quantity: 1,
           size: "Standard",
         }),
-      });
-
+      },
+    ).then(async (response) => {
       const result = (await response
         .json()
         .catch(() => ({}))) as CartApiResponse;
 
-      if (!response.ok) {
+      return { response, result };
+    });
+
+    try {
+      setError("");
+      setAddingProductId(productId);
+
+      // Same reference-video timing as New Arrivals.
+      await wait(180);
+
+      setCartAnimation({
+        productId,
+        phase: "fold",
+      });
+
+      await wait(1420);
+
+      setCartAnimation({
+        productId,
+        phase: "bag",
+      });
+
+      await wait(540);
+
+      setCartAnimation({
+        productId,
+        phase: "puff",
+      });
+
+      await wait(420);
+
+      setCartAnimation({
+        productId,
+        phase: "tag",
+      });
+
+      await wait(700);
+
+      setCartAnimation({
+        productId,
+        phase: "flip",
+      });
+
+      await wait(260);
+
+      const api = await apiPromise;
+
+      if (!api.response.ok) {
         throw new Error(
-          result.message || "Unable to add product to cart.",
+          api.result.message ||
+            "Unable to add product to cart.",
         );
       }
 
-      alert(`${product.name} added to cart.`);
+      setCartAnimation({
+        productId,
+        phase: "check",
+      });
 
-      window.dispatchEvent(new Event("cartUpdated"));
+      window.dispatchEvent(
+        new Event("cartUpdated"),
+      );
+
+      await wait(1140);
+
+      setCartAnimation({
+        productId,
+        phase: "return",
+      });
+
+      await wait(820);
     } catch (err) {
-      console.error("Add to cart error:", err);
+      console.error(
+        "Add to cart error:",
+        err,
+      );
 
       setError(
         err instanceof Error
           ? err.message
           : "Unable to add product to cart.",
       );
+
+      setCartAnimation(null);
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Unable to add product to cart.",
+      );
     } finally {
       setAddingProductId("");
+
+      setCartAnimation((current) =>
+        current?.productId === productId
+          ? null
+          : current,
+      );
     }
   };
 
@@ -274,6 +382,11 @@ function Bestsellers() {
 
               const isAdding =
                 addingProductId === product._id;
+
+              const animationPhase =
+                cartAnimation?.productId === product._id
+                  ? cartAnimation.phase
+                  : "idle";
 
               /*
                * TOP LEFT LABEL
@@ -456,30 +569,160 @@ function Bestsellers() {
                       )}
                     </div>
 
-                    {/* ADD TO CART */}
+                    {/* =================================================
+                        ADD TO CART — REFERENCE VIDEO ANIMATION
+                    ================================================= */}
+
                     <button
                       type="button"
-                      className={styles.addToCart}
+                      className={`${styles.addToCart} ${
+                        styles[`phase-${animationPhase}`]
+                      }`}
                       onClick={() =>
-                        void handleAddToCart(product)
+                        void handleAddToCart(
+                          product,
+                        )
                       }
                       disabled={
                         isAdding || stock <= 0
                       }
+                      aria-label={
+                        stock <= 0
+                          ? `${product.name} is out of stock`
+                          : `Add ${product.name} to cart`
+                      }
                     >
-                      {isAdding ? (
-                        <>
-                          <LoaderCircle
-                            size={17}
-                            className={styles.spin}
+                      <span
+                        className={
+                          styles.cartStage
+                        }
+                      >
+                        <span
+                          className={
+                            styles.cartFace
+                          }
+                        >
+                          <span
+                            className={
+                              styles.cartPanelLeft
+                            }
+                          >
+                            <span
+                              className={
+                                styles.cartMiniBag
+                              }
+                              aria-hidden="true"
+                            >
+                              <span
+                                className={
+                                  styles.cartMiniBagHandle
+                                }
+                              />
+                            </span>
+                          </span>
+
+                          <span
+                            className={
+                              styles.cartPanelMain
+                            }
+                          >
+                            {stock <= 0
+                              ? "OUT OF STOCK"
+                              : "Add to cart"}
+                          </span>
+
+                          <span
+                            className={
+                              styles.cartPanelRight
+                            }
+                          >
+                            {formatPrice(price)}
+                          </span>
+                        </span>
+
+                        <span
+                          className={
+                            styles.cartFolded
+                          }
+                          aria-hidden="true"
+                        >
+                          <span
+                            className={
+                              styles.cartFoldLineLeft
+                            }
                           />
-                          ADDING...
-                        </>
-                      ) : stock <= 0 ? (
-                        "OUT OF STOCK"
-                      ) : (
-                        "ADD TO CART"
-                      )}
+                          <span
+                            className={
+                              styles.cartFoldLineRight
+                            }
+                          />
+                        </span>
+
+                        <span
+                          className={
+                            styles.cartBagScene
+                          }
+                          aria-hidden="true"
+                        >
+                          <span
+                            className={
+                              styles.cartBagHandle
+                            }
+                          />
+
+                          <span
+                            className={
+                              styles.cartBagBody
+                            }
+                          >
+                            <span
+                              className={
+                                styles.cartBagMark
+                              }
+                            >
+                              ×
+                            </span>
+                          </span>
+
+                          <span
+                            className={
+                              styles.cartTag
+                            }
+                          >
+                            <span
+                              className={
+                                styles.cartTagFront
+                              }
+                            >
+                              {formatPrice(price)}
+                            </span>
+
+                            <span
+                              className={
+                                styles.cartTagBack
+                              }
+                            >
+                              <CheckCircle
+                                size={12}
+                                strokeWidth={2.5}
+                              />
+                              Added
+                            </span>
+                          </span>
+                        </span>
+
+                        <span
+                          className={
+                            styles.cartPuff
+                          }
+                          aria-hidden="true"
+                        >
+                          <span />
+                          <span />
+                          <span />
+                          <span />
+                        </span>
+                      </span>
                     </button>
                   </div>
                 </article>

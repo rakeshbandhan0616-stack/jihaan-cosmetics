@@ -572,6 +572,7 @@ function MainHeader() {
       return;
     }
 
+    setIsSearchOpen(true);
     setIsSearching(true);
 
     searchTimerRef.current =
@@ -606,17 +607,11 @@ function MainHeader() {
     setSearchResults([]);
     setSearchValue("");
 
-    if (product.slug) {
-      navigate(
-        `/product/${product.slug}`,
-      );
-
-      return;
-    }
-
-    navigate(
-      `/product/${product._id}`,
-    );
+    // App.tsx uses /products/:id and ProductPage loads
+    // the product using its MongoDB _id. Always navigate
+    // with the product id so the router never falls back
+    // to the homepage.
+    navigate(`/products/${encodeURIComponent(product._id)}`);
   };
 
   /* =======================================================

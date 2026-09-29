@@ -1,25 +1,128 @@
+/* =========================================================
+   JIHAAN COSMETICS
+   GLOBAL STYLES
+   ========================================================= */
+
 :root {
   font-family:
-    Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "DM Sans",
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
     sans-serif;
+
   color: #242424;
   background: #ffffff;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+
+  --font-body:
+    "DM Sans",
+    Inter,
+    system-ui,
+    sans-serif;
+
+  --font-heading:
+    "Playfair Display",
+    Georgia,
+    serif;
+
+  --font-script:
+    "Caveat",
+    cursive;
+
+  --primary: #111111;
+  --text: #242424;
+  --text-secondary: #666666;
+  --text-muted: #888888;
+
+  --accent: #b76e79;
+  --accent-dark: #9f5964;
+  --accent-light: #f8e8eb;
+
+  --background: #ffffff;
+  --background-soft: #faf8f7;
+
+  --border: #eeeeee;
+
+  --shadow-sm:
+    0 4px 14px rgba(0, 0, 0, 0.05);
+
+  --shadow-md:
+    0 10px 30px rgba(0, 0, 0, 0.08);
+
+  --shadow-lg:
+    0 20px 50px rgba(0, 0, 0, 0.12);
 }
 
-* {
+/* =========================================================
+   RESET
+   ========================================================= */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html {
+  margin: 0;
+  padding: 0;
+
   scroll-behavior: smooth;
+
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
+  padding: 0;
+
   min-width: 320px;
-  background: #ffffff;
+  min-height: 100vh;
+
+  background: var(--background);
+  color: var(--text);
+
+  font-family: var(--font-body);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =========================================================
+   ROOT
+   ========================================================= */
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* =========================================================
+   TYPOGRAPHY
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+
+  font-family: var(--font-heading);
+
+  font-weight: 600;
+
+  color: var(--text);
+}
+
+p {
+  margin: 0;
 }
 
 button,
@@ -29,9 +132,15 @@ select {
   font: inherit;
 }
 
+button {
+  cursor: pointer;
+}
+
 button,
-a {
-  -webkit-tap-highlight-color: transparent;
+input,
+textarea,
+select {
+  outline: none;
 }
 
 a {
@@ -39,7 +148,129 @@ a {
   text-decoration: none;
 }
 
-img {
+img,
+picture,
+video,
+canvas,
+svg {
   display: block;
   max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+/* =========================================================
+   FORM ELEMENTS
+   ========================================================= */
+
+input,
+textarea,
+select {
+  color: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #999999;
+  opacity: 1;
+}
+
+/* =========================================================
+   BUTTON RESET
+   ========================================================= */
+
+button {
+  border: 0;
+  background: none;
+  padding: 0;
+}
+
+/* =========================================================
+   SELECTION
+   ========================================================= */
+
+::selection {
+  background: rgba(183, 110, 121, 0.2);
+  color: #111111;
+}
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f7f7f7;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cccccc;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #aaaaaa;
+}
+
+/* =========================================================
+   UTILITY
+   ========================================================= */
+
+.container {
+  width: min(100% - 40px, 1440px);
+  margin: 0 auto;
+}
+
+.section {
+  width: 100%;
+  padding: 80px 0;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .container {
+    width: min(100% - 28px, 100%);
+  }
+
+  .section {
+    padding: 55px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: min(100% - 20px, 100%);
+  }
+
+  .section {
+    padding: 45px 0;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

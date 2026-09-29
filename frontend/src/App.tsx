@@ -41,6 +41,7 @@ import StaffLogin from "./pages/StaffLogin/StaffLogin";
 import AccountsDashboard from "./pages/AccountsDashboard/AccountsDashboard";
 import LogisticsDashboard from "./pages/LogisticsDashboard/LogisticsDashboard";
 
+import NotificationsPage from "./components/header/MainHeader/NotificationsPage/NotificationsPage";
 /* =========================================================
    TYPES
    ========================================================= */
@@ -498,6 +499,11 @@ function App() {
               <LogisticPartnerRegisterPage />
             }
           />
+
+          <Route
+  path="/notifications"
+  element={<NotificationsPage />}
+/>
 
           {/* =================================================
               PUBLIC HEALTH CHECK

@@ -156,6 +156,22 @@ function NewArrivals() {
   const [addingProductId, setAddingProductId] =
     useState("");
 
+  type CartAnimationPhase =
+    | "idle"
+    | "fold"
+    | "bag"
+    | "puff"
+    | "tag"
+    | "flip"
+    | "check"
+    | "return";
+
+  const [cartAnimation, setCartAnimation] =
+    useState<{
+      productId: string;
+      phase: CartAnimationPhase;
+    } | null>(null);
+
   /* =======================================================
      LOAD NEW ARRIVALS
   ======================================================= */
@@ -283,54 +299,109 @@ function NewArrivals() {
       return;
     }
 
-    if (!productId) {
-      alert("Product ID is missing.");
+    if (!productId || addingProductId) {
+      if (!productId) {
+        alert("Product ID is missing.");
+      }
       return;
     }
 
-    try {
-      setAddingProductId(productId);
-      setError("");
-
-      const response = await fetch(
-        `${API_URL}/cart/items`,
-        {
-          method: "POST",
-
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-
-          credentials: "include",
-
-          body: JSON.stringify({
-            productId,
-            quantity: 1,
-            size: "Standard",
-          }),
-        },
+    const wait = (ms: number) =>
+      new Promise<void>((resolve) =>
+        window.setTimeout(resolve, ms),
       );
 
+    const apiPromise = fetch(
+      `${API_URL}/cart/items`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          productId,
+          quantity: 1,
+          size: "Standard",
+        }),
+      },
+    ).then(async (response) => {
       const result = (await response
         .json()
         .catch(() => ({}))) as CartApiResponse;
 
-      if (!response.ok) {
+      return { response, result };
+    });
+
+    try {
+      setError("");
+      setAddingProductId(productId);
+
+      // Reference sequence:
+      // press → visible paper folding → square → bag → tag → Added.
+      await wait(180);
+
+      setCartAnimation({
+        productId,
+        phase: "fold",
+      });
+
+      await wait(1420);
+      setCartAnimation({
+        productId,
+        phase: "bag",
+      });
+
+      await wait(540);
+      setCartAnimation({
+        productId,
+        phase: "puff",
+      });
+
+      await wait(420);
+      setCartAnimation({
+        productId,
+        phase: "tag",
+      });
+
+      await wait(700);
+      setCartAnimation({
+        productId,
+        phase: "flip",
+      });
+
+      await wait(260);
+
+      const api = await apiPromise;
+
+      if (!api.response.ok) {
         throw new Error(
-          result.message ||
+          api.result.message ||
             "Unable to add product to cart.",
         );
       }
 
-      alert(
-        `${product.name} added to cart.`,
-      );
+      setCartAnimation({
+        productId,
+        phase: "check",
+      });
 
       window.dispatchEvent(
         new Event("cartUpdated"),
       );
+
+      await wait(1140);
+
+      // Fold the bag back into the square and unfold into the
+      // original three-panel button, just like the reference.
+      setCartAnimation({
+        productId,
+        phase: "return",
+      });
+
+      await wait(820);
     } catch (err) {
       console.error(
         "Add to cart error:",
@@ -342,8 +413,22 @@ function NewArrivals() {
           ? err.message
           : "Unable to add product to cart.",
       );
+
+      setCartAnimation(null);
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Unable to add product to cart.",
+      );
     } finally {
       setAddingProductId("");
+
+      setCartAnimation((current) =>
+        current?.productId === productId
+          ? null
+          : current,
+      );
     }
   };
 
@@ -388,6 +473,11 @@ function NewArrivals() {
 
     const isAdding =
       addingProductId === productId;
+
+    const animationPhase =
+      cartAnimation?.productId === productId
+        ? cartAnimation.phase
+        : "idle";
 
     /*
      * Dynamic feature/tagline.
@@ -582,13 +672,15 @@ function NewArrivals() {
             )}
           </div>
 
-          {/* ADD TO CART */}
+          {/* =================================================
+              ADD TO CART — REFERENCE VIDEO ANIMATION
+          ================================================= */}
 
           <button
             type="button"
-            className={
-              styles.addToCart
-            }
+            className={`${styles.addToCart} ${
+              styles[`phase-${animationPhase}`]
+            }`}
             onClick={() =>
               void handleAddToCart(
                 product,
@@ -597,23 +689,148 @@ function NewArrivals() {
             disabled={
               isAdding || stock <= 0
             }
+            aria-label={
+              stock <= 0
+                ? `${product.name} is out of stock`
+                : `Add ${product.name} to cart`
+            }
           >
-            {isAdding ? (
-              <>
-                <LoaderCircle
-                  size={16}
+            <span
+              className={
+                styles.cartStage
+              }
+            >
+              {/* NORMAL 3-PANEL BUTTON */}
+              <span
+                className={
+                  styles.cartFace
+                }
+              >
+                <span
                   className={
-                    styles.spin
+                    styles.cartPanelLeft
+                  }
+                >
+                  <span
+                    className={
+                      styles.cartMiniBag
+                    }
+                    aria-hidden="true"
+                  >
+                    <span
+                      className={
+                        styles.cartMiniBagHandle
+                      }
+                    />
+                  </span>
+                </span>
+
+                <span
+                  className={
+                    styles.cartPanelMain
+                  }
+                >
+                  {stock <= 0
+                    ? "OUT OF STOCK"
+                    : "Add to cart"}
+                </span>
+
+                <span
+                  className={
+                    styles.cartPanelRight
+                  }
+                >
+                  {formatPrice(price)}
+                </span>
+              </span>
+
+              {/* FOLDED PAPER BLOCK — the square between the button and bag */}
+              <span
+                className={
+                  styles.cartFolded
+                }
+                aria-hidden="true"
+              >
+                <span
+                  className={
+                    styles.cartFoldLineLeft
                   }
                 />
 
-                ADDING...
-              </>
-            ) : stock <= 0 ? (
-              "OUT OF STOCK"
-            ) : (
-              "ADD TO CART"
-            )}
+                <span
+                  className={
+                    styles.cartFoldLineRight
+                  }
+                />
+              </span>
+
+              {/* CENTER BAG */}
+              <span
+                className={
+                  styles.cartBagScene
+                }
+                aria-hidden="true"
+              >
+                <span
+                  className={
+                    styles.cartBagHandle
+                  }
+                />
+
+                <span
+                  className={
+                    styles.cartBagBody
+                  }
+                >
+                  <span
+                    className={
+                      styles.cartBagMark
+                    }
+                  >
+                    ×
+                  </span>
+                </span>
+
+                <span
+                  className={
+                    styles.cartTag
+                  }
+                >
+                  <span
+                    className={
+                      styles.cartTagFront
+                    }
+                  >
+                    {formatPrice(price)}
+                  </span>
+
+                  <span
+                    className={
+                      styles.cartTagBack
+                    }
+                  >
+                    <CheckCircle
+                      size={12}
+                      strokeWidth={2.5}
+                    />
+                    Added
+                  </span>
+                </span>
+              </span>
+
+              {/* tiny puff/confetti shown before the tag lands */}
+              <span
+                className={
+                  styles.cartPuff
+                }
+                aria-hidden="true"
+              >
+                <span />
+                <span />
+                <span />
+                <span />
+              </span>
+            </span>
           </button>
         </div>
       </article>
