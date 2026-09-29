@@ -183,6 +183,7 @@ const LoginPage = () => {
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -218,6 +219,7 @@ const LoginPage = () => {
   const clearMessages = () => {
     setError("");
     setSuccess("");
+    setShowRegisterPrompt(false);
   };
 
   const storeAuthenticatedUser = (
@@ -406,6 +408,19 @@ const LoginPage = () => {
       }
 
       if (!response.ok) {
+        if (
+          response.status === 404 ||
+          (data as LoginResponse & {
+            accountNotFound?: boolean;
+          }).accountNotFound === true
+        ) {
+          setError(
+            "No account was found with these details. Please create an account first.",
+          );
+          setShowRegisterPrompt(true);
+          return;
+        }
+
         throw new Error(
           data.message ||
             "Invalid email/mobile number or password.",
@@ -464,6 +479,19 @@ const LoginPage = () => {
         (await serverResponse.json()) as SocialLoginResponse;
 
       if (!serverResponse.ok) {
+        if (
+          (data as LoginResponse & {
+            requiresRegistration?: boolean;
+          }).requiresRegistration === true
+        ) {
+          setError(
+            data.message ||
+              "No account exists with this Google account. Please create an account first.",
+          );
+          setShowRegisterPrompt(true);
+          return;
+        }
+
         throw new Error(
           data.message ||
             "Unable to continue with Google.",
@@ -778,6 +806,19 @@ const LoginPage = () => {
               (await serverResponse.json()) as SocialLoginResponse;
 
             if (!serverResponse.ok) {
+              if (
+                (data as LoginResponse & {
+                  requiresRegistration?: boolean;
+                }).requiresRegistration === true
+              ) {
+                setError(
+                  data.message ||
+                    "No account exists with this Facebook account. Please create an account first.",
+                );
+                setShowRegisterPrompt(true);
+                return;
+              }
+
               throw new Error(
                 data.message ||
                   "Unable to continue with Facebook.",
@@ -1172,6 +1213,24 @@ const LoginPage = () => {
             >
               {error}
             </p>
+          )}
+
+          {showRegisterPrompt && !socialRegistration.active && (
+            <div
+              className={styles.registerPrompt}
+              role="alert"
+            >
+              <span>
+                Don't have an account yet?
+              </span>
+
+              <Link
+                to="/register"
+                className={styles.registerPromptLink}
+              >
+                Create an account
+              </Link>
+            </div>
           )}
 
           {socialRegistration.active ? (
