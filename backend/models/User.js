@@ -99,28 +99,20 @@ const userSchema = new mongoose.Schema(
        GOOGLE ACCOUNT
     ========================================================= */
 
-    googleId: {
-      type: String,
-      default: null,
-      unique: true,
-      sparse: true,
-      trim: true,
-      index: true,
-    },
-
+   googleId: {
+  type: String,
+  trim: true,
+  default: undefined,
+},
     /* =========================================================
        FACEBOOK ACCOUNT
     ========================================================= */
 
-    facebookId: {
-      type: String,
-      default: null,
-      unique: true,
-      sparse: true,
-      trim: true,
-      index: true,
-    },
-
+  facebookId: {
+  type: String,
+  trim: true,
+  default: undefined,
+},
     /* =========================================================
        PASSWORD
 
@@ -425,28 +417,38 @@ userSchema.pre("validate", function () {
 
 /*
  * Google ID
+ * Only documents with a string googleId are indexed.
+ * This allows normal local accounts to have no googleId.
  */
 userSchema.index(
   { googleId: 1 },
   {
     unique: true,
-    sparse: true,
+    partialFilterExpression: {
+      googleId: {
+        $type: "string",
+      },
+    },
     name: "unique_google_id",
   },
 );
 
 /*
  * Facebook ID
+ * Only documents with a string facebookId are indexed.
  */
 userSchema.index(
   { facebookId: 1 },
   {
     unique: true,
-    sparse: true,
+    partialFilterExpression: {
+      facebookId: {
+        $type: "string",
+      },
+    },
     name: "unique_facebook_id",
   },
 );
-
 /* =========================================================
    MODEL
 ========================================================= */

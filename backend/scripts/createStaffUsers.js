@@ -18,34 +18,31 @@ dns.setDefaultResultOrder("ipv4first");
 
 /* =========================================================
    STAFF USERS
+   Only:
+   - Admin
+   - Accounts
+   - Logistics
    ========================================================= */
 
 const STAFF_USERS = [
   {
-    name: "Super Admin",
-    email: "superadmin@jihaancosmetics.com",
-    password: "SuperAdmin@123",
-    role: "superadmin",
-  },
-
-  {
     name: "Admin",
-    email: "admin@jihaancosmetics.com",
-    password: "Admin@123",
+    email: "admin@jinicosmetics.com",
+    password: "123",
     role: "admin",
   },
 
   {
     name: "Accounts Manager",
-    email: "accounts@jihaancosmetics.com",
-    password: "Accounts@123",
+    email: "accounts@jinicosmetics.com",
+    password: "123",
     role: "accounts",
   },
 
   {
     name: "Logistics Manager",
-    email: "logistics@jihaancosmetics.com",
-    password: "Logistics@123",
+    email: "logistics@jinicosmetics.com",
+    password: "123",
     role: "logistics",
   },
 ];
@@ -80,10 +77,16 @@ const createStaffUsers = async () => {
 
     await mongoose.connect(process.env.MONGO_URI, {
       serverSelectionTimeoutMS: 15000,
+      family: 4,
+      dbName: "jihaan",
     });
 
     console.log(
       "MongoDB connected successfully."
+    );
+
+    console.log(
+      `Connected database: ${mongoose.connection.name}`
     );
 
     console.log("");
@@ -101,9 +104,17 @@ const createStaffUsers = async () => {
         `Processing ${staff.role}: ${email}`
       );
 
+      /* ---------------------------------------------------
+         FIND EXISTING USER
+         --------------------------------------------------- */
+
       const existingUser = await User.findOne({
         email,
       });
+
+      /* ---------------------------------------------------
+         HASH PASSWORD
+         --------------------------------------------------- */
 
       const hashedPassword =
         await bcrypt.hash(
@@ -112,16 +123,16 @@ const createStaffUsers = async () => {
         );
 
       /* ---------------------------------------------------
-         EXISTING USER
+         UPDATE EXISTING USER
          --------------------------------------------------- */
 
       if (existingUser) {
         existingUser.name = staff.name;
         existingUser.email = email;
-        existingUser.password =
-          hashedPassword;
+        existingUser.password = hashedPassword;
         existingUser.role = staff.role;
         existingUser.isActive = true;
+        existingUser.isBlocked = false;
 
         await existingUser.save();
 
@@ -142,6 +153,7 @@ const createStaffUsers = async () => {
         password: hashedPassword,
         role: staff.role,
         isActive: true,
+        isBlocked: false,
       });
 
       console.log(
@@ -166,42 +178,32 @@ const createStaffUsers = async () => {
 
     console.log("");
 
-    console.log("SUPER ADMIN");
-    console.log(
-      "Email:    superadmin@jihaancosmetics.com"
-    );
-    console.log(
-      "Password: SuperAdmin@123"
-    );
-
-    console.log("");
-
     console.log("ADMIN");
     console.log(
-      "Email:    admin@jihaancosmetics.com"
+      "Email:    admin@jinicosmetics.com"
     );
     console.log(
-      "Password: Admin@123"
+      "Password: 123"
     );
 
     console.log("");
 
     console.log("ACCOUNTS");
     console.log(
-      "Email:    accounts@jihaancosmetics.com"
+      "Email:    accounts@jinicosmetics.com"
     );
     console.log(
-      "Password: Accounts@123"
+      "Password: 123"
     );
 
     console.log("");
 
     console.log("LOGISTICS");
     console.log(
-      "Email:    logistics@jihaancosmetics.com"
+      "Email:    logistics@jinicosmetics.com"
     );
     console.log(
-      "Password: Logistics@123"
+      "Password: 123"
     );
 
     console.log("");
