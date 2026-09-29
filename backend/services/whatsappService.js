@@ -15,16 +15,8 @@
    NORMALIZE INDIAN PHONE NUMBER
 ========================================================= */
 
-const normalizeIndianPhone = (
-  phone,
-) => {
-  let normalized =
-    String(
-      phone || "",
-    ).replace(
-      /\D/g,
-      "",
-    );
+const normalizeIndianPhone = (phone) => {
+  let normalized = String(phone || "").replace(/\D/g, "");
 
   /*
    * Convert:
@@ -41,8 +33,7 @@ const normalizeIndianPhone = (
     normalized.startsWith("91") &&
     normalized.length === 12
   ) {
-    normalized =
-      normalized.slice(2);
+    normalized = normalized.slice(2);
   }
 
   return normalized;
@@ -52,31 +43,18 @@ const normalizeIndianPhone = (
    VALIDATE INDIAN PHONE
 ========================================================= */
 
-const isValidIndianPhone = (
-  phone,
-) => {
-  return /^[6-9][0-9]{9}$/.test(
-    phone,
-  );
+const isValidIndianPhone = (phone) => {
+  return /^[6-9][0-9]{9}$/.test(phone);
 };
 
 /* =========================================================
    FORMAT WHATSAPP RECIPIENT
 ========================================================= */
 
-const formatWhatsAppRecipient = (
-  phone,
-) => {
-  const normalized =
-    normalizeIndianPhone(
-      phone,
-    );
+const formatWhatsAppRecipient = (phone) => {
+  const normalized = normalizeIndianPhone(phone);
 
-  if (
-    !isValidIndianPhone(
-      normalized,
-    )
-  ) {
+  if (!isValidIndianPhone(normalized)) {
     throw new Error(
       "Invalid Indian mobile number",
     );
@@ -94,34 +72,29 @@ const formatWhatsAppRecipient = (
 };
 
 /* =========================================================
-   GET WHATSAPP CONFIG
+   GET WHATSAPP CONFIGURATION
 ========================================================= */
 
 const getWhatsAppConfig = () => {
   const accessToken =
-    process.env
-      .WHATSAPP_ACCESS_TOKEN;
+    process.env.WHATSAPP_ACCESS_TOKEN;
 
   const phoneNumberId =
-    process.env
-      .WHATSAPP_PHONE_NUMBER_ID;
+    process.env.WHATSAPP_PHONE_NUMBER_ID;
 
   const graphVersion =
-    process.env
-      .WHATSAPP_GRAPH_VERSION ||
+    process.env.WHATSAPP_GRAPH_VERSION ||
     "v24.0";
 
   const templateName =
-    process.env
-      .WHATSAPP_OTP_TEMPLATE_NAME;
+    process.env.WHATSAPP_OTP_TEMPLATE_NAME;
 
   const languageCode =
-    process.env
-      .WHATSAPP_OTP_LANGUAGE_CODE ||
+    process.env.WHATSAPP_OTP_LANGUAGE_CODE ||
     "en_US";
 
   /* =======================================================
-     VALIDATE REQUIRED CONFIGURATION
+     REQUIRED CONFIGURATION
   ======================================================= */
 
   if (!accessToken) {
@@ -143,14 +116,10 @@ const getWhatsAppConfig = () => {
   }
 
   /* =======================================================
-     VALIDATE GRAPH API VERSION
+     GRAPH API VERSION VALIDATION
   ======================================================= */
 
-  if (
-    !/^v\d+\.\d+$/.test(
-      graphVersion,
-    )
-  ) {
+  if (!/^v\d+\.\d+$/.test(graphVersion)) {
     throw new Error(
       `Invalid WHATSAPP_GRAPH_VERSION: ${graphVersion}`,
     );
@@ -169,239 +138,362 @@ const getWhatsAppConfig = () => {
    SEND WHATSAPP OTP
 ========================================================= */
 
-export const sendWhatsAppOtp =
-  async ({
-    phone,
-    otp,
-  }) => {
-    /* =====================================================
-       GET CONFIGURATION
-    ===================================================== */
+export const sendWhatsAppOtp = async ({
+  phone,
+  otp,
+}) => {
+  /* =======================================================
+     GET CONFIGURATION
+  ======================================================= */
 
-    const {
-      accessToken,
-      phoneNumberId,
-      graphVersion,
-      templateName,
-      languageCode,
-    } =
-      getWhatsAppConfig();
+  const {
+    accessToken,
+    phoneNumberId,
+    graphVersion,
+    templateName,
+    languageCode,
+  } = getWhatsAppConfig();
 
-    /* =====================================================
-       VALIDATE OTP
-    ===================================================== */
+  /* =======================================================
+     VALIDATE OTP
+  ======================================================= */
 
-    if (
-      otp === undefined ||
-      otp === null ||
-      String(otp).trim() === ""
-    ) {
-      throw new Error(
-        "OTP is required",
-      );
-    }
+  if (
+    otp === undefined ||
+    otp === null ||
+    String(otp).trim() === ""
+  ) {
+    throw new Error(
+      "OTP is required",
+    );
+  }
 
-    /* =====================================================
-       FORMAT RECIPIENT
-    ===================================================== */
+  /* =======================================================
+     FORMAT RECIPIENT
+  ======================================================= */
 
-    const recipient =
-      formatWhatsAppRecipient(
-        phone,
-      );
+  const recipient =
+    formatWhatsAppRecipient(phone);
 
-    /* =====================================================
-       META WHATSAPP CLOUD API URL
-    ===================================================== */
+  /* =======================================================
+     META WHATSAPP CLOUD API URL
+  ======================================================= */
 
-    const url =
-      `https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`;
+  const url =
+    `https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`;
 
-    /* =====================================================
-       WHATSAPP TEMPLATE PAYLOAD
+  /* =======================================================
+     WHATSAPP TEMPLATE PAYLOAD
 
-       This payload expects an Authentication template
-       containing:
+     This expects an Authentication template with:
 
-       - Body OTP variable
-       - Copy Code authentication button
+     - OTP body variable
+     - Copy Code authentication button
 
-       Example:
+     Example:
 
-       Your Jini Cosmetics verification
-       code is {{1}}.
+     Your Jini Cosmetics verification
+     code is {{1}}.
 
-       Do not share this code with anyone.
-    ===================================================== */
+     Do not share this code with anyone.
+  ======================================================= */
 
-    const payload = {
-      messaging_product:
-        "whatsapp",
+  const payload = {
+    messaging_product: "whatsapp",
 
-      to:
-        recipient,
+    to: recipient,
 
-      type:
-        "template",
+    type: "template",
 
-      template: {
-        name:
-          templateName,
+    template: {
+      name: templateName,
 
-        language: {
-          code:
-            languageCode,
+      language: {
+        code: languageCode,
+      },
+
+      components: [
+        /* =================================================
+           OTP BODY
+        ================================================= */
+
+        {
+          type: "body",
+
+          parameters: [
+            {
+              type: "text",
+              text: String(otp),
+            },
+          ],
         },
 
-        components: [
-          /* ===============================================
-             OTP BODY
-          =============================================== */
+        /* =================================================
+           COPY CODE BUTTON
+        ================================================= */
 
-          {
-            type:
-              "body",
+        {
+          type: "button",
 
-            parameters: [
-              {
-                type:
-                  "text",
+          sub_type: "copy_code",
 
-                text:
-                  String(otp),
-              },
-            ],
-          },
+          index: "0",
 
-          /* ===============================================
-             COPY CODE BUTTON
-          =============================================== */
-
-          {
-            type:
-              "button",
-
-            sub_type:
-              "copy_code",
-
-            index:
-              "0",
-
-            parameters: [
-              {
-                type:
-                  "text",
-
-                text:
-                  String(otp),
-              },
-            ],
-          },
-        ],
-      },
-    };
-
-    /* =====================================================
-       SEND REQUEST TO META
-    ===================================================== */
-
-    let response;
-
-    try {
-      response =
-        await fetch(
-          url,
-          {
-            method:
-              "POST",
-
-            headers: {
-              Authorization:
-                `Bearer ${accessToken}`,
-
-              "Content-Type":
-                "application/json",
+          parameters: [
+            {
+              type: "text",
+              text: String(otp),
             },
-
-            body:
-              JSON.stringify(
-                payload,
-              ),
-          },
-        );
-    } catch (networkError) {
-      console.error(
-        "WHATSAPP NETWORK ERROR:",
-        networkError?.message ||
-          networkError,
-      );
-
-      throw new Error(
-        "Unable to connect to WhatsApp Cloud API",
-      );
-    }
-
-    /* =====================================================
-       READ META RESPONSE
-    ===================================================== */
-
-    const data =
-      await response
-        .json()
-        .catch(
-          () => ({}),
-        );
-
-    /* =====================================================
-       HANDLE META API ERROR
-    ===================================================== */
-
-    if (!response.ok) {
-      console.error(
-        "WHATSAPP API ERROR:",
-        JSON.stringify(
-          data,
-          null,
-          2,
-        ),
-      );
-
-      const errorMessage =
-        data?.error
-          ?.message ||
-        "WhatsApp message could not be sent";
-
-      const error =
-        new Error(
-          errorMessage,
-        );
-
-      error.status =
-        response.status;
-
-      error.whatsappError =
-        data?.error ||
-        null;
-
-      throw error;
-    }
-
-    /* =====================================================
-       SUCCESS RESPONSE
-    ===================================================== */
-
-    return {
-      success:
-        true,
-
-      messageId:
-        data?.messages?.[0]
-          ?.id ||
-        null,
-
-      recipient,
-    };
+          ],
+        },
+      ],
+    },
   };
+
+  /* =======================================================
+     SEND REQUEST TO META
+  ======================================================= */
+
+  let response;
+
+  try {
+    console.log(
+      "========================================",
+    );
+
+    console.log(
+      "WHATSAPP API REQUEST",
+    );
+
+    console.log(
+      "URL:",
+      url,
+    );
+
+    console.log(
+      "PHONE NUMBER ID:",
+      phoneNumberId,
+    );
+
+    console.log(
+      "GRAPH VERSION:",
+      graphVersion,
+    );
+
+    console.log(
+      "TEMPLATE NAME:",
+      templateName,
+    );
+
+    console.log(
+      "LANGUAGE:",
+      languageCode,
+    );
+
+    console.log(
+      "RECIPIENT:",
+      recipient,
+    );
+
+    console.log(
+      "========================================",
+    );
+
+    response = await fetch(
+      url,
+      {
+        method: "POST",
+
+        headers: {
+          Authorization:
+            `Bearer ${accessToken}`,
+
+          "Content-Type":
+            "application/json",
+        },
+
+        body: JSON.stringify(
+          payload,
+        ),
+      },
+    );
+
+    console.log(
+      "WHATSAPP HTTP STATUS:",
+      response.status,
+    );
+  } catch (networkError) {
+    /* =====================================================
+       IMPORTANT
+
+       Do NOT hide the original network error.
+
+       This helps identify:
+       - DNS errors
+       - Connection refused
+       - Timeout
+       - TLS errors
+       - ECONNRESET
+       - Render networking problems
+       - fetch failures
+    ===================================================== */
+
+    console.error(
+      "========================================",
+    );
+
+    console.error(
+      "WHATSAPP NETWORK ERROR",
+    );
+
+    console.error(
+      "ERROR NAME:",
+      networkError?.name,
+    );
+
+    console.error(
+      "ERROR MESSAGE:",
+      networkError?.message,
+    );
+
+    console.error(
+      "ERROR CAUSE:",
+      networkError?.cause,
+    );
+
+    console.error(
+      "ERROR CODE:",
+      networkError?.code ||
+        networkError?.cause?.code ||
+        "N/A",
+    );
+
+    console.error(
+      "ERROR STACK:",
+      networkError?.stack,
+    );
+
+    console.error(
+      "========================================",
+    );
+
+    throw new Error(
+      `Unable to connect to WhatsApp Cloud API: ${
+        networkError?.message ||
+        "Unknown network error"
+      }`,
+    );
+  }
+
+  /* =======================================================
+     READ META RESPONSE
+
+     Read as text first so the service doesn't fail if
+     Meta returns an unexpected/non-JSON response.
+  ======================================================= */
+
+  const responseText =
+    await response.text();
+
+  let data = {};
+
+  try {
+    data =
+      responseText
+        ? JSON.parse(responseText)
+        : {};
+  } catch {
+    data = {
+      rawResponse:
+        responseText,
+    };
+  }
+
+  /* =======================================================
+     HANDLE META API ERROR
+  ======================================================= */
+
+  if (!response.ok) {
+    console.error(
+      "========================================",
+    );
+
+    console.error(
+      "WHATSAPP API ERROR",
+    );
+
+    console.error(
+      "HTTP STATUS:",
+      response.status,
+    );
+
+    console.error(
+      "RESPONSE:",
+      JSON.stringify(
+        data,
+        null,
+        2,
+      ),
+    );
+
+    console.error(
+      "========================================",
+    );
+
+    const errorMessage =
+      data?.error?.message ||
+      "WhatsApp message could not be sent";
+
+    const error =
+      new Error(errorMessage);
+
+    error.status =
+      response.status;
+
+    error.whatsappError =
+      data?.error || null;
+
+    throw error;
+  }
+
+  /* =======================================================
+     SUCCESS RESPONSE
+  ======================================================= */
+
+  const messageId =
+    data?.messages?.[0]?.id ||
+    null;
+
+  console.log(
+    "========================================",
+  );
+
+  console.log(
+    "WHATSAPP OTP SENT SUCCESSFULLY",
+  );
+
+  console.log(
+    "MESSAGE ID:",
+    messageId,
+  );
+
+  console.log(
+    "RECIPIENT:",
+    recipient,
+  );
+
+  console.log(
+    "========================================",
+  );
+
+  return {
+    success: true,
+
+    messageId,
+
+    recipient,
+  };
+};
 
 /* =========================================================
    WHATSAPP CONFIGURATION STATUS
@@ -409,47 +501,38 @@ export const sendWhatsAppOtp =
    Optional development helper.
 
    IMPORTANT:
-   This function NEVER returns the access token.
+   This NEVER returns the access token.
 ========================================================= */
 
-export const getWhatsAppStatus =
-  () => {
-    const graphVersion =
-      process.env
-        .WHATSAPP_GRAPH_VERSION ||
-      "v24.0";
+export const getWhatsAppStatus = () => {
+  const graphVersion =
+    process.env.WHATSAPP_GRAPH_VERSION ||
+    "v24.0";
 
-    return {
-      configured:
-        Boolean(
-          process.env
-            .WHATSAPP_ACCESS_TOKEN &&
-            process.env
-              .WHATSAPP_PHONE_NUMBER_ID &&
-            process.env
-              .WHATSAPP_OTP_TEMPLATE_NAME,
-        ),
+  return {
+    configured: Boolean(
+      process.env.WHATSAPP_ACCESS_TOKEN &&
+      process.env.WHATSAPP_PHONE_NUMBER_ID &&
+      process.env.WHATSAPP_OTP_TEMPLATE_NAME,
+    ),
 
-      phoneNumberId:
-        process.env
-          .WHATSAPP_PHONE_NUMBER_ID ||
-        null,
+    phoneNumberId:
+      process.env.WHATSAPP_PHONE_NUMBER_ID ||
+      null,
 
-      graphVersion,
+    graphVersion,
 
-      graphVersionValid:
-        /^v\d+\.\d+$/.test(
-          graphVersion,
-        ),
+    graphVersionValid:
+      /^v\d+\.\d+$/.test(
+        graphVersion,
+      ),
 
-      templateName:
-        process.env
-          .WHATSAPP_OTP_TEMPLATE_NAME ||
-        null,
+    templateName:
+      process.env.WHATSAPP_OTP_TEMPLATE_NAME ||
+      null,
 
-      languageCode:
-        process.env
-          .WHATSAPP_OTP_LANGUAGE_CODE ||
-        "en_US",
-    };
+    languageCode:
+      process.env.WHATSAPP_OTP_LANGUAGE_CODE ||
+      "en_US",
   };
+};
