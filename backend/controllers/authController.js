@@ -4,6 +4,7 @@ import crypto from "crypto";
 import mongoose from "mongoose";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/User.js";
+import { sendWhatsAppOtp } from "../services/whatsappService.js";
 
 /* =========================================================
    ROLE CONFIGURATION
@@ -36,7 +37,9 @@ const googleClient = new OAuth2Client(
 ========================================================= */
 
 const OTP_LENGTH = 6;
+
 const OTP_EXPIRY_MINUTES = 5;
+
 const OTP_EXPIRY_MS =
   OTP_EXPIRY_MINUTES * 60 * 1000;
 
@@ -519,200 +522,6 @@ const hashChallengeKey = (
 };
 
 /* =========================================================
-   WHATSAPP PHONE FORMAT
-========================================================= */
-
-const formatWhatsAppPhone = (
-  phone,
-) => {
-  const normalized =
-    normalizePhone(phone);
-
-  if (
-    !isValidPhone(normalized)
-  ) {
-    throw new Error(
-      "Invalid Indian phone number",
-    );
-  }
-
-  return `91${normalized}`;
-};
-
-/* =========================================================
-   SEND WHATSAPP OTP
-
-   Meta WhatsApp Cloud API
-
-   Required backend environment variables:
-
-   WHATSAPP_ACCESS_TOKEN
-   WHATSAPP_PHONE_NUMBER_ID
-   WHATSAPP_GRAPH_VERSION
-   WHATSAPP_OTP_TEMPLATE_NAME
-   WHATSAPP_OTP_LANGUAGE_CODE
-========================================================= */
-
-const sendWhatsAppOtp = async ({
-  phone,
-  otp,
-}) => {
-  const accessToken =
-    process.env
-      .WHATSAPP_ACCESS_TOKEN;
-
-  const phoneNumberId =
-    process.env
-      .WHATSAPP_PHONE_NUMBER_ID;
-
-  const graphVersion =
-    process.env
-      .WHATSAPP_GRAPH_VERSION ||
-    "v24.0";
-
-  const templateName =
-    process.env
-      .WHATSAPP_OTP_TEMPLATE_NAME;
-
-  const languageCode =
-    process.env
-      .WHATSAPP_OTP_LANGUAGE_CODE ||
-    "en_US";
-
-  if (!accessToken) {
-    throw new Error(
-      "WHATSAPP_ACCESS_TOKEN is not configured",
-    );
-  }
-
-  if (!phoneNumberId) {
-    throw new Error(
-      "WHATSAPP_PHONE_NUMBER_ID is not configured",
-    );
-  }
-
-  if (!templateName) {
-    throw new Error(
-      "WHATSAPP_OTP_TEMPLATE_NAME is not configured",
-    );
-  }
-
-  const recipient =
-    formatWhatsAppPhone(phone);
-
-  const url =
-    `https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`;
-
-  /*
-   * This expects an Authentication/OTP
-   * WhatsApp template that accepts the OTP
-   * as a body parameter and has a Copy Code
-   * authentication button.
-   */
-  const payload = {
-    messaging_product:
-      "whatsapp",
-
-    to: recipient,
-
-    type: "template",
-
-    template: {
-      name: templateName,
-
-      language: {
-        code: languageCode,
-      },
-
-      components: [
-        {
-          type: "body",
-
-          parameters: [
-            {
-              type: "text",
-              text: String(otp),
-            },
-          ],
-        },
-
-        {
-          type: "button",
-
-          sub_type:
-            "copy_code",
-
-          index: "0",
-
-          parameters: [
-            {
-              type: "text",
-              text: String(otp),
-            },
-          ],
-        },
-      ],
-    },
-  };
-
-  const response =
-    await fetch(
-      url,
-      {
-        method: "POST",
-
-        headers: {
-          Authorization:
-            `Bearer ${accessToken}`,
-
-          "Content-Type":
-            "application/json",
-        },
-
-        body: JSON.stringify(
-          payload,
-        ),
-      },
-    );
-
-  const data =
-    await response
-      .json()
-      .catch(
-        () => ({}),
-      );
-
-  if (!response.ok) {
-    console.error(
-      "WHATSAPP API ERROR:",
-      JSON.stringify(
-        data,
-        null,
-        2,
-      ),
-    );
-
-    const errorMessage =
-      data?.error?.message ||
-      "WhatsApp OTP could not be sent";
-
-    throw new Error(
-      errorMessage,
-    );
-  }
-
-  return {
-    success: true,
-
-    messageId:
-      data?.messages?.[0]?.id ||
-      null,
-
-    recipient,
-  };
-};
-
-/* =========================================================
    INVALIDATE EXISTING OTP
 ========================================================= */
 
@@ -750,9 +559,7 @@ const invalidateExistingOtp = async ({
 const getResendCooldown = (
   record,
 ) => {
-  if (
-    !record?.lastSentAt
-  ) {
+  if (!record?.lastSentAt) {
     return 0;
   }
 
@@ -790,23 +597,22 @@ const createOtpChallenge = async ({
     await getOtpCollection();
 
   const existing =
-    await collection
-      .findOne(
-        {
-          phone,
-          purpose,
-          challengeKey,
-          consumedAt: null,
-          expiresAt: {
-            $gt: new Date(),
-          },
+    await collection.findOne(
+      {
+        phone,
+        purpose,
+        challengeKey,
+        consumedAt: null,
+        expiresAt: {
+          $gt: new Date(),
         },
-        {
-          sort: {
-            createdAt: -1,
-          },
+      },
+      {
+        sort: {
+          createdAt: -1,
         },
-      );
+      },
+    );
 
   const cooldown =
     getResendCooldown(
@@ -1553,8 +1359,7 @@ export const registerUser =
       });
     }
   };
-
-/* =========================================================
+  /* =========================================================
    USER LOGIN
 
    POST /api/auth/login
@@ -2078,13 +1883,17 @@ export const facebookLogin =
           debugUrl,
         );
 
-      const debugData =
-        await debugResponse.json();
-
       if (
-        !debugResponse.ok ||
-        !debugData?.data
+        !debugResponse.ok
       ) {
+        const debugText =
+          await debugResponse.text();
+
+        console.error(
+          "FACEBOOK DEBUG TOKEN ERROR:",
+          debugText,
+        );
+
         return res.status(401).json({
           success: false,
           message:
@@ -2092,13 +1901,13 @@ export const facebookLogin =
         });
       }
 
-      const tokenData =
-        debugData.data;
+      const debugData =
+        await debugResponse.json();
 
-      if (
-        tokenData.is_valid !==
-        true
-      ) {
+      const tokenData =
+        debugData?.data;
+
+      if (!tokenData?.is_valid) {
         return res.status(401).json({
           success: false,
           message:
@@ -2107,42 +1916,28 @@ export const facebookLogin =
       }
 
       if (
+        tokenData.app_id &&
         String(
-          tokenData.app_id ||
-            "",
+          tokenData.app_id,
         ) !==
-        String(
-          process.env
-            .FACEBOOK_APP_ID,
-        )
+          String(
+            process.env
+              .FACEBOOK_APP_ID,
+          )
       ) {
         return res.status(401).json({
           success: false,
           message:
-            "Facebook token does not belong to this application",
-        });
-      }
-
-      const facebookId =
-        String(
-          tokenData.user_id ||
-            "",
-        );
-
-      if (!facebookId) {
-        return res.status(401).json({
-          success: false,
-          message:
-            "Facebook user ID was not provided",
+            "Facebook access token belongs to a different application",
         });
       }
 
       /*
-       * GET FACEBOOK PROFILE
+       * FETCH FACEBOOK PROFILE
        */
 
       const profileUrl =
-        `https://graph.facebook.com/${graphVersion}/${facebookId}` +
+        `https://graph.facebook.com/${graphVersion}/me` +
         `?fields=id,name,email,picture.type(large)` +
         `&access_token=${encodeURIComponent(
           accessToken,
@@ -2153,13 +1948,17 @@ export const facebookLogin =
           profileUrl,
         );
 
-      const profileData =
-        await profileResponse.json();
-
       if (
-        !profileResponse.ok ||
-        !profileData
+        !profileResponse.ok
       ) {
+        const profileText =
+          await profileResponse.text();
+
+        console.error(
+          "FACEBOOK PROFILE ERROR:",
+          profileText,
+        );
+
         return res.status(401).json({
           success: false,
           message:
@@ -2167,34 +1966,52 @@ export const facebookLogin =
         });
       }
 
+      const profile =
+        await profileResponse.json();
+
+      const facebookId =
+        profile?.id;
+
+      const facebookName =
+        normalizeName(
+          profile?.name ||
+            "Facebook User",
+        );
+
       const facebookEmail =
         String(
-          profileData.email ||
+          profile?.email ||
             "",
         )
           .trim()
           .toLowerCase();
 
-      const facebookName =
-        normalizeName(
-          profileData.name ||
-            "Facebook User",
-        );
-
       const facebookImage =
-        profileData?.picture
+        profile?.picture
           ?.data?.url ||
         "";
+
+      if (!facebookId) {
+        return res.status(401).json({
+          success: false,
+          message:
+            "Facebook account ID was not provided",
+        });
+      }
+
+      /*
+       * Facebook may not return an email
+       * depending on the account or permission.
+       *
+       * The current account flow requires
+       * an email for the customer account.
+       */
 
       if (!facebookEmail) {
         return res.status(400).json({
           success: false,
-
-          requiresEmail:
-            true,
-
           message:
-            "Facebook did not provide an email address. Please allow email permission or provide your email address.",
+            "Facebook did not provide an email address. Please use another login method.",
         });
       }
 
@@ -2217,6 +2034,9 @@ export const facebookLogin =
           return;
         }
 
+        user.isEmailVerified =
+          true;
+
         return completeLogin(
           user,
           res,
@@ -2235,6 +2055,11 @@ export const facebookLogin =
         });
 
       if (user) {
+        /*
+         * Do not silently attach Facebook
+         * to another authentication provider.
+         */
+
         if (
           user.authProvider !==
           "facebook"
@@ -2259,6 +2084,9 @@ export const facebookLogin =
           user.facebookId =
             facebookId;
 
+          user.isEmailVerified =
+            true;
+
           await user.save();
         }
 
@@ -2279,7 +2107,12 @@ export const facebookLogin =
       }
 
       /*
-       * NEW FACEBOOK USER
+       * NEW SOCIAL USER
+       *
+       * Do not create the account yet.
+       *
+       * First collect phone and verify
+       * WhatsApp OTP.
        */
 
       const socialToken =
@@ -2336,7 +2169,7 @@ export const facebookLogin =
         error,
       );
 
-      return res.status(500).json({
+      return res.status(401).json({
         success: false,
         message:
           "Facebook authentication failed",
@@ -2348,14 +2181,12 @@ export const facebookLogin =
       });
     }
   };
-
-/* =========================================================
+  /* =========================================================
    SOCIAL SEND OTP
 
    POST /api/auth/social/send-otp
 
    Body:
-
    {
      socialToken,
      phone
@@ -2475,6 +2306,9 @@ export const sendSocialOtp =
 
         resendAfter:
           result.resendAfter,
+
+        challengeId:
+          result.challengeId,
       });
     } catch (error) {
       console.error(
@@ -2504,13 +2338,8 @@ export const sendSocialOtp =
         success: false,
 
         message:
-          "Unable to send OTP",
-
-        error:
-          process.env.NODE_ENV ===
-          "development"
-            ? error.message
-            : undefined,
+          error?.message ||
+          "Unable to send OTP at this time",
       });
     }
   };
@@ -2521,7 +2350,6 @@ export const sendSocialOtp =
    POST /api/auth/social/complete
 
    Body:
-
    {
      socialToken,
      phone,
@@ -2542,6 +2370,14 @@ export const completeSocialRegistration =
       } =
         req.body || {};
 
+      const normalizedPhone =
+        normalizePhone(phone);
+
+      const normalizedOtp =
+        String(
+          otp || "",
+        ).trim();
+
       if (!socialToken) {
         return res.status(400).json({
           success: false,
@@ -2550,33 +2386,22 @@ export const completeSocialRegistration =
         });
       }
 
-      if (!phone) {
+      if (
+        !isValidPhone(
+          normalizedPhone,
+        )
+      ) {
         return res.status(400).json({
           success: false,
           message:
-            "Mobile number is required",
+            "Please enter a valid Indian mobile number",
         });
       }
-
-      if (!otp) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "OTP is required",
-        });
-      }
-
-      const normalizedOtp =
-        String(otp)
-          .replace(
-            /\D/g,
-            "",
-          )
-          .trim();
 
       if (
-        normalizedOtp.length !==
-        OTP_LENGTH
+        !/^[0-9]{6}$/.test(
+          normalizedOtp,
+        )
       ) {
         return res.status(400).json({
           success: false,
@@ -2585,10 +2410,10 @@ export const completeSocialRegistration =
         });
       }
 
-      let decoded;
+      let socialData;
 
       try {
-        decoded =
+        socialData =
           verifySocialPendingToken(
             socialToken,
           );
@@ -2602,28 +2427,13 @@ export const completeSocialRegistration =
 
       if (
         !SOCIAL_PROVIDERS.includes(
-          decoded.provider,
+          socialData.provider,
         )
       ) {
         return res.status(400).json({
           success: false,
           message:
-            "Invalid social authentication provider",
-        });
-      }
-
-      const normalizedPhone =
-        normalizePhone(phone);
-
-      if (
-        !isValidPhone(
-          normalizedPhone,
-        )
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Please enter a valid 10-digit mobile number",
+            "Invalid social login provider",
         });
       }
 
@@ -2643,7 +2453,7 @@ export const completeSocialRegistration =
 
       const challengeKey =
         hashChallengeKey(
-          `${decoded.provider}:${decoded.providerId}:${normalizedPhone}`,
+          `${socialData.provider}:${socialData.providerId}:${normalizedPhone}`,
         );
 
       const verification =
@@ -2683,34 +2493,56 @@ export const completeSocialRegistration =
       }
 
       /*
-       * Re-check email/social account
-       * immediately before creation.
+       * Re-check the social account immediately
+       * before creating the account.
        */
+
       const existingSocial =
-        decoded.provider ===
+        socialData.provider ===
         "google"
           ? await User.findOne({
               googleId:
-                decoded.providerId,
+                socialData.providerId,
             })
           : await User.findOne({
               facebookId:
-                decoded.providerId,
+                socialData.providerId,
             });
 
       if (existingSocial) {
+        if (
+          !checkAccountStatus(
+            existingSocial,
+            res,
+          )
+        ) {
+          return;
+        }
+
         return completeLogin(
           existingSocial,
           res,
-          `${decoded.provider === "google" ? "Google" : "Facebook"} login successful`,
+          `${
+            socialData.provider ===
+            "google"
+              ? "Google"
+              : "Facebook"
+          } login successful`,
         );
       }
+
+      /*
+       * Re-check email because a customer may have
+       * registered with the same email while the OTP
+       * was being completed.
+       */
 
       const existingEmail =
         await User.findOne({
           email:
             String(
-              decoded.email || "",
+              socialData.email ||
+                "",
             )
               .trim()
               .toLowerCase(),
@@ -2719,21 +2551,26 @@ export const completeSocialRegistration =
       if (existingEmail) {
         return res.status(409).json({
           success: false,
+          accountExists:
+            true,
+          requiresExistingLogin:
+            true,
           message:
-            "An account already exists with this email. Please login using your existing login method.",
+            "An account already exists with this email. Please log in using your existing login method.",
         });
       }
 
       const userData = {
         name:
           normalizeName(
-            decoded.name ||
-              `${decoded.provider} User`,
+            socialData.name ||
+              "Customer",
           ),
 
         email:
           String(
-            decoded.email || "",
+            socialData.email ||
+              "",
           )
             .trim()
             .toLowerCase(),
@@ -2741,18 +2578,15 @@ export const completeSocialRegistration =
         phone:
           normalizedPhone,
 
-        password:
-          undefined,
-
         authProvider:
-          decoded.provider,
-
-        profileImage:
-          decoded.profileImage ||
-          "",
+          socialData.provider,
 
         role:
           CUSTOMER_ROLE,
+
+        profileImage:
+          socialData.profileImage ||
+          "",
 
         isActive:
           true,
@@ -2761,29 +2595,26 @@ export const completeSocialRegistration =
           false,
 
         isEmailVerified:
-          decoded.provider ===
-          "google"
-            ? true
-            : false,
+          true,
 
         isPhoneVerified:
           true,
       };
 
       if (
-        decoded.provider ===
+        socialData.provider ===
         "google"
       ) {
         userData.googleId =
-          decoded.providerId;
+          socialData.providerId;
       }
 
       if (
-        decoded.provider ===
+        socialData.provider ===
         "facebook"
       ) {
         userData.facebookId =
-          decoded.providerId;
+          socialData.providerId;
       }
 
       const user =
@@ -2794,7 +2625,7 @@ export const completeSocialRegistration =
       return completeLogin(
         user,
         res,
-        `${decoded.provider === "google" ? "Google" : "Facebook"} registration successful`,
+        "Registration completed successfully",
       );
     } catch (error) {
       console.error(
@@ -2817,29 +2648,26 @@ export const completeSocialRegistration =
         success: false,
         message:
           "Unable to complete social registration",
-        error:
-          process.env.NODE_ENV ===
-          "development"
-            ? error.message
-            : undefined,
       });
     }
   };
 
 /* =========================================================
-   FORGOT PASSWORD - SEND OTP
+   FORGOT PASSWORD
 
    POST /api/auth/forgot-password
 
    Body:
-
    {
-     identifier: "email or phone"
+     identifier
    }
 
-   IMPORTANT:
-   Response intentionally does not reveal whether
-   an account exists.
+   Identifier may be:
+   - Email
+   - Mobile number
+
+   Response intentionally remains generic so that
+   account existence is not exposed.
 ========================================================= */
 
 export const forgotPassword =
@@ -2847,6 +2675,14 @@ export const forgotPassword =
     req,
     res,
   ) => {
+    const genericResponse =
+      () =>
+        res.status(200).json({
+          success: true,
+          message:
+            "If an account exists with these details, a password reset OTP has been sent to the registered WhatsApp number.",
+        });
+
     try {
       const identifier =
         String(
@@ -2855,16 +2691,6 @@ export const forgotPassword =
             req.body?.phone ??
             "",
         ).trim();
-
-      /*
-       * Always return a generic response.
-       */
-      const genericResponse = () =>
-        res.status(200).json({
-          success: true,
-          message:
-            "If an account exists with these details, a password reset OTP has been sent to the registered WhatsApp number.",
-        });
 
       if (!identifier) {
         return genericResponse();
@@ -2931,13 +2757,16 @@ export const forgotPassword =
       }
 
       /*
-       * Social-only accounts do not have a
-       * password to reset.
-       *
-       * We deliberately keep the response
-       * generic to avoid account enumeration.
+       * Social-only accounts should continue
+       * using their social provider.
        */
-      if (!user.password) {
+
+      if (
+        SOCIAL_PROVIDERS.includes(
+          user.authProvider,
+        ) &&
+        !user.password
+      ) {
         return genericResponse();
       }
 
@@ -2981,7 +2810,7 @@ export const forgotPassword =
           "OTP_RESEND_COOLDOWN"
         ) {
           /*
-           * Keep generic response.
+           * Keep response generic.
            * Do not reveal whether account exists.
            */
           return genericResponse();
@@ -3001,6 +2830,7 @@ export const forgotPassword =
        * Do not reveal internal details
        * through this endpoint.
        */
+
       return res.status(200).json({
         success: true,
         message:
@@ -3015,13 +2845,12 @@ export const forgotPassword =
    POST /api/auth/forgot-password/verify-otp
 
    Body:
-
    {
      identifier,
      otp
    }
 
-   Returns a short-lived reset token.
+   Returns a short-lived password reset token.
 ========================================================= */
 
 export const verifyForgotPasswordOtp =
@@ -3068,12 +2897,16 @@ export const verifyForgotPasswordOtp =
         });
       }
 
-      let user = null;
+      let normalizedEmail =
+        "";
+
+      let normalizedPhone =
+        "";
 
       if (
         identifier.includes("@")
       ) {
-        const normalizedEmail =
+        normalizedEmail =
           identifier
             .toLowerCase();
 
@@ -3088,17 +2921,8 @@ export const verifyForgotPasswordOtp =
               "Please enter a valid email address",
           });
         }
-
-        user =
-          await User.findOne({
-            email:
-              normalizedEmail,
-
-            role:
-              CUSTOMER_ROLE,
-          });
       } else {
-        const normalizedPhone =
+        normalizedPhone =
           normalizePhone(
             identifier,
           );
@@ -3111,19 +2935,32 @@ export const verifyForgotPasswordOtp =
           return res.status(400).json({
             success: false,
             message:
-              "Please enter a valid mobile number",
+              "Please enter a valid 10-digit mobile number",
           });
         }
-
-        user =
-          await User.findOne({
-            phone:
-              normalizedPhone,
-
-            role:
-              CUSTOMER_ROLE,
-          });
       }
+
+      const query =
+        normalizedEmail
+          ? {
+              email:
+                normalizedEmail,
+
+              role:
+                CUSTOMER_ROLE,
+            }
+          : {
+              phone:
+                normalizedPhone,
+
+              role:
+                CUSTOMER_ROLE,
+            };
+
+      const user =
+        await User.findOne(
+          query,
+        );
 
       if (!user) {
         return res.status(400).json({
@@ -3144,20 +2981,35 @@ export const verifyForgotPasswordOtp =
         });
       }
 
-      if (!user.password) {
+      if (
+        SOCIAL_PROVIDERS.includes(
+          user.authProvider,
+        ) &&
+        !user.password
+      ) {
         return res.status(400).json({
           success: false,
-          code:
-            "SOCIAL_ACCOUNT",
           message:
             "This account uses social login. Please continue with Google or Facebook.",
         });
       }
 
-      const normalizedPhone =
+      const registeredPhone =
         normalizePhone(
           user.phone,
         );
+
+      if (
+        !isValidPhone(
+          registeredPhone,
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid or expired OTP",
+        });
+      }
 
       const challengeKey =
         hashChallengeKey(
@@ -3167,7 +3019,7 @@ export const verifyForgotPasswordOtp =
       const verification =
         await verifyOtpChallenge({
           phone:
-            normalizedPhone,
+            registeredPhone,
 
           purpose:
             "forgot-password",
@@ -3180,7 +3032,15 @@ export const verifyForgotPasswordOtp =
       if (
         !verification.success
       ) {
-        return res.status(400).json({
+        const status =
+          verification.code ===
+          "OTP_MAX_ATTEMPTS"
+            ? 429
+            : 400;
+
+        return res.status(
+          status,
+        ).json({
           success: false,
 
           code:
@@ -3205,7 +3065,7 @@ export const verifyForgotPasswordOtp =
         success: true,
 
         message:
-          "OTP verified successfully. You can now reset your password.",
+          "OTP verified successfully",
 
         resetToken,
 
@@ -3232,7 +3092,6 @@ export const verifyForgotPasswordOtp =
    POST /api/auth/reset-password
 
    Body:
-
    {
      resetToken,
      newPassword,
@@ -3261,14 +3120,11 @@ export const resetPassword =
         });
       }
 
-      if (
-        !newPassword ||
-        !confirmPassword
-      ) {
+      if (!newPassword) {
         return res.status(400).json({
           success: false,
           message:
-            "New password and confirmation are required",
+            "New password is required",
         });
       }
 
@@ -3285,8 +3141,10 @@ export const resetPassword =
       }
 
       if (
+        confirmPassword !==
+          undefined &&
         newPassword !==
-        confirmPassword
+          confirmPassword
       ) {
         return res.status(400).json({
           success: false,
@@ -3302,7 +3160,7 @@ export const resetPassword =
           verifyPasswordResetToken(
             resetToken,
           );
-      } catch {
+      } catch (error) {
         return res.status(401).json({
           success: false,
           message:
@@ -3318,124 +3176,74 @@ export const resetPassword =
         );
 
       if (!user) {
-        return res.status(401).json({
+        return res.status(404).json({
           success: false,
           message:
-            "Password reset session is invalid",
+            "User account not found",
         });
       }
 
       if (
-        !checkAccountStatus(
-          user,
-          res,
-        )
+        user.isBlocked === true ||
+        user.isActive === false
       ) {
-        return;
+        return res.status(403).json({
+          success: false,
+          message:
+            "Account is not available",
+        });
+      }
+
+      if (!user.password) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "This account uses social login and does not have a password to reset.",
+        });
       }
 
       /*
-       * Make sure this reset token is tied
-       * to an actual verified OTP challenge.
+       * Verify that the OTP referenced by the
+       * reset token was genuinely verified.
        */
+
       const collection =
         await getOtpCollection();
-
-      let challengeId;
-
-      try {
-        challengeId =
-          new mongoose.Types.ObjectId(
-            decoded.challengeId,
-          );
-      } catch {
-        return res.status(401).json({
-          success: false,
-          message:
-            "Password reset session is invalid",
-        });
-      }
 
       const challenge =
         await collection.findOne({
           _id:
-            challengeId,
-
-          purpose:
-            "forgot-password",
+            new mongoose.Types.ObjectId(
+              decoded.challengeId,
+            ),
 
           userId:
             user._id,
 
-          verifiedAt: {
-            $exists: true,
-          },
+          purpose:
+            "forgot-password",
 
-          consumedAt: {
+          verifiedAt: {
             $exists: true,
             $ne: null,
           },
-
-          expiresAt: {
-            $gt: new Date(),
-          },
         });
 
-      /*
-       * Important:
-       *
-       * The OTP challenge is marked consumed
-       * when OTP verification succeeds.
-       *
-       * verifiedAt proves that the challenge
-       * was actually verified.
-       */
-      if (
-        !challenge ||
-        !challenge.verifiedAt
-      ) {
+      if (!challenge) {
         return res.status(401).json({
           success: false,
           message:
-            "Password reset session is invalid or expired",
+            "Password reset verification is invalid or expired.",
         });
       }
 
-      /*
-       * Prevent reusing the same challenge.
-       */
-      if (
-        challenge.passwordResetCompletedAt
-      ) {
-        return res.status(401).json({
-          success: false,
-          message:
-            "This password reset session has already been used",
-        });
-      }
-
-      /*
-       * Prevent changing a social-only account
-       * through the password-reset flow unless
-       * it already has a local password.
-       */
-      if (!user.password) {
-        return res.status(400).json({
-          success: false,
-          code:
-            "SOCIAL_ACCOUNT",
-          message:
-            "This account uses social login and does not have a local password.",
-        });
-      }
-
-      const isSamePassword =
+      const samePassword =
         await bcrypt.compare(
           newPassword,
           user.password,
         );
 
-      if (isSamePassword) {
+      if (samePassword) {
         return res.status(400).json({
           success: false,
           message:
@@ -3449,16 +3257,30 @@ export const resetPassword =
           12,
         );
 
+      user.authProvider =
+        "local";
+
+      user.googleId =
+        null;
+
+      user.facebookId =
+        null;
+
       await user.save();
+
+      /*
+       * Consume the reset challenge so that the
+       * same OTP cannot be reused.
+       */
 
       await collection.updateOne(
         {
           _id:
-            challengeId,
+            challenge._id,
         },
         {
           $set: {
-            passwordResetCompletedAt:
+            resetUsedAt:
               new Date(),
           },
         },
@@ -3467,7 +3289,7 @@ export const resetPassword =
       return res.status(200).json({
         success: true,
         message:
-          "Password reset successfully. Please login with your new password.",
+          "Password reset successfully. You can now login with your new password.",
       });
     } catch (error) {
       console.error(
@@ -3482,8 +3304,7 @@ export const resetPassword =
       });
     }
   };
-
-/* =========================================================
+  /* =========================================================
    LOGOUT
 
    POST /api/auth/logout
@@ -3515,6 +3336,7 @@ export const logoutUser =
 
     return res.status(200).json({
       success: true,
+
       message:
         "Logout successful",
     });
@@ -3535,6 +3357,7 @@ export const getCurrentUser =
     if (!req.user) {
       return res.status(401).json({
         success: false,
+
         message:
           "Not authenticated",
       });
@@ -3576,6 +3399,7 @@ export const updateProfile =
       if (!user) {
         return res.status(404).json({
           success: false,
+
           message:
             "User not found",
         });
@@ -3597,6 +3421,7 @@ export const updateProfile =
         ) {
           return res.status(400).json({
             success: false,
+
             message:
               "Name must contain at least 2 characters",
           });
@@ -3608,6 +3433,7 @@ export const updateProfile =
         ) {
           return res.status(400).json({
             success: false,
+
             message:
               "Name cannot exceed 80 characters",
           });
@@ -3636,6 +3462,7 @@ export const updateProfile =
         ) {
           return res.status(400).json({
             success: false,
+
             message:
               "Please enter a valid 10-digit mobile number",
           });
@@ -3655,6 +3482,7 @@ export const updateProfile =
         if (phoneExists) {
           return res.status(409).json({
             success: false,
+
             message:
               "Phone number is already registered",
           });
@@ -3709,6 +3537,7 @@ export const updateProfile =
       ) {
         return res.status(409).json({
           success: false,
+
           message:
             "Phone number is already registered",
         });
@@ -3716,6 +3545,7 @@ export const updateProfile =
 
       return res.status(500).json({
         success: false,
+
         message:
           "Unable to update profile",
       });
@@ -3758,6 +3588,7 @@ export const updateStaffProfile =
       if (!user) {
         return res.status(404).json({
           success: false,
+
           message:
             "Staff account not found",
         });
@@ -3770,6 +3601,7 @@ export const updateStaffProfile =
       ) {
         return res.status(403).json({
           success: false,
+
           message:
             "Staff account access only",
         });
@@ -3791,6 +3623,7 @@ export const updateStaffProfile =
         ) {
           return res.status(400).json({
             success: false,
+
             message:
               "Name must contain at least 2 characters",
           });
@@ -3802,6 +3635,7 @@ export const updateStaffProfile =
         ) {
           return res.status(400).json({
             success: false,
+
             message:
               "Name cannot exceed 80 characters",
           });
@@ -3825,14 +3659,6 @@ export const updateStaffProfile =
             .trim()
             .toLowerCase();
 
-        if (!normalizedEmail) {
-          return res.status(400).json({
-            success: false,
-            message:
-              "Email is required",
-          });
-        }
-
         if (
           !isValidEmail(
             normalizedEmail,
@@ -3840,12 +3666,13 @@ export const updateStaffProfile =
         ) {
           return res.status(400).json({
             success: false,
+
             message:
               "Please enter a valid email address",
           });
         }
 
-        const existingUser =
+        const emailExists =
           await User.findOne({
             email:
               normalizedEmail,
@@ -3856,9 +3683,10 @@ export const updateStaffProfile =
             },
           });
 
-        if (existingUser) {
+        if (emailExists) {
           return res.status(409).json({
             success: false,
+
             message:
               "Email address is already registered",
           });
@@ -3874,7 +3702,7 @@ export const updateStaffProfile =
         success: true,
 
         message:
-          "Staff account updated successfully",
+          "Staff profile updated successfully",
 
         user:
           getUserResponse(user),
@@ -3891,39 +3719,17 @@ export const updateStaffProfile =
       ) {
         return res.status(409).json({
           success: false,
+
           message:
             "Email address is already registered",
         });
       }
 
-      if (
-        error?.name ===
-        "ValidationError"
-      ) {
-        const validationMessages =
-          Object.values(
-            error.errors || {},
-          )
-            .map(
-              (item) =>
-                item.message,
-            )
-            .filter(Boolean);
-
-        return res.status(400).json({
-          success: false,
-          message:
-            validationMessages.join(
-              ", ",
-            ) ||
-            "Invalid staff account data",
-        });
-      }
-
       return res.status(500).json({
         success: false,
+
         message:
-          "Unable to update staff account",
+          "Unable to update staff profile",
       });
     }
   };
@@ -3932,9 +3738,10 @@ export const updateStaffProfile =
    CHANGE PASSWORD
 
    PUT /api/auth/change-password
-   PUT /api/auth/staff/change-password
 
-   Works for local-password accounts.
+   Staff endpoint can also use this controller:
+
+   PUT /api/auth/staff/change-password
 ========================================================= */
 
 export const changePassword =
@@ -3950,6 +3757,10 @@ export const changePassword =
       } =
         req.body;
 
+      /*
+       * REQUIRED
+       */
+
       if (
         !currentPassword ||
         !newPassword ||
@@ -3957,10 +3768,15 @@ export const changePassword =
       ) {
         return res.status(400).json({
           success: false,
+
           message:
             "All password fields are required",
         });
       }
+
+      /*
+       * PASSWORD LENGTH
+       */
 
       if (
         String(
@@ -3969,10 +3785,15 @@ export const changePassword =
       ) {
         return res.status(400).json({
           success: false,
+
           message:
             "New password must contain at least 4 characters",
         });
       }
+
+      /*
+       * PASSWORD CONFIRMATION
+       */
 
       if (
         newPassword !==
@@ -3980,10 +3801,15 @@ export const changePassword =
       ) {
         return res.status(400).json({
           success: false,
+
           message:
             "New passwords do not match",
         });
       }
+
+      /*
+       * USER
+       */
 
       const user =
         await User.findById(
@@ -3995,34 +3821,50 @@ export const changePassword =
       if (!user) {
         return res.status(404).json({
           success: false,
+
           message:
             "User not found",
         });
       }
 
+      /*
+       * ACCOUNT STATUS
+       */
+
       if (
-        !checkAccountStatus(
-          user,
-          res,
-        )
+        user.isBlocked ===
+        true
       ) {
-        return;
+        return res.status(403).json({
+          success: false,
+
+          message:
+            "Your account has been blocked",
+        });
+      }
+
+      if (
+        user.isActive ===
+        false
+      ) {
+        return res.status(403).json({
+          success: false,
+
+          message:
+            "Your account is inactive",
+        });
       }
 
       /*
-       * Social accounts do not have a
-       * local password.
+       * CURRENT PASSWORD
        */
 
       if (!user.password) {
-        return res.status(400).json({
+        return res.status(401).json({
           success: false,
 
-          code:
-            "SOCIAL_ACCOUNT",
-
           message:
-            "This account uses social login and does not have a current password. Please use the password setup/reset flow.",
+            "Current password is incorrect",
         });
       }
 
@@ -4037,10 +3879,15 @@ export const changePassword =
       ) {
         return res.status(401).json({
           success: false,
+
           message:
             "Current password is incorrect",
         });
       }
+
+      /*
+       * PREVENT SAME PASSWORD
+       */
 
       const isSamePassword =
         await bcrypt.compare(
@@ -4048,13 +3895,20 @@ export const changePassword =
           user.password,
         );
 
-      if (isSamePassword) {
+      if (
+        isSamePassword
+      ) {
         return res.status(400).json({
           success: false,
+
           message:
             "New password must be different from your current password",
         });
       }
+
+      /*
+       * HASH NEW PASSWORD
+       */
 
       user.password =
         await bcrypt.hash(
@@ -4062,10 +3916,19 @@ export const changePassword =
           12,
         );
 
+      /*
+       * SAVE
+       */
+
       await user.save();
+
+      /*
+       * RESPONSE
+       */
 
       return res.status(200).json({
         success: true,
+
         message:
           "Password changed successfully",
       });
@@ -4077,8 +3940,31 @@ export const changePassword =
 
       return res.status(500).json({
         success: false,
+
         message:
           "Unable to change password",
       });
     }
   };
+
+/* =========================================================
+   EXPORT SUMMARY
+
+   Controllers exported from this file:
+
+   adminLogin
+   registerUser
+   userLogin
+   googleLogin
+   facebookLogin
+   sendSocialOtp
+   completeSocialRegistration
+   forgotPassword
+   verifyForgotPasswordOtp
+   resetPassword
+   logoutUser
+   getCurrentUser
+   updateProfile
+   updateStaffProfile
+   changePassword
+========================================================= */
