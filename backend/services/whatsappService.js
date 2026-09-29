@@ -120,6 +120,10 @@ const getWhatsAppConfig = () => {
       .WHATSAPP_OTP_LANGUAGE_CODE ||
     "en_US";
 
+  /* =======================================================
+     VALIDATE REQUIRED CONFIGURATION
+  ======================================================= */
+
   if (!accessToken) {
     throw new Error(
       "WHATSAPP_ACCESS_TOKEN is missing",
@@ -135,6 +139,20 @@ const getWhatsAppConfig = () => {
   if (!templateName) {
     throw new Error(
       "WHATSAPP_OTP_TEMPLATE_NAME is missing",
+    );
+  }
+
+  /* =======================================================
+     VALIDATE GRAPH API VERSION
+  ======================================================= */
+
+  if (
+    !/^v\d+\.\d+$/.test(
+      graphVersion,
+    )
+  ) {
+    throw new Error(
+      `Invalid WHATSAPP_GRAPH_VERSION: ${graphVersion}`,
     );
   }
 
@@ -156,6 +174,10 @@ export const sendWhatsAppOtp =
     phone,
     otp,
   }) => {
+    /* =====================================================
+       GET CONFIGURATION
+    ===================================================== */
+
     const {
       accessToken,
       phoneNumberId,
@@ -165,44 +187,62 @@ export const sendWhatsAppOtp =
     } =
       getWhatsAppConfig();
 
-    if (!otp) {
+    /* =====================================================
+       VALIDATE OTP
+    ===================================================== */
+
+    if (
+      otp === undefined ||
+      otp === null ||
+      String(otp).trim() === ""
+    ) {
       throw new Error(
         "OTP is required",
       );
     }
+
+    /* =====================================================
+       FORMAT RECIPIENT
+    ===================================================== */
 
     const recipient =
       formatWhatsAppRecipient(
         phone,
       );
 
+    /* =====================================================
+       META WHATSAPP CLOUD API URL
+    ===================================================== */
+
     const url =
       `https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`;
 
-    /*
-     * IMPORTANT:
-     *
-     * This payload expects a WhatsApp
-     * Authentication template with:
-     *
-     * - Body OTP variable
-     * - Copy Code authentication button
-     *
-     * Template example:
-     *
-     * Your Jini Cosmetics verification
-     * code is {{1}}.
-     *
-     * Do not share this code with anyone.
-     */
+    /* =====================================================
+       WHATSAPP TEMPLATE PAYLOAD
+
+       This payload expects an Authentication template
+       containing:
+
+       - Body OTP variable
+       - Copy Code authentication button
+
+       Example:
+
+       Your Jini Cosmetics verification
+       code is {{1}}.
+
+       Do not share this code with anyone.
+    ===================================================== */
 
     const payload = {
       messaging_product:
         "whatsapp",
 
-      to: recipient,
+      to:
+        recipient,
 
-      type: "template",
+      type:
+        "template",
 
       template: {
         name:
@@ -214,12 +254,18 @@ export const sendWhatsAppOtp =
         },
 
         components: [
+          /* ===============================================
+             OTP BODY
+          =============================================== */
+
           {
-            type: "body",
+            type:
+              "body",
 
             parameters: [
               {
-                type: "text",
+                type:
+                  "text",
 
                 text:
                   String(otp),
@@ -227,17 +273,24 @@ export const sendWhatsAppOtp =
             ],
           },
 
+          /* ===============================================
+             COPY CODE BUTTON
+          =============================================== */
+
           {
-            type: "button",
+            type:
+              "button",
 
             sub_type:
               "copy_code",
 
-            index: "0",
+            index:
+              "0",
 
             parameters: [
               {
-                type: "text",
+                type:
+                  "text",
 
                 text:
                   String(otp),
@@ -248,27 +301,49 @@ export const sendWhatsAppOtp =
       },
     };
 
-    const response =
-      await fetch(
-        url,
-        {
-          method:
-            "POST",
+    /* =====================================================
+       SEND REQUEST TO META
+    ===================================================== */
 
-          headers: {
-            Authorization:
-              `Bearer ${accessToken}`,
+    let response;
 
-            "Content-Type":
-              "application/json",
+    try {
+      response =
+        await fetch(
+          url,
+          {
+            method:
+              "POST",
+
+            headers: {
+              Authorization:
+                `Bearer ${accessToken}`,
+
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify(
+                payload,
+              ),
           },
-
-          body:
-            JSON.stringify(
-              payload,
-            ),
-        },
+        );
+    } catch (networkError) {
+      console.error(
+        "WHATSAPP NETWORK ERROR:",
+        networkError?.message ||
+          networkError,
       );
+
+      throw new Error(
+        "Unable to connect to WhatsApp Cloud API",
+      );
+    }
+
+    /* =====================================================
+       READ META RESPONSE
+    ===================================================== */
 
     const data =
       await response
@@ -276,6 +351,10 @@ export const sendWhatsAppOtp =
         .catch(
           () => ({}),
         );
+
+    /* =====================================================
+       HANDLE META API ERROR
+    ===================================================== */
 
     if (!response.ok) {
       console.error(
@@ -301,10 +380,15 @@ export const sendWhatsAppOtp =
         response.status;
 
       error.whatsappError =
-        data?.error || null;
+        data?.error ||
+        null;
 
       throw error;
     }
+
+    /* =====================================================
+       SUCCESS RESPONSE
+    ===================================================== */
 
     return {
       success:
@@ -312,20 +396,29 @@ export const sendWhatsAppOtp =
 
       messageId:
         data?.messages?.[0]
-          ?.id || null,
+          ?.id ||
+        null,
 
       recipient,
     };
   };
 
 /* =========================================================
-   TEST WHATSAPP CONFIGURATION
+   WHATSAPP CONFIGURATION STATUS
 
-   Optional helper for development.
+   Optional development helper.
+
+   IMPORTANT:
+   This function NEVER returns the access token.
 ========================================================= */
 
 export const getWhatsAppStatus =
   () => {
+    const graphVersion =
+      process.env
+        .WHATSAPP_GRAPH_VERSION ||
+      "v24.0";
+
     return {
       configured:
         Boolean(
@@ -342,10 +435,12 @@ export const getWhatsAppStatus =
           .WHATSAPP_PHONE_NUMBER_ID ||
         null,
 
-      graphVersion:
-        process.env
-          .WHATSAPP_GRAPH_VERSION ||
-        "v24.0",
+      graphVersion,
+
+      graphVersionValid:
+        /^v\d+\.\d+$/.test(
+          graphVersion,
+        ),
 
       templateName:
         process.env
