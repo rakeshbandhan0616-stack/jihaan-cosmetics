@@ -42,14 +42,6 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        PHONE
-
-       Customer:
-       - Phone required
-
-       Staff:
-       - Phone optional
-
-       Customer can edit their phone number from profile.
     ========================================================= */
 
     phone: {
@@ -59,6 +51,12 @@ const userSchema = new mongoose.Schema(
         return this.role === "user";
       },
 
+      /*
+       * sparse:true is important.
+       *
+       * Staff accounts do not need a phone number, so multiple
+       * staff documents can have no phone value.
+       */
       unique: true,
       sparse: true,
       trim: true,
@@ -71,13 +69,6 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        AUTHENTICATION PROVIDER
-
-       local
-       google
-       facebook
-
-       Existing local users can also have a Google/Facebook
-       account linked to them.
     ========================================================= */
 
     authProvider: {
@@ -99,33 +90,40 @@ const userSchema = new mongoose.Schema(
        GOOGLE ACCOUNT
     ========================================================= */
 
-   googleId: {
-  type: String,
-  trim: true,
-  default: undefined,
-},
+    googleId: {
+      type: String,
+
+      /*
+       * IMPORTANT:
+       *
+       * Do NOT use unique:true here.
+       * The unique sparse index is defined below.
+       *
+       * This prevents multiple index definitions from being
+       * generated for googleId.
+       */
+      default: undefined,
+
+      trim: true,
+    },
+
     /* =========================================================
        FACEBOOK ACCOUNT
     ========================================================= */
 
-  facebookId: {
-  type: String,
-  trim: true,
-  default: undefined,
-},
+    facebookId: {
+      type: String,
+
+      /*
+       * Same approach as googleId.
+       */
+      default: undefined,
+
+      trim: true,
+    },
+
     /* =========================================================
        PASSWORD
-
-       IMPORTANT:
-
-       select:false means normal queries do not return the
-       password.
-
-       This is intentional for security.
-
-       Do NOT check `this.password` inside the pre-validation
-       middleware because existing users loaded using
-       User.findById() do not contain the password field.
     ========================================================= */
 
     password: {
@@ -145,8 +143,6 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        PROFILE IMAGE
-
-       Customer can update this field from profile.
     ========================================================= */
 
     profileImage: {
@@ -157,9 +153,6 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        USER ROLE
-
-       IMPORTANT:
-       Role cannot be changed through customer profile update.
     ========================================================= */
 
     role: {
@@ -179,9 +172,6 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        ACCOUNT STATUS
-
-       These fields are controlled by the backend/admin.
-       Customer profile update does not modify them.
     ========================================================= */
 
     isActive: {
@@ -196,8 +186,6 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        EMAIL VERIFICATION
-
-       Controlled by authentication/verification flow.
     ========================================================= */
 
     isEmailVerified: {
@@ -207,9 +195,6 @@ const userSchema = new mongoose.Schema(
 
     /* =========================================================
        PHONE VERIFICATION
-
-       If a customer changes their phone number, the controller
-       should set this to false and require verification again.
     ========================================================= */
 
     isPhoneVerified: {
@@ -235,16 +220,10 @@ const userSchema = new mongoose.Schema(
    ROLE HELPERS
 ========================================================= */
 
-/**
- * Check whether this user is a customer.
- */
 userSchema.methods.isCustomer = function () {
   return this.role === "user";
 };
 
-/**
- * Check whether this user is a staff member.
- */
 userSchema.methods.isStaff = function () {
   return [
     "superadmin",
@@ -254,30 +233,18 @@ userSchema.methods.isStaff = function () {
   ].includes(this.role);
 };
 
-/**
- * Check whether this user has administrative access.
- */
 userSchema.methods.isAdmin = function () {
   return ["superadmin", "admin"].includes(this.role);
 };
 
-/**
- * Check whether this user is a superadmin.
- */
 userSchema.methods.isSuperAdmin = function () {
   return this.role === "superadmin";
 };
 
-/**
- * Check whether this user is an Accounts employee.
- */
 userSchema.methods.isAccounts = function () {
   return this.role === "accounts";
 };
 
-/**
- * Check whether this user is a Logistics employee.
- */
 userSchema.methods.isLogistics = function () {
   return this.role === "logistics";
 };
@@ -286,45 +253,28 @@ userSchema.methods.isLogistics = function () {
    AUTHENTICATION HELPERS
 ========================================================= */
 
-/**
- * Check whether this user uses local authentication.
- */
 userSchema.methods.isLocalAuth = function () {
   return this.authProvider === "local";
 };
 
-/**
- * Check whether this user uses Google authentication.
- */
 userSchema.methods.isGoogleAuth = function () {
   return this.authProvider === "google";
 };
 
-/**
- * Check whether this user uses Facebook authentication.
- */
 userSchema.methods.isFacebookAuth = function () {
   return this.authProvider === "facebook";
 };
 
-/**
- * Check whether this user uses social authentication.
- */
 userSchema.methods.isSocialAuth = function () {
-  return ["google", "facebook"].includes(this.authProvider);
+  return ["google", "facebook"].includes(
+    this.authProvider,
+  );
 };
 
-/**
- * Check whether the phone is verified.
- */
 userSchema.methods.isPhoneVerifiedAccount = function () {
   return this.isPhoneVerified === true;
 };
 
-/**
- * Check whether the account has completed the required
- * verification for its primary authentication provider.
- */
 userSchema.methods.isVerifiedAccount = function () {
   if (this.authProvider === "google") {
     return (
@@ -343,37 +293,6 @@ userSchema.methods.isVerifiedAccount = function () {
 /* =========================================================
    VALIDATION
 ========================================================= */
-
-/*
- * IMPORTANT
- *
- * Do NOT use:
- *
- * userSchema.pre("validate", function (next) {})
- *
- * with next() here.
- *
- * Your previous Render error was:
- *
- * TypeError: next is not a function
- *
- * This middleware intentionally uses the synchronous style.
- *
- * Also:
- *
- * DO NOT validate this.password here.
- *
- * password has select:false, therefore an existing user loaded
- * using User.findById() will normally not contain password.
- *
- * Profile update:
- *
- * name
- * phone
- * profileImage
- *
- * must therefore be allowed to save without loading password.
- */
 
 userSchema.pre("validate", function () {
   /* ---------------------------------------------------------
@@ -403,11 +322,12 @@ userSchema.pre("validate", function () {
   }
 
   /*
-   * No password validation here.
+   * Password validation is intentionally not performed here.
    *
-   * The schema-level `required` validator handles password
-   * requirements during document creation/appropriate
-   * validation.
+   * password has select:false.
+   *
+   * Existing users loaded without password should still be
+   * allowed to update profile information.
    */
 });
 
@@ -416,39 +336,52 @@ userSchema.pre("validate", function () {
 ========================================================= */
 
 /*
+ * Email
+ *
+ * The `unique:true` declaration on the email field creates
+ * the unique email index.
+ */
+
+/*
+ * Phone
+ *
+ * The `unique:true + sparse:true` declaration on the phone
+ * field creates the unique sparse phone index.
+ */
+
+/*
  * Google ID
- * Only documents with a string googleId are indexed.
- * This allows normal local accounts to have no googleId.
+ *
+ * IMPORTANT:
+ *
+ * This is the only Google ID index definition.
+ *
+ * sparse:true means documents without googleId do not
+ * conflict with each other.
  */
 userSchema.index(
   { googleId: 1 },
   {
     unique: true,
-    partialFilterExpression: {
-      googleId: {
-        $type: "string",
-      },
-    },
+    sparse: true,
     name: "unique_google_id",
   },
 );
 
 /*
  * Facebook ID
- * Only documents with a string facebookId are indexed.
+ *
+ * Same approach as Google ID.
  */
 userSchema.index(
   { facebookId: 1 },
   {
     unique: true,
-    partialFilterExpression: {
-      facebookId: {
-        $type: "string",
-      },
-    },
+    sparse: true,
     name: "unique_facebook_id",
   },
 );
+
 /* =========================================================
    MODEL
 ========================================================= */

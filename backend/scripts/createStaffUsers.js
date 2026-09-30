@@ -18,31 +18,30 @@ dns.setDefaultResultOrder("ipv4first");
 
 /* =========================================================
    STAFF USERS
-   Only:
-   - Admin
-   - Accounts
-   - Logistics
+   Super Admin is intentionally NOT included here.
+   Super Admin is created separately using:
+   createSuperAdmin.js
    ========================================================= */
 
 const STAFF_USERS = [
   {
     name: "Admin",
-    email: "admin@jinicosmetics.com",
-    password: "123",
+    email: "admin@jihaancosmetics.com",
+    password: "Admin@123",
     role: "admin",
   },
 
   {
     name: "Accounts Manager",
-    email: "accounts@jinicosmetics.com",
-    password: "123",
+    email: "accounts@jihaancosmetics.com",
+    password: "Accounts@123",
     role: "accounts",
   },
 
   {
     name: "Logistics Manager",
-    email: "logistics@jinicosmetics.com",
-    password: "123",
+    email: "logistics@jihaancosmetics.com",
+    password: "Logistics@123",
     role: "logistics",
   },
 ];
@@ -77,8 +76,6 @@ const createStaffUsers = async () => {
 
     await mongoose.connect(process.env.MONGO_URI, {
       serverSelectionTimeoutMS: 15000,
-      family: 4,
-      dbName: "jihaan",
     });
 
     console.log(
@@ -86,7 +83,8 @@ const createStaffUsers = async () => {
     );
 
     console.log(
-      `Connected database: ${mongoose.connection.name}`
+      "Connected database:",
+      mongoose.connection.name
     );
 
     console.log("");
@@ -105,7 +103,7 @@ const createStaffUsers = async () => {
       );
 
       /* ---------------------------------------------------
-         FIND EXISTING USER
+         CHECK EXISTING USER
          --------------------------------------------------- */
 
       const existingUser = await User.findOne({
@@ -116,11 +114,10 @@ const createStaffUsers = async () => {
          HASH PASSWORD
          --------------------------------------------------- */
 
-      const hashedPassword =
-        await bcrypt.hash(
-          staff.password,
-          12
-        );
+      const hashedPassword = await bcrypt.hash(
+        staff.password,
+        12
+      );
 
       /* ---------------------------------------------------
          UPDATE EXISTING USER
@@ -132,13 +129,14 @@ const createStaffUsers = async () => {
         existingUser.password = hashedPassword;
         existingUser.role = staff.role;
         existingUser.isActive = true;
-        existingUser.isBlocked = false;
 
         await existingUser.save();
 
         console.log(
           `✓ Updated ${staff.role}: ${email}`
         );
+
+        console.log("");
 
         continue;
       }
@@ -153,25 +151,27 @@ const createStaffUsers = async () => {
         password: hashedPassword,
         role: staff.role,
         isActive: true,
-        isBlocked: false,
       });
 
       console.log(
         `✓ Created ${staff.role}: ${newUser.email}`
       );
+
+      console.log("");
     }
 
     /* =====================================================
        RESULT
        ===================================================== */
 
-    console.log("");
     console.log(
       "========================================"
     );
+
     console.log(
       "       STAFF USERS READY"
     );
+
     console.log(
       "========================================"
     );
@@ -180,30 +180,30 @@ const createStaffUsers = async () => {
 
     console.log("ADMIN");
     console.log(
-      "Email:    admin@jinicosmetics.com"
+      "Email:    admin@jihaancosmetics.com"
     );
     console.log(
-      "Password: 123"
-    );
-
-    console.log("");
-
-    console.log("ACCOUNTS");
-    console.log(
-      "Email:    accounts@jinicosmetics.com"
-    );
-    console.log(
-      "Password: 123"
+      "Password: Admin@123"
     );
 
     console.log("");
 
-    console.log("LOGISTICS");
+    console.log("ACCOUNTS MANAGER");
     console.log(
-      "Email:    logistics@jinicosmetics.com"
+      "Email:    accounts@jihaancosmetics.com"
     );
     console.log(
-      "Password: 123"
+      "Password: Accounts@123"
+    );
+
+    console.log("");
+
+    console.log("LOGISTICS MANAGER");
+    console.log(
+      "Email:    logistics@jihaancosmetics.com"
+    );
+    console.log(
+      "Password: Logistics@123"
     );
 
     console.log("");
@@ -211,9 +211,15 @@ const createStaffUsers = async () => {
     console.log(
       "========================================"
     );
+
     console.log(
       "Staff setup completed successfully."
     );
+
+    console.log(
+      "Super Admin was NOT modified."
+    );
+
     console.log(
       "========================================"
     );
@@ -231,14 +237,18 @@ const createStaffUsers = async () => {
     );
 
     process.exitCode = 0;
+
   } catch (error) {
     console.error("");
+
     console.error(
       "========================================"
     );
+
     console.error(
       "       STAFF SETUP FAILED"
     );
+
     console.error(
       "========================================"
     );
