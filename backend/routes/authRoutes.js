@@ -1,24 +1,43 @@
 import express from "express";
 
 import {
+  /* =========================================================
+     STAFF / ADMIN LOGIN
+  ========================================================= */
+
   adminLogin,
+
+  /* =========================================================
+     CUSTOMER REGISTRATION / LOGIN
+  ========================================================= */
+
   registerUser,
+  verifyRegistrationOtp,
+  resendRegistrationOtp,
   userLogin,
 
   /* =========================================================
      SOCIAL AUTHENTICATION
+     
+     Google/Facebook users are created and logged in
+     immediately.
+
+     NO WhatsApp OTP.
   ========================================================= */
 
   googleLogin,
   facebookLogin,
-  sendSocialOtp,
-  completeSocialRegistration,
 
   /* =========================================================
      PASSWORD RESET
+     
+     Email OTP is used.
+     
+     NO WhatsApp OTP.
   ========================================================= */
 
   forgotPassword,
+  resendForgotPasswordOtp,
   verifyForgotPasswordOtp,
   resetPassword,
 
@@ -41,11 +60,14 @@ import {
 
 import userUpload from "../middleware/userUpload.js";
 
-const router = express.Router();
+const router =
+  express.Router();
 
 /* =========================================================
    STAFF / ADMIN LOGIN
 =========================================================
+
+   POST /api/auth/admin-login
 
    Supported staff roles:
 
@@ -54,10 +76,7 @@ const router = express.Router();
    - accounts
    - logistics
 
-   POST /api/auth/admin-login
-
-   IMPORTANT:
-   This route remains PUBLIC because the user does not
+   This route is PUBLIC because the user does not
    have a JWT before logging in.
 
    Role verification is handled inside adminLogin().
@@ -69,22 +88,46 @@ router.post(
 );
 
 /* =========================================================
-   USER REGISTRATION
+   USER REGISTRATION - SEND EMAIL OTP
 =========================================================
 
    POST /api/auth/register
 
    Public customer registration.
 
-   Public registration can only create:
+   Expected multipart/form-data or JSON:
 
-   role = user
+   {
+     "name": "Customer Name",
+     "email": "customer@example.com",
+     "phone": "9876543210",
+     "password": "password"
+   }
 
-   Profile image is optional.
+   Flow:
 
-   Authentication provider:
+   Registration details
+          ↓
+   Validate details
+          ↓
+   Check duplicate account
+          ↓
+   Send OTP to email
+          ↓
+   Wait for verification
+          ↓
+   /register/verify-otp
+          ↓
+   Create account
+          ↓
+   Login
 
-   authProvider = local
+   IMPORTANT:
+
+   The account is NOT created before the
+   email OTP is successfully verified.
+
+   NO WhatsApp OTP.
 ========================================================= */
 
 router.post(
@@ -96,19 +139,65 @@ router.post(
 );
 
 /* =========================================================
+   USER REGISTRATION - VERIFY EMAIL OTP
+=========================================================
+
+   POST /api/auth/register/verify-otp
+
+   Body:
+
+   {
+     "email": "customer@example.com",
+     "otp": "123456"
+   }
+
+   Successful verification:
+
+   - Creates the customer account
+   - Marks email as verified
+   - Generates JWT
+   - Sets HTTP-only authentication cookie
+   - Logs the user in
+========================================================= */
+
+router.post(
+  "/register/verify-otp",
+  verifyRegistrationOtp,
+);
+
+/* =========================================================
+   USER REGISTRATION - RESEND EMAIL OTP
+=========================================================
+
+   POST /api/auth/register/resend-otp
+
+   Body:
+
+   {
+     "email": "customer@example.com"
+   }
+
+   The backend applies the configured resend
+   cooldown before allowing another OTP.
+========================================================= */
+
+router.post(
+  "/register/resend-otp",
+  resendRegistrationOtp,
+);
+
+/* =========================================================
    CUSTOMER LOGIN
 =========================================================
 
    POST /api/auth/login
-
-   This endpoint is ONLY for normal customer login.
 
    Supported:
 
    - Email + password
    - Mobile + password
 
-   The controller restricts authentication to:
+   Authentication is restricted to:
 
    role = user
 ========================================================= */
@@ -124,11 +213,7 @@ router.post(
 
    POST /api/auth/google
 
-   Public route.
-
-   Frontend sends the Google Identity Services credential.
-
-   Example:
+   Frontend sends:
 
    {
      "credential": "GOOGLE_ID_TOKEN"
@@ -137,20 +222,32 @@ router.post(
    Flow:
 
    Existing Google account
-        ↓
-   Login
+          ↓
+       Login
+
+   Existing email account
+          ↓
+   Link Google account
+          ↓
+       Login
 
    New Google account
-        ↓
-   Return socialToken
-        ↓
-   Ask mobile number
-        ↓
-   WhatsApp OTP
-        ↓
-   OTP verification
-        ↓
-   Complete registration
+          ↓
+   Create account immediately
+          ↓
+       Login
+
+   IMPORTANT:
+
+   There is NO:
+
+   - socialToken
+   - phone collection
+   - WhatsApp OTP
+   - social registration completion step
+
+   Google authentication is sufficient for
+   immediate account creation/login.
 ========================================================= */
 
 router.post(
@@ -164,35 +261,38 @@ router.post(
 
    POST /api/auth/facebook
 
-   Public route.
-
    Frontend sends:
 
    {
      "accessToken": "FACEBOOK_ACCESS_TOKEN"
    }
 
-   Backend:
+   Flow:
 
-   Facebook access token
-        ↓
-   Verify token
-        ↓
-   Get Facebook user information
-        ↓
-   Existing account → Login
+   Existing Facebook account
+          ↓
+       Login
 
-   New account
-        ↓
-   Return socialToken
-        ↓
-   Ask mobile number
-        ↓
-   WhatsApp OTP
-        ↓
-   OTP verification
-        ↓
-   Complete registration
+   Existing email account
+          ↓
+   Link Facebook account
+          ↓
+       Login
+
+   New Facebook account
+          ↓
+   Create account immediately
+          ↓
+       Login
+
+   IMPORTANT:
+
+   There is NO:
+
+   - socialToken
+   - phone collection
+   - WhatsApp OTP
+   - social registration completion step
 ========================================================= */
 
 router.post(
@@ -201,145 +301,36 @@ router.post(
 );
 
 /* =========================================================
-   SEND SOCIAL REGISTRATION OTP
-=========================================================
-
-   POST /api/auth/social/send-otp
-
-   Public route.
-
-   Used after successful Google/Facebook
-   authentication for a new customer.
-
-   Body:
-
-   {
-     "socialToken": "...",
-     "phone": "9876543210"
-   }
-
-   Flow:
-
-   Google/Facebook
-        ↓
-   socialToken
-        ↓
-   Mobile number
-        ↓
-   Generate OTP
-        ↓
-   Send OTP through WhatsApp
-        ↓
-   Verify OTP
-        ↓
-   Create account
-
-   Security:
-
-   - OTP is generated on backend
-   - OTP is hashed before storage
-   - OTP expires after 5 minutes
-   - Maximum 5 verification attempts
-   - Resend cooldown is applied
-   - OTP is never returned to frontend
-========================================================= */
-
-router.post(
-  "/social/send-otp",
-  sendSocialOtp,
-);
-
-/* =========================================================
-   COMPLETE SOCIAL REGISTRATION
-=========================================================
-
-   POST /api/auth/social/complete
-
-   Public route.
-
-   Body:
-
-   {
-     "socialToken": "...",
-     "phone": "9876543210",
-     "otp": "123456"
-   }
-
-   Flow:
-
-   Social account verified
-        ↓
-   Phone number submitted
-        ↓
-   WhatsApp OTP verified
-        ↓
-   Create customer
-        ↓
-   JWT + HTTP-only cookie
-        ↓
-   Login successful
-
-   IMPORTANT:
-
-   The controller does NOT trust any frontend
-   "verified" flag.
-
-   The OTP must match the backend-generated
-   and stored OTP hash.
-========================================================= */
-
-router.post(
-  "/social/complete",
-  completeSocialRegistration,
-);
-
-/* =========================================================
-   FORGOT PASSWORD - SEND OTP
+   FORGOT PASSWORD - SEND EMAIL OTP
 =========================================================
 
    POST /api/auth/forgot-password
 
-   Public route.
-
-   Customer can provide:
-
-   - Email
-   OR
-   - Mobile number
-
-   Example:
+   Body:
 
    {
-     "identifier": "customer@example.com"
-   }
-
-   OR:
-
-   {
-     "identifier": "9876543210"
+     "email": "customer@example.com"
    }
 
    Flow:
 
-   Email / Mobile
-        ↓
-   Find customer account
-        ↓
-   Get registered mobile number
-        ↓
+   Email
+      ↓
+   Find customer
+      ↓
    Generate OTP
-        ↓
-   Send OTP through WhatsApp
-        ↓
+      ↓
+   Send OTP to email
+      ↓
    Verify OTP
-        ↓
-   Reset password
+      ↓
+   Receive reset token
+      ↓
+   Set new password
 
-   SECURITY:
+   IMPORTANT:
 
-   The response is intentionally generic so that
-   the API does not reveal whether an email or
-   mobile number belongs to an account.
+   WhatsApp OTP is NOT used.
 ========================================================= */
 
 router.post(
@@ -348,31 +339,52 @@ router.post(
 );
 
 /* =========================================================
-   FORGOT PASSWORD - VERIFY OTP
+   FORGOT PASSWORD - RESEND EMAIL OTP
 =========================================================
 
-   POST /api/auth/forgot-password/verify-otp
-
-   Public route.
+   POST /api/auth/forgot-password/resend-otp
 
    Body:
 
    {
-     "identifier": "customer@example.com",
-     "otp": "123456"
+     "email": "customer@example.com"
    }
 
-   OR:
+   The backend applies the OTP resend cooldown.
+========================================================= */
+
+router.post(
+  "/forgot-password/resend-otp",
+  resendForgotPasswordOtp,
+);
+
+/* =========================================================
+   FORGOT PASSWORD - VERIFY EMAIL OTP
+=========================================================
+
+   POST /api/auth/forgot-password/verify-otp
+
+   Body:
 
    {
-     "identifier": "9876543210",
+     "email": "customer@example.com",
      "otp": "123456"
    }
 
-   Successful verification returns a short-lived
-   password reset token.
+   Successful verification returns:
 
-   The reset token is NOT the normal login JWT.
+   {
+     "success": true,
+     "resetToken": "...",
+     "user": {
+       "id": "...",
+       "name": "...",
+       "email": "...",
+       "phone": "******1234"
+     }
+   }
+
+   The resetToken is NOT the normal login JWT.
 ========================================================= */
 
 router.post(
@@ -386,8 +398,6 @@ router.post(
 
    POST /api/auth/reset-password
 
-   Public route.
-
    Body:
 
    {
@@ -398,22 +408,17 @@ router.post(
 
    Flow:
 
-   Verified OTP
-        ↓
+   Verified email OTP
+          ↓
    Short-lived resetToken
-        ↓
+          ↓
    New password
-        ↓
+          ↓
    Hash password
-        ↓
+          ↓
    Save password
-        ↓
+          ↓
    Password reset successful
-
-   IMPORTANT:
-
-   The reset token is short-lived and can only be
-   used for the password reset flow.
 ========================================================= */
 
 router.post(
@@ -427,11 +432,10 @@ router.post(
 
    POST /api/auth/logout
 
-   Works for both customer and staff sessions because
-   authentication is stored in the same HTTP-only cookie.
+   Public route.
 
-   This route is intentionally PUBLIC because the cookie
-   can simply be cleared even if the session has expired.
+   The authentication cookie is cleared even if
+   the existing session has already expired.
 ========================================================= */
 
 router.post(
@@ -445,10 +449,15 @@ router.post(
 
    GET /api/auth/me
 
-   Only normal customer accounts can access this endpoint.
+   Only customers can access this endpoint.
 
-   Staff applications should NOT use this endpoint because
-   userOnly intentionally blocks staff roles.
+   Middleware:
+
+   protect
+      ↓
+   userOnly
+      ↓
+   getCurrentUser
 ========================================================= */
 
 router.get(
@@ -463,9 +472,6 @@ router.get(
 =========================================================
 
    GET /api/auth/staff/me
-
-   Used by the staff portal to verify the HTTP-only
-   authentication cookie and retrieve the current staff user.
 
    Supported roles:
 
@@ -496,8 +502,7 @@ router.get(
    - phone
    - profile image
 
-   Email is intentionally not updated through this
-   customer profile endpoint.
+   Email is intentionally not changed here.
 ========================================================= */
 
 router.put(
@@ -518,29 +523,23 @@ router.put(
 
    Staff only.
 
-   Supported staff roles:
-
-   - superadmin
-   - admin
-   - accounts
-   - logistics
-
-   Supports:
+   Supported:
 
    - name
-   - email
-
-   The controller validates the email and prevents
-   duplicate email addresses.
+   - phone
+   - profile image
 
    Role, permissions, active status, blocked status,
-   and password cannot be changed here.
+   and password are not changed here.
 ========================================================= */
 
 router.put(
   "/staff/profile",
   protect,
   staffOnly,
+  userUpload.single(
+    "profileImage",
+  ),
   updateStaffProfile,
 );
 
@@ -552,10 +551,18 @@ router.put(
 
    Customers only.
 
-   Local accounts can change their password.
+   Requires authentication.
 
-   Social-only accounts without a local password will
-   receive a social-account response from the controller.
+   Body:
+
+   {
+     "currentPassword": "...",
+     "newPassword": "...",
+     "confirmPassword": "..."
+   }
+
+   Social-only users without a password should use
+   the forgot-password flow to create a password.
 ========================================================= */
 
 router.put(
@@ -573,16 +580,12 @@ router.put(
 
    Staff only.
 
-   Supported staff roles:
+   Supported:
 
    - superadmin
    - admin
    - accounts
    - logistics
-
-   Uses the same changePassword controller, which updates
-   the authenticated user's password after validating the
-   current password.
 ========================================================= */
 
 router.put(

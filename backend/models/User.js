@@ -14,6 +14,10 @@ const AUTH_PROVIDERS = [
   "facebook",
 ];
 
+/* =========================================================
+   USER SCHEMA
+========================================================= */
+
 const userSchema = new mongoose.Schema(
   {
     /* =========================================================
@@ -22,47 +26,81 @@ const userSchema = new mongoose.Schema(
 
     name: {
       type: String,
-      required: [true, "Name is required"],
+
+      required: [
+        true,
+        "Name is required",
+      ],
+
       trim: true,
-      minlength: [2, "Name must contain at least 2 characters"],
-      maxlength: [80, "Name cannot exceed 80 characters"],
+
+      minlength: [
+        2,
+        "Name must contain at least 2 characters",
+      ],
+
+      maxlength: [
+        80,
+        "Name cannot exceed 80 characters",
+      ],
     },
 
     email: {
       type: String,
-      required: [true, "Email is required"],
+
+      required: [
+        true,
+        "Email is required",
+      ],
+
       unique: true,
+
       lowercase: true,
+
       trim: true,
+
       match: [
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+
         "Please enter a valid email address",
       ],
     },
 
     /* =========================================================
        PHONE
+       
+       IMPORTANT:
+       Phone is OPTIONAL now.
+
+       Local registration:
+       - Phone can be provided.
+       - Email OTP verifies registration.
+
+       Google:
+       - Phone is NOT required.
+       - No WhatsApp OTP.
+
+       Facebook:
+       - Phone is NOT required.
+       - No WhatsApp OTP.
     ========================================================= */
 
     phone: {
       type: String,
 
-      required: function () {
-        return this.role === "user";
-      },
+      required: false,
 
-      /*
-       * sparse:true is important.
-       *
-       * Staff accounts do not need a phone number, so multiple
-       * staff documents can have no phone value.
-       */
+      default: null,
+
       unique: true,
+
       sparse: true,
+
       trim: true,
 
       match: [
         /^[6-9][0-9]{9}$/,
+
         "Phone number must contain exactly 10 digits",
       ],
     },
@@ -76,13 +114,17 @@ const userSchema = new mongoose.Schema(
 
       enum: {
         values: AUTH_PROVIDERS,
+
         message:
           "Invalid authentication provider. Allowed providers: local, google, facebook",
       },
 
       default: "local",
+
       required: true,
+
       lowercase: true,
+
       trim: true,
     },
 
@@ -94,14 +136,11 @@ const userSchema = new mongoose.Schema(
       type: String,
 
       /*
-       * IMPORTANT:
+       * Do not use unique:true here.
        *
-       * Do NOT use unique:true here.
        * The unique sparse index is defined below.
-       *
-       * This prevents multiple index definitions from being
-       * generated for googleId.
        */
+
       default: undefined,
 
       trim: true,
@@ -115,8 +154,11 @@ const userSchema = new mongoose.Schema(
       type: String,
 
       /*
-       * Same approach as googleId.
+       * Do not use unique:true here.
+       *
+       * The unique sparse index is defined below.
        */
+
       default: undefined,
 
       trim: true,
@@ -128,6 +170,12 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
+
+      /*
+       * Password is required only for local accounts.
+       *
+       * Google/Facebook accounts can exist without a password.
+       */
 
       required: function () {
         return this.authProvider === "local";
@@ -147,7 +195,9 @@ const userSchema = new mongoose.Schema(
 
     profileImage: {
       type: String,
+
       default: "",
+
       trim: true,
     },
 
@@ -160,13 +210,17 @@ const userSchema = new mongoose.Schema(
 
       enum: {
         values: USER_ROLES,
+
         message:
           "Invalid user role. Allowed roles: superadmin, admin, accounts, logistics, user",
       },
 
       default: "user",
+
       required: true,
+
       lowercase: true,
+
       trim: true,
     },
 
@@ -176,29 +230,50 @@ const userSchema = new mongoose.Schema(
 
     isActive: {
       type: Boolean,
+
       default: true,
     },
 
     isBlocked: {
       type: Boolean,
+
       default: false,
     },
 
     /* =========================================================
        EMAIL VERIFICATION
+       
+       Local registration:
+       false initially
+       true after email OTP verification
+
+       Google:
+       true because Google provides verified email
+
+       Facebook:
+       true when Facebook account email is received
     ========================================================= */
 
     isEmailVerified: {
       type: Boolean,
+
       default: false,
     },
 
     /* =========================================================
        PHONE VERIFICATION
+       
+       Kept for future phone verification if needed.
+       
+       It is NOT required for:
+       - Google login
+       - Facebook login
+       - Email OTP registration
     ========================================================= */
 
     isPhoneVerified: {
       type: Boolean,
+
       default: false,
     },
 
@@ -208,9 +283,11 @@ const userSchema = new mongoose.Schema(
 
     lastLoginAt: {
       type: Date,
+
       default: null,
     },
   },
+
   {
     timestamps: true,
   },
@@ -234,7 +311,10 @@ userSchema.methods.isStaff = function () {
 };
 
 userSchema.methods.isAdmin = function () {
-  return ["superadmin", "admin"].includes(this.role);
+  return [
+    "superadmin",
+    "admin",
+  ].includes(this.role);
 };
 
 userSchema.methods.isSuperAdmin = function () {
@@ -266,119 +346,185 @@ userSchema.methods.isFacebookAuth = function () {
 };
 
 userSchema.methods.isSocialAuth = function () {
-  return ["google", "facebook"].includes(
+  return [
+    "google",
+    "facebook",
+  ].includes(
     this.authProvider,
   );
 };
 
-userSchema.methods.isPhoneVerifiedAccount = function () {
-  return this.isPhoneVerified === true;
-};
+/* =========================================================
+   PHONE VERIFICATION HELPER
+========================================================= */
 
-userSchema.methods.isVerifiedAccount = function () {
-  if (this.authProvider === "google") {
-    return (
-      this.isEmailVerified === true &&
-      this.isPhoneVerified === true
-    );
-  }
-
-  if (this.authProvider === "facebook") {
+userSchema.methods.isPhoneVerifiedAccount =
+  function () {
     return this.isPhoneVerified === true;
-  }
+  };
 
-  return this.isEmailVerified === true;
-};
+/* =========================================================
+   ACCOUNT VERIFICATION HELPER
+       
+   IMPORTANT:
+       
+   The new authentication flow does NOT require
+   WhatsApp/phone OTP for Google or Facebook.
+
+   Verification is based on email verification.
+========================================================= */
+
+userSchema.methods.isVerifiedAccount =
+  function () {
+    /*
+     * Google account
+     *
+     * Google provides a verified email.
+     * Phone verification is NOT required.
+     */
+
+    if (
+      this.authProvider ===
+      "google"
+    ) {
+      return (
+        this.isEmailVerified ===
+        true
+      );
+    }
+
+    /*
+     * Facebook account
+     *
+     * Phone verification is NOT required.
+     */
+
+    if (
+      this.authProvider ===
+      "facebook"
+    ) {
+      return (
+        this.isEmailVerified ===
+        true
+      );
+    }
+
+    /*
+     * Local account
+     *
+     * Registration is completed only after
+     * email OTP verification.
+     */
+
+    return (
+      this.isEmailVerified ===
+      true
+    );
+  };
 
 /* =========================================================
    VALIDATION
 ========================================================= */
 
-userSchema.pre("validate", function () {
-  /* ---------------------------------------------------------
-     GOOGLE ACCOUNT
-  --------------------------------------------------------- */
+userSchema.pre(
+  "validate",
+  function () {
+    /* ---------------------------------------------------------
+       GOOGLE ACCOUNT
+    --------------------------------------------------------- */
 
-  if (
-    this.authProvider === "google" &&
-    !this.googleId
-  ) {
-    throw new Error(
-      "Google ID is required for Google authentication",
-    );
-  }
+    if (
+      this.authProvider ===
+        "google" &&
+      !this.googleId
+    ) {
+      throw new Error(
+        "Google ID is required for Google authentication",
+      );
+    }
 
-  /* ---------------------------------------------------------
-     FACEBOOK ACCOUNT
-  --------------------------------------------------------- */
+    /* ---------------------------------------------------------
+       FACEBOOK ACCOUNT
+    --------------------------------------------------------- */
 
-  if (
-    this.authProvider === "facebook" &&
-    !this.facebookId
-  ) {
-    throw new Error(
-      "Facebook ID is required for Facebook authentication",
-    );
-  }
+    if (
+      this.authProvider ===
+        "facebook" &&
+      !this.facebookId
+    ) {
+      throw new Error(
+        "Facebook ID is required for Facebook authentication",
+      );
+    }
 
-  /*
-   * Password validation is intentionally not performed here.
-   *
-   * password has select:false.
-   *
-   * Existing users loaded without password should still be
-   * allowed to update profile information.
-   */
-});
+    /*
+     * Phone is intentionally NOT validated as required here.
+     *
+     * Google/Facebook users can have:
+     *
+     * phone: null
+     *
+     * and can still login normally.
+     *
+     * Local users also complete registration using
+     * email OTP instead of WhatsApp OTP.
+     */
+  },
+);
 
 /* =========================================================
    INDEXES
 ========================================================= */
 
 /*
- * Email
+ * EMAIL
  *
- * The `unique:true` declaration on the email field creates
- * the unique email index.
+ * `unique:true` on the email field creates the
+ * unique email index.
  */
 
 /*
- * Phone
+ * PHONE
  *
- * The `unique:true + sparse:true` declaration on the phone
- * field creates the unique sparse phone index.
+ * `unique:true + sparse:true`
+ *
+ * allows multiple documents with no phone value
+ * while preventing duplicate actual phone numbers.
  */
 
-/*
- * Google ID
- *
- * IMPORTANT:
- *
- * This is the only Google ID index definition.
- *
- * sparse:true means documents without googleId do not
- * conflict with each other.
- */
+/* =========================================================
+   GOOGLE ID INDEX
+========================================================= */
+
 userSchema.index(
-  { googleId: 1 },
+  {
+    googleId: 1,
+  },
   {
     unique: true,
+
     sparse: true,
-    name: "unique_google_id",
+
+    name:
+      "unique_google_id",
   },
 );
 
-/*
- * Facebook ID
- *
- * Same approach as Google ID.
- */
+/* =========================================================
+   FACEBOOK ID INDEX
+========================================================= */
+
 userSchema.index(
-  { facebookId: 1 },
+  {
+    facebookId: 1,
+  },
   {
     unique: true,
+
     sparse: true,
-    name: "unique_facebook_id",
+
+    name:
+      "unique_facebook_id",
   },
 );
 
@@ -388,6 +534,9 @@ userSchema.index(
 
 const User =
   mongoose.models.User ||
-  mongoose.model("User", userSchema);
+  mongoose.model(
+    "User",
+    userSchema,
+  );
 
 export default User;

@@ -12,7 +12,12 @@ import {
   X,
 } from "lucide-react";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import type {
   ChangeEvent,
   FormEvent,
@@ -131,7 +136,9 @@ const CURRENT_USER_STORAGE_KEY =
    HELPERS
 ========================================================= */
 
-function getImageUrl(image?: string): string {
+function getImageUrl(
+  image?: string,
+): string {
   if (!image) {
     return jihaanLogo;
   }
@@ -196,88 +203,130 @@ function MainHeader() {
   const navigate = useNavigate();
 
   const searchRef =
-    useRef<HTMLDivElement | null>(null);
+    useRef<HTMLDivElement | null>(
+      null,
+    );
 
   const accountRef =
-    useRef<HTMLDivElement | null>(null);
+    useRef<HTMLDivElement | null>(
+      null,
+    );
 
   const notificationRef =
-    useRef<HTMLDivElement | null>(null);
+    useRef<HTMLDivElement | null>(
+      null,
+    );
 
   const searchRequestRef =
-    useRef<AbortController | null>(null);
+    useRef<AbortController | null>(
+      null,
+    );
 
   const searchTimerRef =
     useRef<number | null>(null);
 
-  /* -------------------------------------------------------
+  /* =======================================================
      CATEGORY STATE
-  ------------------------------------------------------- */
+  ======================================================= */
 
-  const [categories, setCategories] =
-    useState<Category[]>([]);
+  const [
+    categories,
+    setCategories,
+  ] = useState<Category[]>([]);
 
-  const [categoriesLoading, setCategoriesLoading] =
-    useState(true);
+  const [
+    categoriesLoading,
+    setCategoriesLoading,
+  ] = useState(true);
 
-  /* -------------------------------------------------------
+  /* =======================================================
      SEARCH STATE
-  ------------------------------------------------------- */
+  ======================================================= */
 
-  const [searchValue, setSearchValue] =
-    useState("");
+  const [
+    searchValue,
+    setSearchValue,
+  ] = useState("");
 
-  const [searchResults, setSearchResults] =
-    useState<Product[]>([]);
+  const [
+    searchResults,
+    setSearchResults,
+  ] = useState<Product[]>([]);
 
-  const [isSearchOpen, setIsSearchOpen] =
-    useState(false);
+  const [
+    isSearchOpen,
+    setIsSearchOpen,
+  ] = useState(false);
 
-  const [isSearching, setIsSearching] =
-    useState(false);
+  const [
+    isSearching,
+    setIsSearching,
+  ] = useState(false);
 
-  /* -------------------------------------------------------
+  /* =======================================================
      ACCOUNT STATE
-  ------------------------------------------------------- */
+  ======================================================= */
 
-  const [currentUser, setCurrentUser] =
-    useState<CurrentUser | null>(null);
+  const [
+    currentUser,
+    setCurrentUser,
+  ] = useState<CurrentUser | null>(
+    null,
+  );
 
-  const [isAccountOpen, setIsAccountOpen] =
-    useState(false);
+  const [
+    isAccountOpen,
+    setIsAccountOpen,
+  ] = useState(false);
 
-  /* -------------------------------------------------------
+  /* =======================================================
      NOTIFICATION STATE
-  ------------------------------------------------------- */
+  ======================================================= */
 
-  const [notifications, setNotifications] =
-    useState<NotificationItem[]>([]);
+  const [
+    notifications,
+    setNotifications,
+  ] = useState<NotificationItem[]>(
+    [],
+  );
 
-  const [notificationCount, setNotificationCount] =
-    useState(0);
+  const [
+    notificationCount,
+    setNotificationCount,
+  ] = useState(0);
 
-  const [isNotificationOpen, setIsNotificationOpen] =
-    useState(false);
+  const [
+    isNotificationOpen,
+    setIsNotificationOpen,
+  ] = useState(false);
 
-  const [notificationsLoading, setNotificationsLoading] =
-    useState(false);
+  const [
+    notificationsLoading,
+    setNotificationsLoading,
+  ] = useState(false);
 
-  /* -------------------------------------------------------
+  /* =======================================================
      MOBILE MENU
-  ------------------------------------------------------- */
+  ======================================================= */
 
-  const [isMobileMenuOpen, setIsMobileMenuOpen] =
-    useState(false);
+  const [
+    isMobileMenuOpen,
+    setIsMobileMenuOpen,
+  ] = useState(false);
 
-  const [isCategoryMenuOpen, setIsCategoryMenuOpen] =
-    useState(false);
+  const [
+    isCategoryMenuOpen,
+    setIsCategoryMenuOpen,
+  ] = useState(false);
 
-  /* -------------------------------------------------------
+  /* =======================================================
      CART
-  ------------------------------------------------------- */
+  ======================================================= */
 
-  const [cartCount, setCartCount] =
-    useState(0);
+  const [
+    cartCount,
+    setCartCount,
+  ] = useState(0);
 
   /* =======================================================
      FETCH CATEGORIES
@@ -286,69 +335,85 @@ function MainHeader() {
   useEffect(() => {
     let mounted = true;
 
-    const fetchCategories = async () => {
-      try {
-        setCategoriesLoading(true);
-
-        const response = await fetch(
-          `${API_BASE_URL}/categories`,
-          {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-            },
-          },
-        );
-
-        const data =
-          (await response
-            .json()
-            .catch(() => ({}))) as CategoryResponse;
-
-        if (!response.ok) {
-          throw new Error(
-            data.message ||
-              "Unable to load categories.",
+    const fetchCategories =
+      async () => {
+        try {
+          setCategoriesLoading(
+            true,
           );
-        }
 
-        const receivedCategories =
-          Array.isArray(data.data)
-            ? data.data
-            : Array.isArray(data.categories)
-              ? data.categories
-              : [];
-
-        const activeCategories =
-          receivedCategories
-            .filter(
-              (category) =>
-                category.isActive !== false,
-            )
-            .sort(
-              (a, b) =>
-                Number(a.sortOrder || 0) -
-                Number(b.sortOrder || 0),
+          const response =
+            await fetch(
+              `${API_BASE_URL}/categories`,
+              {
+                method: "GET",
+                headers: {
+                  Accept:
+                    "application/json",
+                },
+              },
             );
 
-        if (mounted) {
-          setCategories(activeCategories);
-        }
-      } catch (error) {
-        console.error(
-          "Header category error:",
-          error,
-        );
+          const data =
+            (await response
+              .json()
+              .catch(() => ({}))) as CategoryResponse;
 
-        if (mounted) {
-          setCategories([]);
+          if (!response.ok) {
+            throw new Error(
+              data.message ||
+                "Unable to load categories.",
+            );
+          }
+
+          const receivedCategories =
+            Array.isArray(data.data)
+              ? data.data
+              : Array.isArray(
+                    data.categories,
+                  )
+                ? data.categories
+                : [];
+
+          const activeCategories =
+            receivedCategories
+              .filter(
+                (category) =>
+                  category.isActive !==
+                  false,
+              )
+              .sort(
+                (a, b) =>
+                  Number(
+                    a.sortOrder || 0,
+                  ) -
+                  Number(
+                    b.sortOrder || 0,
+                  ),
+              );
+
+          if (mounted) {
+            setCategories(
+              activeCategories,
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Header category error:",
+            error,
+          );
+
+          if (mounted) {
+            setCategories([]);
+          }
+        } finally {
+          if (mounted) {
+            setCategoriesLoading(
+              false,
+            );
+          }
         }
-      } finally {
-        if (mounted) {
-          setCategoriesLoading(false);
-        }
-      }
-    };
+      };
 
     void fetchCategories();
 
@@ -365,13 +430,17 @@ function MainHeader() {
     category: Category,
   ) => {
     const slug =
-      getCategorySlug(category);
+      getCategorySlug(
+        category,
+      );
 
     setIsMobileMenuOpen(false);
     setIsCategoryMenuOpen(false);
 
     navigate(
-      `/category/${encodeURIComponent(slug)}`,
+      `/category/${encodeURIComponent(
+        slug,
+      )}`,
     );
   };
 
@@ -384,9 +453,12 @@ function MainHeader() {
 
     window.setTimeout(() => {
       const input =
-        document.querySelector(
+        (document.querySelector(
           `.${styles.searchInput}`,
-        ) as HTMLInputElement | null;
+        ) ||
+          document.querySelector(
+            `.${styles.mobileSearchInput}`,
+          )) as HTMLInputElement | null;
 
       input?.focus();
     }, 50);
@@ -399,12 +471,16 @@ function MainHeader() {
   const closeSearch = () => {
     searchRequestRef.current?.abort();
 
-    if (searchTimerRef.current !== null) {
+    if (
+      searchTimerRef.current !==
+      null
+    ) {
       window.clearTimeout(
         searchTimerRef.current,
       );
 
-      searchTimerRef.current = null;
+      searchTimerRef.current =
+        null;
     }
 
     setIsSearchOpen(false);
@@ -433,7 +509,9 @@ function MainHeader() {
     setSearchValue("");
 
     navigate(
-      `/search?q=${encodeURIComponent(query)}`,
+      `/search?q=${encodeURIComponent(
+        query,
+      )}`,
     );
   };
 
@@ -441,101 +519,109 @@ function MainHeader() {
      LIVE PRODUCT SEARCH
   ======================================================= */
 
-  const searchProducts = async (
-    query: string,
-  ) => {
-    const trimmedQuery =
-      query.trim();
+  const searchProducts =
+    async (
+      query: string,
+    ) => {
+      const trimmedQuery =
+        query.trim();
 
-    if (!trimmedQuery) {
-      searchRequestRef.current?.abort();
+      if (!trimmedQuery) {
+        searchRequestRef.current?.abort();
 
-      setSearchResults([]);
-      setIsSearching(false);
+        setSearchResults([]);
+        setIsSearching(false);
 
-      return;
-    }
-
-    searchRequestRef.current?.abort();
-
-    const controller =
-      new AbortController();
-
-    searchRequestRef.current =
-      controller;
-
-    setIsSearching(true);
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/products?search=${encodeURIComponent(
-          trimmedQuery,
-        )}`,
-        {
-          method: "GET",
-
-          headers: {
-            Accept:
-              "application/json",
-          },
-
-          signal:
-            controller.signal,
-        },
-      );
-
-      const data =
-        (await response
-          .json()
-          .catch(() => ({}))) as ProductResponse;
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Unable to search products.",
-        );
-      }
-
-      const products =
-        Array.isArray(data.products)
-          ? data.products
-          : Array.isArray(data.data)
-            ? data.data
-            : [];
-
-      if (
-        !controller.signal.aborted
-      ) {
-        setSearchResults(
-          products.slice(0, 8),
-        );
-      }
-    } catch (error) {
-      if (
-        error instanceof DOMException &&
-        error.name === "AbortError"
-      ) {
         return;
       }
 
-      console.error(
-        "Product search error:",
-        error,
-      );
+      searchRequestRef.current?.abort();
 
-      if (
-        !controller.signal.aborted
-      ) {
-        setSearchResults([]);
+      const controller =
+        new AbortController();
+
+      searchRequestRef.current =
+        controller;
+
+      setIsSearching(true);
+
+      try {
+        const response =
+          await fetch(
+            `${API_BASE_URL}/products?search=${encodeURIComponent(
+              trimmedQuery,
+            )}`,
+            {
+              method: "GET",
+
+              headers: {
+                Accept:
+                  "application/json",
+              },
+
+              signal:
+                controller.signal,
+            },
+          );
+
+        const data =
+          (await response
+            .json()
+            .catch(() => ({}))) as ProductResponse;
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              "Unable to search products.",
+          );
+        }
+
+        const products =
+          Array.isArray(
+            data.products,
+          )
+            ? data.products
+            : Array.isArray(
+                  data.data,
+                )
+              ? data.data
+              : [];
+
+        if (
+          !controller.signal.aborted
+        ) {
+          setSearchResults(
+            products.slice(0, 8),
+          );
+        }
+      } catch (error) {
+        if (
+          error instanceof
+            DOMException &&
+          error.name ===
+            "AbortError"
+        ) {
+          return;
+        }
+
+        console.error(
+          "Product search error:",
+          error,
+        );
+
+        if (
+          !controller.signal.aborted
+        ) {
+          setSearchResults([]);
+        }
+      } finally {
+        if (
+          !controller.signal.aborted
+        ) {
+          setIsSearching(false);
+        }
       }
-    } finally {
-      if (
-        !controller.signal.aborted
-      ) {
-        setIsSearching(false);
-      }
-    }
-  };
+    };
 
   /* =======================================================
      SEARCH INPUT
@@ -557,7 +643,8 @@ function MainHeader() {
         searchTimerRef.current,
       );
 
-      searchTimerRef.current = null;
+      searchTimerRef.current =
+        null;
     }
 
     const trimmedValue =
@@ -600,18 +687,19 @@ function MainHeader() {
         searchTimerRef.current,
       );
 
-      searchTimerRef.current = null;
+      searchTimerRef.current =
+        null;
     }
 
     setIsSearchOpen(false);
     setSearchResults([]);
     setSearchValue("");
 
-    // App.tsx uses /products/:id and ProductPage loads
-    // the product using its MongoDB _id. Always navigate
-    // with the product id so the router never falls back
-    // to the homepage.
-    navigate(`/products/${encodeURIComponent(product._id)}`);
+    navigate(
+      `/products/${encodeURIComponent(
+        product._id,
+      )}`,
+    );
   };
 
   /* =======================================================
@@ -716,37 +804,47 @@ function MainHeader() {
      NOTIFICATIONS
   ======================================================= */
 
-  const fetchNotifications = async (
-    showList = false,
-  ) => {
-    const token = localStorage.getItem(
-      AUTH_TOKEN_STORAGE_KEY,
-    );
+  const fetchNotifications =
+    async (
+      showList = false,
+    ) => {
+      const token =
+        localStorage.getItem(
+          AUTH_TOKEN_STORAGE_KEY,
+        );
 
-    if (!token) {
-      setNotifications([]);
-      setNotificationCount(0);
-      return;
-    }
-
-    try {
-      if (showList) {
-        setNotificationsLoading(true);
+      if (!token) {
+        setNotifications([]);
+        setNotificationCount(0);
+        return;
       }
 
-      const [countResponse, listResponse] =
-        await Promise.all([
+      try {
+        if (showList) {
+          setNotificationsLoading(
+            true,
+          );
+        }
+
+        const [
+          countResponse,
+          listResponse,
+        ] = await Promise.all([
           fetch(
             `${API_BASE_URL}/notifications/unread-count`,
             {
               method: "GET",
               headers: {
-                Accept: "application/json",
-                Authorization: `Bearer ${token}`,
+                Accept:
+                  "application/json",
+                Authorization:
+                  `Bearer ${token}`,
               },
-              credentials: "include",
+              credentials:
+                "include",
             },
           ),
+
           showList
             ? fetch(
                 `${API_BASE_URL}/notifications`,
@@ -755,166 +853,209 @@ function MainHeader() {
                   headers: {
                     Accept:
                       "application/json",
-                    Authorization: `Bearer ${token}`,
+                    Authorization:
+                      `Bearer ${token}`,
                   },
-                  credentials: "include",
+                  credentials:
+                    "include",
                 },
               )
-            : Promise.resolve(null),
+            : Promise.resolve(
+                null,
+              ),
         ]);
 
-      const countData =
-        (await countResponse
-          .json()
-          .catch(() => ({}))) as NotificationResponse;
-
-      if (countResponse.ok) {
-        setNotificationCount(
-          Number(
-            countData.unreadCount ??
-              countData.count ??
-              0,
-          ),
-        );
-      }
-
-      if (listResponse) {
-        const listData =
-          (await listResponse
+        const countData =
+          (await countResponse
             .json()
             .catch(() => ({}))) as NotificationResponse;
 
-        if (listResponse.ok) {
-          const received =
-            Array.isArray(
-              listData.notifications,
-            )
-              ? listData.notifications
-              : Array.isArray(listData.data)
-                ? listData.data
-                : [];
-
-          setNotifications(
-            received.filter(
-              (notification) =>
-                notification.isActive !== false,
+        if (countResponse.ok) {
+          setNotificationCount(
+            Number(
+              countData.unreadCount ??
+                countData.count ??
+                0,
             ),
           );
         }
-      }
-    } catch (error) {
-      console.error(
-        "Notification fetch error:",
-        error,
-      );
-    } finally {
-      if (showList) {
-        setNotificationsLoading(false);
-      }
-    }
-  };
 
-  const toggleNotifications = async () => {
-    if (!currentUser) {
-      navigate("/login");
-      return;
-    }
+        if (listResponse) {
+          const listData =
+            (await listResponse
+              .json()
+              .catch(() => ({}))) as NotificationResponse;
 
-    const nextOpen =
-      !isNotificationOpen;
+          if (listResponse.ok) {
+            const received =
+              Array.isArray(
+                listData.notifications,
+              )
+                ? listData.notifications
+                : Array.isArray(
+                      listData.data,
+                    )
+                  ? listData.data
+                  : [];
 
-    setIsNotificationOpen(nextOpen);
-    setIsAccountOpen(false);
-
-    if (nextOpen) {
-      await fetchNotifications(true);
-    }
-  };
-
-  const markNotificationAsRead = async (
-    notification: NotificationItem,
-  ) => {
-    const token = localStorage.getItem(
-      AUTH_TOKEN_STORAGE_KEY,
-    );
-
-    if (!token) {
-      return;
-    }
-
-    try {
-      if (!notification.isRead) {
-        await fetch(
-          `${API_BASE_URL}/notifications/${notification._id}/read`,
-          {
-            method: "PATCH",
-            headers: {
-              Accept: "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            credentials: "include",
-          },
+            setNotifications(
+              received.filter(
+                (notification) =>
+                  notification.isActive !==
+                  false,
+              ),
+            );
+          }
+        }
+      } catch (error) {
+        console.error(
+          "Notification fetch error:",
+          error,
         );
-
-        setNotifications((previous) =>
-          previous.map((item) =>
-            item._id === notification._id
-              ? {
-                  ...item,
-                  isRead: true,
-                }
-              : item,
-          ),
-        );
-
-        setNotificationCount(
-          (previous) =>
-            Math.max(0, previous - 1),
-        );
-      }
-
-      setIsNotificationOpen(false);
-
-      if (notification.link?.trim()) {
-        const link =
-          notification.link.trim();
-
-        if (/^https?:\/\//i.test(link)) {
-          window.location.href = link;
-        } else {
-          navigate(link);
+      } finally {
+        if (showList) {
+          setNotificationsLoading(
+            false,
+          );
         }
       }
-    } catch (error) {
-      console.error(
-        "Notification read error:",
-        error,
-      );
-    }
-  };
+    };
 
-  const markAllNotificationsAsRead =
+  const toggleNotifications =
     async () => {
-      const token = localStorage.getItem(
-        AUTH_TOKEN_STORAGE_KEY,
+      if (!currentUser) {
+        navigate("/login");
+        return;
+      }
+
+      const nextOpen =
+        !isNotificationOpen;
+
+      setIsNotificationOpen(
+        nextOpen,
       );
 
-      if (!token || notificationCount === 0) {
+      setIsAccountOpen(false);
+
+      if (nextOpen) {
+        await fetchNotifications(
+          true,
+        );
+      }
+    };
+
+  const markNotificationAsRead =
+    async (
+      notification: NotificationItem,
+    ) => {
+      const token =
+        localStorage.getItem(
+          AUTH_TOKEN_STORAGE_KEY,
+        );
+
+      if (!token) {
         return;
       }
 
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/notifications/read-all`,
-          {
-            method: "PATCH",
-            headers: {
-              Accept: "application/json",
-              Authorization: `Bearer ${token}`,
+        if (!notification.isRead) {
+          await fetch(
+            `${API_BASE_URL}/notifications/${notification._id}/read`,
+            {
+              method: "PATCH",
+              headers: {
+                Accept:
+                  "application/json",
+                Authorization:
+                  `Bearer ${token}`,
+              },
+              credentials:
+                "include",
             },
-            credentials: "include",
-          },
+          );
+
+          setNotifications(
+            (previous) =>
+              previous.map(
+                (item) =>
+                  item._id ===
+                  notification._id
+                    ? {
+                        ...item,
+                        isRead: true,
+                      }
+                    : item,
+              ),
+          );
+
+          setNotificationCount(
+            (previous) =>
+              Math.max(
+                0,
+                previous - 1,
+              ),
+          );
+        }
+
+        setIsNotificationOpen(
+          false,
         );
+
+        if (
+          notification.link?.trim()
+        ) {
+          const link =
+            notification.link.trim();
+
+          if (
+            /^https?:\/\//i.test(
+              link,
+            )
+          ) {
+            window.location.href =
+              link;
+          } else {
+            navigate(link);
+          }
+        }
+      } catch (error) {
+        console.error(
+          "Notification read error:",
+          error,
+        );
+      }
+    };
+
+  const markAllNotificationsAsRead =
+    async () => {
+      const token =
+        localStorage.getItem(
+          AUTH_TOKEN_STORAGE_KEY,
+        );
+
+      if (
+        !token ||
+        notificationCount === 0
+      ) {
+        return;
+      }
+
+      try {
+        const response =
+          await fetch(
+            `${API_BASE_URL}/notifications/read-all`,
+            {
+              method: "PATCH",
+              headers: {
+                Accept:
+                  "application/json",
+                Authorization:
+                  `Bearer ${token}`,
+              },
+              credentials:
+                "include",
+            },
+          );
 
         if (!response.ok) {
           throw new Error(
@@ -922,11 +1063,12 @@ function MainHeader() {
           );
         }
 
-        setNotifications((previous) =>
-          previous.map((item) => ({
-            ...item,
-            isRead: true,
-          })),
+        setNotifications(
+          (previous) =>
+            previous.map((item) => ({
+              ...item,
+              isRead: true,
+            })),
         );
 
         setNotificationCount(0);
@@ -938,23 +1080,27 @@ function MainHeader() {
       }
     };
 
-  const formatNotificationDate = (
-    value: string,
-  ) => {
-    const date = new Date(value);
+  const formatNotificationDate =
+    (value: string) => {
+      const date =
+        new Date(value);
 
-    if (Number.isNaN(date.getTime())) {
-      return "";
-    }
+      if (
+        Number.isNaN(
+          date.getTime(),
+        )
+      ) {
+        return "";
+      }
 
-    return date.toLocaleDateString(
-      "en-IN",
-      {
-        day: "2-digit",
-        month: "short",
-      },
-    );
-  };
+      return date.toLocaleDateString(
+        "en-IN",
+        {
+          day: "2-digit",
+          month: "short",
+        },
+      );
+    };
 
   /* =======================================================
      LOGOUT
@@ -1003,7 +1149,9 @@ function MainHeader() {
         setNotifications([]);
         setNotificationCount(0);
         setIsAccountOpen(false);
-        setIsNotificationOpen(false);
+        setIsNotificationOpen(
+          false,
+        );
 
         navigate("/login", {
           replace: true,
@@ -1021,12 +1169,12 @@ function MainHeader() {
     void updateCartCount();
     void fetchNotifications();
 
-    const handleStorage =
-      () => {
-        loadCurrentUser();
-        void updateCartCount();
-        void fetchNotifications();
-      };
+    const handleStorage = () => {
+      loadCurrentUser();
+
+      void updateCartCount();
+      void fetchNotifications();
+    };
 
     const handleCartUpdated =
       () => {
@@ -1090,7 +1238,9 @@ function MainHeader() {
             target,
           )
         ) {
-          setIsNotificationOpen(false);
+          setIsNotificationOpen(
+            false,
+          );
         }
       };
 
@@ -1131,7 +1281,13 @@ function MainHeader() {
   ======================================================= */
 
   return (
-    <header className={styles.header}>
+    <header
+      className={styles.header}
+    >
+      {/* =================================================
+          TOP HEADER
+      ================================================= */}
+
       <div
         className={
           styles.headerInner
@@ -1143,7 +1299,9 @@ function MainHeader() {
 
         <Link
           to="/"
-          className={styles.logo}
+          className={
+            styles.logo
+          }
           aria-label="Jihaan Cosmetics home"
         >
           <img
@@ -1178,7 +1336,7 @@ function MainHeader() {
         </Link>
 
         {/* =================================================
-            CATEGORY NAVIGATION
+            DESKTOP CATEGORY NAVIGATION
         ================================================= */}
 
         <nav
@@ -1222,33 +1380,25 @@ function MainHeader() {
                       )
                     }
                   >
-                    {category.name}
+                    {
+                      category.name
+                    }
                   </button>
                 ),
               )}
-
-              {/* <button
-                type="button"
-                className={`${styles.navLink} ${styles.offerNavLink}`}
-                onClick={() =>
-                  navigate(
-                    "/offers",
-                  )
-                }
-              >
-                OFFERS
-              </button> */}
             </div>
           )}
         </nav>
 
         {/* =================================================
-            SEARCH
+            DESKTOP SEARCH
         ================================================= */}
 
         <div
           className={`${styles.searchContainer} ${
-            isSearchOpen ? styles.mobileSearchOpen : ""
+            isSearchOpen
+              ? styles.mobileSearchOpen
+              : ""
           }`}
           ref={searchRef}
         >
@@ -1258,7 +1408,9 @@ function MainHeader() {
               className={
                 styles.searchIconButton
               }
-              onClick={openSearch}
+              onClick={
+                openSearch
+              }
               aria-label="Search products"
               title="Search"
             >
@@ -1289,7 +1441,9 @@ function MainHeader() {
                 className={
                   styles.searchInput
                 }
-                value={searchValue}
+                value={
+                  searchValue
+                }
                 onChange={
                   handleSearchChange
                 }
@@ -1315,7 +1469,7 @@ function MainHeader() {
           )}
 
           {/* =================================================
-              SEARCH RESULTS
+              DESKTOP SEARCH RESULTS
           ================================================= */}
 
           {isSearchOpen && (
@@ -1336,7 +1490,6 @@ function MainHeader() {
                       styles.loadingIcon
                     }
                   />
-
                   Searching products...
                 </div>
               )}
@@ -1451,7 +1604,6 @@ function MainHeader() {
                         }
 
                         closeSearch();
-
                         setSearchValue("");
 
                         navigate(
@@ -1477,38 +1629,35 @@ function MainHeader() {
         ================================================= */}
 
         <div
-          className={styles.actions}
+          className={
+            styles.actions
+          }
         >
-          <button
-            type="button"
-            className={
-              styles.mobileSearchButton
-            }
-            onClick={openSearch}
-            aria-label="Search"
-          >
-            <Search
-              size={22}
-              strokeWidth={1.7}
-            />
-          </button>
-
-          {/* NOTIFICATIONS */}
+          {/* =================================================
+              NOTIFICATIONS
+          ================================================= */}
 
           <div
-            className={styles.notificationContainer}
-            ref={notificationRef}
+            className={
+              styles.notificationContainer
+            }
+            ref={
+              notificationRef
+            }
           >
             <button
               type="button"
-              className={styles.iconButton}
+              className={
+                styles.iconButton
+              }
               onClick={() =>
                 void toggleNotifications()
               }
               aria-label={
                 currentUser
                   ? `Notifications${
-                      notificationCount > 0
+                      notificationCount >
+                      0
                         ? `, ${notificationCount} unread`
                         : ""
                     }`
@@ -1534,13 +1683,15 @@ function MainHeader() {
                 />
 
                 {currentUser &&
-                  notificationCount > 0 && (
+                  notificationCount >
+                    0 && (
                     <span
                       className={
                         styles.notificationBadge
                       }
                     >
-                      {notificationCount > 99
+                      {notificationCount >
+                      99
                         ? "99+"
                         : notificationCount}
                     </span>
@@ -1566,13 +1717,15 @@ function MainHeader() {
                       </strong>
 
                       <span>
-                        {notificationCount > 0
+                        {notificationCount >
+                        0
                           ? `${notificationCount} unread`
                           : "All caught up"}
                       </span>
                     </div>
 
-                    {notificationCount > 0 && (
+                    {notificationCount >
+                      0 && (
                       <button
                         type="button"
                         className={
@@ -1620,7 +1773,9 @@ function MainHeader() {
                       </div>
                     ) : (
                       notifications.map(
-                        (notification) => (
+                        (
+                          notification,
+                        ) => (
                           <button
                             type="button"
                             key={
@@ -1658,17 +1813,17 @@ function MainHeader() {
                                 }
                               </strong>
 
-                              <span>
+                              <p>
                                 {
                                   notification.message
                                 }
-                              </span>
+                              </p>
 
-                              <small>
+                              <time>
                                 {formatNotificationDate(
                                   notification.createdAt,
                                 )}
-                              </small>
+                              </time>
                             </span>
 
                             {!notification.isRead && (
@@ -1695,6 +1850,7 @@ function MainHeader() {
                         setIsNotificationOpen(
                           false,
                         );
+
                         navigate(
                           "/notifications",
                         );
@@ -1707,13 +1863,17 @@ function MainHeader() {
               )}
           </div>
 
-          {/* ACCOUNT */}
+          {/* =================================================
+              ACCOUNT
+          ================================================= */}
 
           <div
             className={
               styles.accountContainer
             }
-            ref={accountRef}
+            ref={
+              accountRef
+            }
           >
             <button
               type="button"
@@ -1917,13 +2077,13 @@ function MainHeader() {
             )}
           </div>
 
-          {/* CART */}
+          {/* =================================================
+              CART
+          ================================================= */}
 
           <button
             type="button"
-            className={
-              styles.iconButton
-            }
+            className={`${styles.iconButton} ${styles.mobileCartButton}`}
             onClick={() =>
               navigate("/cart")
             }
@@ -1954,20 +2114,28 @@ function MainHeader() {
             </span>
           </button>
 
-          {/* MOBILE MENU */}
+          {/* =================================================
+              MOBILE MENU BUTTON
+          ================================================= */}
 
           <button
             type="button"
-            className={
-              styles.menuButton
-            }
+            className={`${styles.menuButton} ${
+              isMobileMenuOpen
+                ? styles.menuButtonOpen
+                : ""
+            }`}
             onClick={() =>
               setIsMobileMenuOpen(
                 (previous) =>
                   !previous,
               )
             }
-            aria-label="Open menu"
+            aria-label={
+              isMobileMenuOpen
+                ? "Close menu"
+                : "Open menu"
+            }
             aria-expanded={
               isMobileMenuOpen
             }
@@ -1977,6 +2145,224 @@ function MainHeader() {
             <span />
           </button>
         </div>
+      </div>
+
+      {/* ===================================================
+          MOBILE SEARCH BAR
+          Visible only on mobile
+      =================================================== */}
+
+      <div
+        className={
+          styles.mobileSearchBar
+        }
+      >
+        <form
+          className={
+            styles.mobileSearchForm
+          }
+          onSubmit={
+            handleSearch
+          }
+          role="search"
+        >
+          <Search
+            size={18}
+            strokeWidth={1.8}
+            className={
+              styles.mobileSearchIcon
+            }
+          />
+
+          <input
+            type="search"
+            className={
+              styles.mobileSearchInput
+            }
+            value={
+              searchValue
+            }
+            onChange={
+              handleSearchChange
+            }
+            onFocus={() => {
+              if (
+                searchValue.trim()
+              ) {
+                setIsSearchOpen(true);
+              }
+            }}
+            placeholder="Explore our Beauty Collection"
+            aria-label="Search products"
+            autoComplete="off"
+          />
+
+          {searchValue.trim() && (
+            <button
+              type="button"
+              className={
+                styles.mobileSearchClear
+              }
+              onClick={() => {
+                setSearchValue("");
+                closeSearch();
+              }}
+              aria-label="Clear search"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </form>
+
+        {/* =================================================
+            MOBILE SEARCH RESULTS
+        ================================================= */}
+
+        {isSearchOpen &&
+          searchValue.trim() && (
+            <div
+              className={
+                styles.mobileSearchDropdown
+              }
+            >
+              {isSearching ? (
+                <div
+                  className={
+                    styles.mobileSearchState
+                  }
+                >
+                  <LoaderCircle
+                    size={18}
+                    className={
+                      styles.loadingIcon
+                    }
+                  />
+
+                  Searching products...
+                </div>
+              ) : searchResults.length ===
+                0 ? (
+                <div
+                  className={
+                    styles.mobileSearchState
+                  }
+                >
+                  No products found.
+                </div>
+              ) : (
+                <>
+                  <div
+                    className={
+                      styles.mobileSearchResultTitle
+                    }
+                  >
+                    PRODUCTS
+                  </div>
+
+                  {searchResults.map(
+                    (product) => (
+                      <button
+                        type="button"
+                        key={
+                          product._id
+                        }
+                        className={
+                          styles.mobileSearchResult
+                        }
+                        onClick={() =>
+                          handleProductClick(
+                            product,
+                          )
+                        }
+                      >
+                        <img
+                          src={getImageUrl(
+                            getProductImage(
+                              product,
+                            ),
+                          )}
+                          alt={
+                            product.name
+                          }
+                          className={
+                            styles.mobileSearchResultImage
+                          }
+                        />
+
+                        <span
+                          className={
+                            styles.mobileSearchResultDetails
+                          }
+                        >
+                          <strong>
+                            {
+                              product.name
+                            }
+                          </strong>
+
+                          {product.brand && (
+                            <small>
+                              {
+                                product.brand
+                              }
+                            </small>
+                          )}
+
+                          {typeof product.price ===
+                            "number" && (
+                            <span
+                              className={
+                                styles.mobileSearchResultPrice
+                              }
+                            >
+                              ₹
+                              {product.price.toLocaleString(
+                                "en-IN",
+                              )}
+                            </span>
+                          )}
+                        </span>
+
+                        <ChevronRight
+                          size={16}
+                        />
+                      </button>
+                    ),
+                  )}
+
+                  <button
+                    type="button"
+                    className={
+                      styles.mobileSearchViewAll
+                    }
+                    onClick={() => {
+                      const query =
+                        searchValue.trim();
+
+                      if (!query) {
+                        return;
+                      }
+
+                      closeSearch();
+                      setSearchValue("");
+
+                      navigate(
+                        `/search?q=${encodeURIComponent(
+                          query,
+                        )}`,
+                      );
+                    }}
+                  >
+                    View all results
+
+                    <ChevronRight
+                      size={16}
+                    />
+                  </button>
+                </>
+              )}
+            </div>
+          )}
       </div>
 
       {/* ===================================================
@@ -2026,6 +2412,7 @@ function MainHeader() {
                       !previous,
                   )
                 }
+                aria-label="Toggle categories"
               >
                 <ChevronDown
                   size={18}
@@ -2076,9 +2463,7 @@ function MainHeader() {
                 styles.mobileHomeLink
               }
               onClick={() => {
-                navigate(
-                  "/offers",
-                );
+                navigate("/offers");
 
                 setIsMobileMenuOpen(
                   false,

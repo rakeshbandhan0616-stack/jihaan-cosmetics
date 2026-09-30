@@ -1,1066 +1,3805 @@
 /* =========================================================
+   JINI COSMETICS
    NEW ARRIVALS
+   Premium pink/lavender beauty theme
+========================================================= */
+
+
+/* =========================================================
+   SECTION
 ========================================================= */
 
 .section {
+  position: relative;
+
   width: 100%;
-  padding: 10px 2.25% 12px;
-  background: #ffffff;
-  color: #111111;
+
+  padding:
+    14px
+    2.25%
+    20px;
+
   overflow: hidden;
+
+  color: #111111;
+
+  /*
+    Soft cosmetic background inspired by the reference.
+    The small SVG pattern is embedded directly in CSS,
+    so no extra image file is required.
+  */
+  background-color: #fff4fa;
+
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' stroke='%23d79bdd' stroke-width='1.2' stroke-opacity='.13'%3E%3Cg transform='translate(20 18) rotate(-14)'%3E%3Crect x='0' y='16' width='11' height='42' rx='3'/%3E%3Cpath d='M2 10h7v8H2zM3 4h5v6H3z'/%3E%3Cpath d='M11 24l9-7'/%3E%3C/g%3E%3Cg transform='translate(92 12) rotate(12)'%3E%3Crect x='8' y='17' width='25' height='34' rx='4'/%3E%3Cpath d='M12 17V9h17v8M16 4h9v5h-9z'/%3E%3C/g%3E%3Cg transform='translate(46 108) rotate(-8)'%3E%3Cpath d='M4 8h18l-3 44H7L4 8z'/%3E%3Cpath d='M8 8V1h10v7'/%3E%3Cpath d='M9 1h8'/%3E%3C/g%3E%3Cg transform='translate(129 95) rotate(24)'%3E%3Cpath d='M2 6h17l4 7H0L2 6z'/%3E%3Cpath d='M5 13l-7 32h11l7-32'/%3E%3Cpath d='M1 46h9'/%3E%3C/g%3E%3Cg transform='translate(3 88)'%3E%3Cellipse cx='13' cy='13' rx='10' ry='4'/%3E%3Cellipse cx='13' cy='13' rx='6' ry='2.3'/%3E%3Cpath d='M5 13v18c0 4 4 7 8 7s8-3 8-7V13'/%3E%3C/g%3E%3Cg transform='translate(120 5) rotate(-18)'%3E%3Cpath d='M7 2l15 14-5 5L2 7z'/%3E%3Cpath d='M2 7L0 12l5-2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+
+  background-repeat:
+    repeat;
+
+  background-size:
+    180px
+    180px;
+
+  background-position:
+    center;
+
+  isolation: isolate;
+
+  box-sizing: border-box;
 }
 
-.container {
-  width: 100%;
-  max-width: 1900px;
-  margin: 0 auto;
-}
 
 /* =========================================================
-   HEADER
+   SOFT GLOW
+========================================================= */
+
+.section::before {
+  position: absolute;
+
+  top: -180px;
+  left: 20%;
+
+  width: 460px;
+  height: 460px;
+
+  content: "";
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      224,
+      171,
+      229,
+      0.11
+    );
+
+  filter:
+    blur(105px);
+
+  pointer-events: none;
+
+  z-index: -1;
+}
+
+.section::after {
+  position: absolute;
+
+  right: -140px;
+  bottom: -170px;
+
+  width: 430px;
+  height: 430px;
+
+  content: "";
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      247,
+      181,
+      215,
+      0.10
+    );
+
+  filter:
+    blur(100px);
+
+  pointer-events: none;
+
+  z-index: -1;
+}
+
+
+/* =========================================================
+   CONTAINER
+========================================================= */
+
+.container {
+  position: relative;
+
+  z-index: 2;
+
+  width: 100%;
+
+  max-width:
+    1900px;
+
+  margin:
+    0
+    auto;
+}
+
+
+/* =========================================================
+   SECTION HEADER
 ========================================================= */
 
 .sectionHeader {
   display: flex;
+
   align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  margin-bottom: 40px;
+
+  justify-content:
+    space-between;
+
+  gap:
+    16px;
+
+  margin:
+    0
+    0
+    26px;
 }
 
+
+/* =========================================================
+   SECTION TITLE
+========================================================= */
+
 .sectionTitle {
-  margin: 0;
-  color: #111111;
-  font-size: clamp(27px, 2vw, 34px);
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.8px;
+  position: relative;
+
+  margin:
+    0;
+
+  color:
+    #171517;
+
+  font-family:
+    "Playfair Display",
+    "Cormorant Garamond",
+    Georgia,
+    serif;
+
+  font-size:
+    clamp(
+      25px,
+      2vw,
+      34px
+    );
+
+  font-weight:
+    600;
+
+  line-height:
+    1;
+
+  letter-spacing:
+    0.01em;
+
+  text-transform:
+    uppercase;
 }
+
+.sectionTitle::after {
+  display: block;
+
+  width:
+    56px;
+
+  height:
+    2px;
+
+  margin-top:
+    11px;
+
+  content:
+    "";
+
+  border-radius:
+    999px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #bb6dc5,
+      #e29bd9
+    );
+
+  animation:
+    titleLineReveal
+    0.65s
+    0.2s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    )
+    both;
+}
+
+
+/* =========================================================
+   VIEW ALL
+========================================================= */
 
 .viewAllButton {
   display: inline-flex;
+
   align-items: center;
-  justify-content: center;
-  gap: 4px;
 
-  padding: 0;
-  border: 0;
+  justify-content:
+    center;
 
-  color: #ff315f;
-  background: transparent;
+  gap:
+    4px;
 
-  font-size: 17px;
-  font-weight: 500;
+  flex-shrink:
+    0;
 
-  cursor: pointer;
-  white-space: nowrap;
+  padding:
+    0
+    0
+    5px;
+
+  border:
+    0;
+
+  border-bottom:
+    1px
+    solid
+    #b255bc;
+
+  color:
+    #a145ab;
+
+  background:
+    transparent;
+
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+
+  font-size:
+    13px;
+
+  font-weight:
+    600;
+
+  line-height:
+    1.2;
+
+  cursor:
+    pointer;
+
+  white-space:
+    nowrap;
 
   transition:
-    color 0.25s ease,
-    transform 0.25s ease;
+    color
+    0.25s
+    ease,
+    transform
+    0.25s
+    ease,
+    border-color
+    0.25s
+    ease;
 }
 
 .viewAllButton:hover {
-  color: #e91549;
-  transform: translateX(3px);
+  color:
+    #81388a;
+
+  border-color:
+    #81388a;
+
+  transform:
+    translateX(
+      3px
+    );
 }
+
+.viewAllButton:active {
+  transform:
+    translateX(0)
+    scale(0.98);
+}
+
 
 /* =========================================================
    PRODUCTS WRAPPER
 ========================================================= */
 
 .productsWrapper {
-  width: 100%;
-  overflow: visible;
+  width:
+    100%;
+
+  overflow:
+    visible;
 }
+
 
 /* =========================================================
    SWIPER
 ========================================================= */
 
 .productSwiper {
-  width: 100%;
-  overflow: visible !important;
-  padding: 0 2px 8px !important;
+  width:
+    100%;
+
+  overflow:
+    visible !important;
+
+  padding:
+    0
+    2px
+    10px
+    !important;
 }
 
 .productSwiper :global(.swiper-wrapper) {
-  align-items: stretch;
+  align-items:
+    stretch;
 }
 
 .productSwiper :global(.swiper-slide) {
-  height: auto;
-  display: flex;
+  height:
+    auto;
+
+  display:
+    flex;
 }
+
 
 /* =========================================================
    PRODUCT CARD
 ========================================================= */
 
 .productCard {
-  position: relative;
+  position:
+    relative;
 
-  width: 100%;
-  min-width: 0;
+  width:
+    100%;
 
-  display: flex;
-  flex-direction: column;
+  min-width:
+    0;
 
-  overflow: hidden;
+  display:
+    flex;
 
-  border: 1px solid #e2e2e2;
-  border-radius: 15px;
+  flex-direction:
+    column;
 
-  background: #ffffff;
+  overflow:
+    hidden;
+
+  border:
+    1px
+    solid
+    rgba(
+      208,
+      182,
+      203,
+      0.72
+    );
+
+  border-radius:
+    15px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.98
+    );
 
   box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.035);
+    0
+    4px
+    14px
+    rgba(
+      122,
+      82,
+      117,
+      0.055
+    );
 
-  animation: cardReveal 0.55s ease both;
+  animation:
+    cardReveal
+    0.55s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    )
+    both;
 
   transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease,
-    border-color 0.3s ease;
+    transform
+    0.35s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    ),
+    box-shadow
+    0.35s
+    ease,
+    border-color
+    0.3s
+    ease;
 }
 
 .productCard:hover {
-  transform: translateY(-3px);
+  transform:
+    translateY(
+      -5px
+    );
 
-  border-color: #d9d9d9;
+  border-color:
+    rgba(
+      180,
+      110,
+      187,
+      0.38
+    );
 
   box-shadow:
-    0 12px 28px rgba(0, 0, 0, 0.09);
+    0
+    16px
+    35px
+    rgba(
+      122,
+      82,
+      117,
+      0.12
+    );
 }
 
+
 /* =========================================================
-   TOP NEW RIBBON
+   NEW BADGE
 ========================================================= */
 
 .topRibbon {
-  position: relative;
-  z-index: 5;
+  position:
+    absolute;
 
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  top:
+    11px;
 
-  width: 100%;
-  height: 26px;
+  left:
+    11px;
+
+  z-index:
+    15;
+
+  width:
+    auto;
+
+  height:
+    auto;
+
+  pointer-events:
+    none;
 }
 
 .newRibbon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display:
+    inline-flex;
 
-  width: 82%;
-  height: 26px;
+  align-items:
+    center;
 
-  border-radius: 0 0 22px 0;
+  justify-content:
+    center;
 
-  color: #ffffff;
-  background: #70b82d;
+  min-width:
+    46px;
 
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1;
+  min-height:
+    23px;
+
+  padding:
+    5px
+    10px;
+
+  border:
+    1px
+    solid
+    rgba(
+      255,
+      255,
+      255,
+      0.78
+    );
+
+  border-radius:
+    999px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #a44daf,
+      #d67be0
+    );
+
+  color:
+    #ffffff;
+
+  font-family:
+    "Montserrat",
+    Arial,
+    sans-serif;
+
+  font-size:
+    8px;
+
+  font-weight:
+    800;
+
+  line-height:
+    1;
+
+  letter-spacing:
+    0.9px;
+
+  text-transform:
+    uppercase;
+
+  box-shadow:
+    0
+    5px
+    14px
+    rgba(
+      155,
+      76,
+      171,
+      0.20
+    );
+
+  backdrop-filter:
+    blur(5px);
+
+  animation:
+    newBadgeIn
+    0.55s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    )
+    both;
 }
-
-/*
-===========================================================
-IMPORTANT:
-The right side is intentionally blank.
-
-NO BUY4
-NO BUY3
-NO OFFER
-NO DISCOUNT BADGE
-===========================================================
-*/
 
 .emptyRibbon {
-  width: 100%;
-  height: 26px;
-
-  border-radius: 0 0 0 22px;
-
-  background: linear-gradient(
-    90deg,
-    #fffafa,
-    #ffe1e1
-  );
+  display:
+    none;
 }
+
 
 /* =========================================================
    PRODUCT IMAGE
 ========================================================= */
 
 .imageWrapper {
-  position: relative;
+  position:
+    relative;
 
-  width: 100%;
-  height: 420px;
+  width:
+    100%;
 
-  overflow: hidden;
+  height:
+    370px;
 
-  background: #ffffff;
+  overflow:
+    hidden;
 
-  cursor: pointer;
+  background:
+    linear-gradient(
+      145deg,
+      #fffdfa,
+      #fff2f7
+    );
 
-  isolation: isolate;
+  cursor:
+    pointer;
+
+  isolation:
+    isolate;
+}
+
+.imageWrapper::after {
+  position:
+    absolute;
+
+  inset:
+    0;
+
+  z-index:
+    2;
+
+  content:
+    "";
+
+  pointer-events:
+    none;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        255,
+        255,
+        255,
+        0
+      )
+      64%,
+      rgba(
+        184,
+        104,
+        158,
+        0.035
+      )
+      100%
+    );
 }
 
 .productImage {
-  position: absolute;
-  inset: 0;
+  position:
+    absolute;
 
-  width: 100%;
-  height: 100%;
+  inset:
+    0;
 
-  display: block;
+  width:
+    100%;
 
-  object-fit: contain;
+  height:
+    100%;
 
-  padding: 15px 18px 10px;
+  display:
+    block;
+
+  object-fit:
+    contain;
+
+  padding:
+    15px
+    18px
+    10px;
 
   transition:
-    opacity 0.45s ease,
-    transform 0.55s ease;
+    opacity
+    0.45s
+    ease,
+    transform
+    0.55s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    );
 }
 
 .primaryImage {
-  opacity: 1;
-  transform: scale(1);
+  opacity:
+    1;
+
+  transform:
+    scale(
+      1
+    );
 }
 
 .hoverImage {
-  opacity: 0;
-  transform: scale(1.035);
+  opacity:
+    0;
+
+  transform:
+    scale(
+      1.035
+    );
 }
 
-/* =========================================================
-   HOVER IMAGE
-========================================================= */
+.productCard:hover
+  .primaryImage {
+  opacity:
+    0;
 
-.productCard:hover .primaryImage {
-  opacity: 0;
-  transform: scale(1.035);
+  transform:
+    scale(
+      1.04
+    );
 }
 
-.productCard:hover .hoverImage {
-  opacity: 1;
-  transform: scale(1);
+.productCard:hover
+  .hoverImage {
+  opacity:
+    1;
+
+  transform:
+    scale(
+      1
+    );
 }
+
 
 /* =========================================================
    PRODUCT INFORMATION
 ========================================================= */
 
 .productInfo {
-  display: flex;
-  flex-direction: column;
+  display:
+    flex;
 
-  padding: 11px 10px 10px;
+  flex-direction:
+    column;
 
-  background: #ffffff;
+  padding:
+    11px
+    10px
+    10px;
+
+  background:
+    #ffffff;
 }
 
+
 /* =========================================================
-   YELLOW FEATURE / TAGLINE
+   TAGLINE
 ========================================================= */
 
 .tagline {
-  width: 100%;
+  display:
+    flex;
 
-  min-height: 26px;
+  align-items:
+    center;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  justify-content:
+    center;
 
-  margin-bottom: 12px;
+  width:
+    100%;
 
-  overflow: hidden;
+  min-height:
+    26px;
 
-  border-radius: 14px 14px 0 0;
+  margin:
+    0
+    0
+    11px;
 
-  background: linear-gradient(
-    90deg,
-    #ffd442 0%,
-    #ffe69b 45%,
-    #fffdf5 100%
-  );
+  overflow:
+    hidden;
+
+  border-radius:
+    13px
+    13px
+    0
+    0;
+
+  background:
+    linear-gradient(
+      90deg,
+      #ffd44c
+      0%,
+      #ffe59a
+      46%,
+      #fffaf1
+      100%
+    );
 }
 
 .tagline span {
-  max-width: 100%;
+  max-width:
+    100%;
 
-  padding: 4px 12px;
+  padding:
+    4px
+    11px;
 
-  overflow: hidden;
+  overflow:
+    hidden;
 
-  color: #151515;
+  color:
+    #151515;
 
-  font-size: 14px;
-  font-weight: 600;
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
 
-  line-height: 1;
+  font-size:
+    12px;
 
-  text-align: center;
+  font-weight:
+    600;
 
-  text-overflow: ellipsis;
+  line-height:
+    1;
 
-  white-space: nowrap;
+  text-align:
+    center;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
 }
+
 
 /* =========================================================
    PRODUCT NAME
 ========================================================= */
 
 .productNameButton {
-  display: block;
+  display:
+    block;
 
-  width: 100%;
+  width:
+    100%;
 
-  padding: 0;
-  border: 0;
+  padding:
+    0;
 
-  color: inherit;
-  background: transparent;
+  border:
+    0;
 
-  cursor: pointer;
+  color:
+    inherit;
+
+  background:
+    transparent;
+
+  cursor:
+    pointer;
 }
 
 .productName {
-  min-height: 24px;
+  min-height:
+    26px;
 
-  margin: 0 0 8px;
+  margin:
+    0
+    0
+    7px;
 
-  color: #111111;
+  color:
+    #161416;
 
-  font-size: 19px;
-  font-weight: 600;
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
 
-  line-height: 1.25;
+  font-size:
+    16px;
 
-  text-align: center;
+  font-weight:
+    650;
 
-  transition: color 0.2s ease;
+  line-height:
+    1.25;
+
+  text-align:
+    center;
+
+  transition:
+    color
+    0.2s
+    ease;
 }
 
-.productNameButton:hover .productName {
-  color: #ff315f;
+.productNameButton:hover
+  .productName {
+  color:
+    #a348ae;
 }
+
 
 /* =========================================================
    RATING
 ========================================================= */
 
 .ratingRow {
-  display: flex;
+  display:
+    flex;
 
-  align-items: center;
-  justify-content: center;
+  align-items:
+    center;
 
-  gap: 6px;
+  justify-content:
+    center;
 
-  min-height: 20px;
+  gap:
+    6px;
 
-  margin-bottom: 7px;
+  min-height:
+    19px;
+
+  margin:
+    0
+    0
+    7px;
 }
 
 .ratingValue {
-  display: inline-flex;
+  display:
+    inline-flex;
 
-  align-items: center;
+  align-items:
+    center;
 
-  gap: 4px;
+  gap:
+    4px;
 
-  color: #777777;
+  color:
+    #747474;
 
-  font-size: 14px;
-  font-weight: 600;
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+
+  font-size:
+    11px;
+
+  font-weight:
+    600;
 }
 
 .ratingValue svg {
-  color: #ff7188;
+  color:
+    #ff7188;
 }
 
 .ratingDivider {
-  color: #bbbbbb;
-  font-size: 13px;
+  color:
+    #bdbdbd;
+
+  font-size:
+    11px;
 }
 
 .verifiedReview {
-  display: inline-flex;
+  display:
+    inline-flex;
 
-  align-items: center;
+  align-items:
+    center;
 
-  gap: 4px;
+  gap:
+    4px;
 
-  color: #777777;
+  color:
+    #777777;
 
-  font-size: 14px;
-  font-weight: 500;
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+
+  font-size:
+    11px;
+
+  font-weight:
+    500;
 }
 
 .verifiedReview svg {
-  color: #139238;
+  color:
+    #139238;
 }
+
 
 /* =========================================================
    PRICE
 ========================================================= */
 
 .priceRow {
-  display: flex;
+  display:
+    flex;
 
-  align-items: center;
-  justify-content: center;
+  align-items:
+    center;
 
-  gap: 8px;
+  justify-content:
+    center;
 
-  min-height: 28px;
+  flex-wrap:
+    wrap;
 
-  margin-bottom: 11px;
+  gap:
+    7px;
+
+  min-height:
+    24px;
+
+  margin:
+    0
+    0
+    10px;
 }
 
 .currentPrice {
-  color: #111111;
+  color:
+    #151515;
 
-  font-size: 20px;
-  font-weight: 800;
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+
+  font-size:
+    18px;
+
+  font-weight:
+    800;
+
+  line-height:
+    1;
 }
 
 .oldPrice {
-  color: #999999;
+  color:
+    #999999;
 
-  font-size: 13px;
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+
+  font-size:
+    11px;
+
+  text-decoration:
+    line-through;
 }
 
 .discount {
-  color: #159447;
+  color:
+    #159447;
 
-  font-size: 11px;
-  font-weight: 700;
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+
+  font-size:
+    9px;
+
+  font-weight:
+    800;
+
+  line-height:
+    1;
 }
 
+
 /* =========================================================
-   ADD TO CART — VIDEO MATCH
-   Exact visual idea from the uploaded reference:
-   3-panel cream button → fold to square → shopping bag
-   → little puff → hanging price tag → tag flips to Added
-   → bag folds back → button unfolds.
+   ADD TO CART
 ========================================================= */
 
 .addToCart {
-  --cart-paper: #f8ecd3;
-  --cart-paper-light: #fff7e7;
-  --cart-paper-mid: #ead8b7;
-  --cart-line: rgba(161, 123, 74, 0.2);
-  --cart-ink: #665346;
-  --cart-gold: #b7884a;
-  --cart-peach: #cf8471;
+  --cart-paper:
+    #f8ecd3;
 
-  position: relative;
-  width: 100%;
-  min-height: 58px;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  cursor: pointer;
-  overflow: visible;
-  isolation: isolate;
-  perspective: 1000px;
-  -webkit-tap-highlight-color: transparent;
+  --cart-paper-light:
+    #fff7e7;
+
+  --cart-paper-mid:
+    #ead8b7;
+
+  --cart-line:
+    rgba(
+      161,
+      123,
+      74,
+      0.20
+    );
+
+  --cart-ink:
+    #665346;
+
+  --cart-gold:
+    #b7884a;
+
+  --cart-peach:
+    #cf8471;
+
+  position:
+    relative;
+
+  width:
+    100%;
+
+  min-height:
+    54px;
+
+  padding:
+    0;
+
+  border:
+    0;
+
+  border-radius:
+    999px;
+
+  background:
+    transparent;
+
+  cursor:
+    pointer;
+
+  overflow:
+    visible;
+
+  isolation:
+    isolate;
+
+  perspective:
+    1000px;
+
+  -webkit-tap-highlight-color:
+    transparent;
 }
 
 .addToCart:disabled {
-  cursor: not-allowed;
+  cursor:
+    not-allowed;
 }
 
 .addToCart:focus-visible {
-  outline: 2px solid rgba(183, 136, 74, 0.55);
-  outline-offset: 4px;
+  outline:
+    2px
+    solid
+    rgba(
+      183,
+      136,
+      74,
+      0.55
+    );
+
+  outline-offset:
+    4px;
 }
 
 .cartStage {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 58px;
-  transform-style: preserve-3d;
+  position:
+    relative;
+
+  display:
+    block;
+
+  width:
+    100%;
+
+  height:
+    54px;
+
+  transform-style:
+    preserve-3d;
 }
 
+
 /* =========================================================
-   1. NORMAL THREE-PANEL BUTTON
+   NORMAL THREE-PANEL BUTTON
 ========================================================= */
 
 .cartFace {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 82px;
-  align-items: stretch;
-  overflow: hidden;
+  position:
+    absolute;
 
-  border: 1px solid var(--cart-line);
-  border-radius: 999px;
+  inset:
+    0;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    58px
+    minmax(
+      0,
+      1fr
+    )
+    72px;
+
+  align-items:
+    stretch;
+
+  overflow:
+    hidden;
+
+  border:
+    1px
+    solid
+    var(--cart-line);
+
+  border-radius:
+    999px;
 
   background:
     linear-gradient(
       90deg,
-      var(--cart-paper-light) 0%,
-      var(--cart-paper) 48%,
-      var(--cart-paper-light) 100%
+      var(--cart-paper-light)
+      0%,
+      var(--cart-paper)
+      48%,
+      var(--cart-paper-light)
+      100%
     );
 
   box-shadow:
-    0 11px 23px rgba(101, 76, 48, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    0
+    9px
+    20px
+    rgba(
+      101,
+      76,
+      48,
+      0.12
+    ),
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.95
+    );
 
-  transform-origin: center;
-  transform-style: preserve-3d;
+  transform-origin:
+    center;
+
+  transform-style:
+    preserve-3d;
+
   transition:
-    opacity 0.28s ease,
-    transform 0.55s cubic-bezier(0.2, 0.85, 0.3, 1);
+    opacity
+    0.28s
+    ease,
+    transform
+    0.55s
+    cubic-bezier(
+      0.2,
+      0.85,
+      0.3,
+      1
+    );
 }
 
 .cartPanelLeft,
 .cartPanelMain,
 .cartPanelRight {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  height: 100%;
-  backface-visibility: hidden;
+  position:
+    relative;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  min-width:
+    0;
+
+  height:
+    100%;
+
+  backface-visibility:
+    hidden;
+
   transition:
-    transform 0.58s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.3s ease;
+    transform
+    0.58s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    ),
+    opacity
+    0.3s
+    ease;
 }
 
 .cartPanelLeft {
-  border-right: 1px solid rgba(120, 92, 60, 0.1);
-  transform-origin: right center;
+  border-right:
+    1px
+    solid
+    rgba(
+      120,
+      92,
+      60,
+      0.10
+    );
+
+  transform-origin:
+    right
+    center;
 }
 
 .cartPanelMain {
-  padding: 0 12px;
-  color: var(--cart-ink);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
+  padding:
+    0
+    8px;
+
+  color:
+    var(--cart-ink);
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size:
+    14px;
+
+  font-weight:
+    700;
+
+  line-height:
+    1;
+
+  white-space:
+    nowrap;
 }
 
 .cartPanelRight {
-  border-left: 1px solid rgba(120, 92, 60, 0.1);
-  color: rgba(102, 83, 70, 0.74);
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
+  border-left:
+    1px
+    solid
+    rgba(
+      120,
+      92,
+      60,
+      0.10
+    );
+
+  color:
+    rgba(
+      102,
+      83,
+      70,
+      0.74
+    );
+
+  font-size:
+    10px;
+
+  font-weight:
+    700;
+
+  white-space:
+    nowrap;
 }
 
+
+/* =========================================================
+   MINI BAG
+========================================================= */
+
 .cartMiniBag {
-  position: relative;
-  width: 18px;
-  height: 19px;
-  border: 1.35px solid rgba(102, 83, 70, 0.8);
-  border-radius: 3px 3px 4px 4px;
+  position:
+    relative;
+
+  width:
+    17px;
+
+  height:
+    18px;
+
+  border:
+    1.35px
+    solid
+    rgba(
+      102,
+      83,
+      70,
+      0.80
+    );
+
+  border-radius:
+    3px
+    3px
+    4px
+    4px;
 }
 
 .cartMiniBagHandle {
-  position: absolute;
-  left: 50%;
-  top: -7px;
-  width: 9px;
-  height: 8px;
-  border: 1.35px solid rgba(102, 83, 70, 0.8);
-  border-bottom: 0;
-  border-radius: 7px 7px 0 0;
-  transform: translateX(-50%);
+  position:
+    absolute;
+
+  left:
+    50%;
+
+  top:
+    -6px;
+
+  width:
+    8px;
+
+  height:
+    7px;
+
+  border:
+    1.35px
+    solid
+    rgba(
+      102,
+      83,
+      70,
+      0.80
+    );
+
+  border-bottom:
+    0;
+
+  border-radius:
+    7px
+    7px
+    0
+    0;
+
+  transform:
+    translateX(
+      -50%
+    );
 }
 
+
 /* =========================================================
-   2. FOLDED SQUARE
+   FOLDED PAPER
 ========================================================= */
 
 .cartFolded {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 70px;
-  height: 70px;
-  border: 1px solid rgba(165, 126, 77, 0.16);
+  position:
+    absolute;
+
+  left:
+    50%;
+
+  top:
+    50%;
+
+  width:
+    66px;
+
+  height:
+    66px;
+
+  border:
+    1px
+    solid
+    rgba(
+      165,
+      126,
+      77,
+      0.16
+    );
+
   background:
     linear-gradient(
       90deg,
-      transparent 0 49%,
-      rgba(148, 107, 61, 0.08) 49% 51%,
-      transparent 51%
+      transparent
+      0
+      49%,
+      rgba(
+        148,
+        107,
+        61,
+        0.08
+      )
+      49%
+      51%,
+      transparent
+      51%
     ),
     linear-gradient(
       180deg,
-      transparent 0 48.5%,
-      rgba(148, 107, 61, 0.07) 48.5% 51.5%,
-      transparent 51.5%
+      transparent
+      0
+      48.5%,
+      rgba(
+        148,
+        107,
+        61,
+        0.07
+      )
+      48.5%
+      51.5%,
+      transparent
+      51.5%
     ),
-    linear-gradient(135deg, #fff5df, #ead9b9 62%, #f8edd8);
+    linear-gradient(
+      135deg,
+      #fff5df,
+      #ead9b9 62%,
+      #f8edd8
+    );
+
   box-shadow:
-    0 10px 19px rgba(100, 75, 47, 0.13),
-    inset 0 0 0 1px rgba(255,255,255,.6);
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.1);
-  transform-origin: center;
+    0
+    9px
+    18px
+    rgba(
+      100,
+      75,
+      47,
+      0.12
+    );
+
+  opacity:
+    0;
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    )
+    scale(
+      0.1
+    );
+
+  transform-origin:
+    center;
+
   transition:
-    opacity 0.2s ease,
-    transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 2;
-  pointer-events: none;
+    opacity
+    0.2s
+    ease,
+    transform
+    0.65s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+
+  z-index:
+    2;
+
+  pointer-events:
+    none;
 }
 
 .cartFoldLineLeft,
 .cartFoldLineRight {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: rgba(139, 104, 63, 0.08);
+  position:
+    absolute;
+
+  top:
+    0;
+
+  bottom:
+    0;
+
+  width:
+    1px;
+
+  background:
+    rgba(
+      139,
+      104,
+      63,
+      0.08
+    );
 }
 
 .cartFoldLineLeft {
-  left: 36%;
+  left:
+    36%;
 }
 
 .cartFoldLineRight {
-  right: 36%;
+  right:
+    36%;
 }
 
+
 /* =========================================================
-   3. BAG
+   BAG
 ========================================================= */
 
 .cartBagScene {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 86px;
-  height: 92px;
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.55);
-  transform-origin: center bottom;
+  position:
+    absolute;
+
+  left:
+    50%;
+
+  top:
+    50%;
+
+  width:
+    86px;
+
+  height:
+    92px;
+
+  opacity:
+    0;
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    )
+    scale(
+      0.55
+    );
+
+  transform-origin:
+    center
+    bottom;
+
   transition:
-    opacity 0.25s ease,
-    transform 0.72s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 4;
-  pointer-events: none;
+    opacity
+    0.25s
+    ease,
+    transform
+    0.72s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+
+  z-index:
+    4;
+
+  pointer-events:
+    none;
 }
 
 .cartBagBody {
-  position: absolute;
-  left: 13px;
-  bottom: 0;
-  width: 60px;
-  height: 69px;
-  border: 1px solid rgba(169, 130, 77, 0.24);
+  position:
+    absolute;
+
+  left:
+    13px;
+
+  bottom:
+    0;
+
+  width:
+    60px;
+
+  height:
+    69px;
+
+  border:
+    1px
+    solid
+    rgba(
+      169,
+      130,
+      77,
+      0.24
+    );
+
   background:
     repeating-linear-gradient(
       90deg,
-      rgba(173, 134, 81, 0.08) 0 1px,
-      transparent 1px 6px
+      rgba(
+        173,
+        134,
+        81,
+        0.08
+      )
+      0
+      1px,
+      transparent
+      1px
+      6px
     ),
     repeating-linear-gradient(
       0deg,
-      rgba(173, 134, 81, 0.055) 0 1px,
-      transparent 1px 5px
+      rgba(
+        173,
+        134,
+        81,
+        0.055
+      )
+      0
+      1px,
+      transparent
+      1px
+      5px
     ),
-    linear-gradient(145deg, #fff5df, #ead9b9 60%, #f8edd7);
+    linear-gradient(
+      145deg,
+      #fff5df,
+      #ead9b9 60%,
+      #f8edd7
+    );
+
   box-shadow:
-    0 9px 14px rgba(91, 67, 42, 0.13),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.55);
-  transform-origin: center bottom;
+    0
+    9px
+    14px
+    rgba(
+      91,
+      67,
+      42,
+      0.13
+    ),
+    inset
+    0
+    0
+    0
+    1px
+    rgba(
+      255,
+      255,
+      255,
+      0.55
+    );
+
+  transform-origin:
+    center
+    bottom;
 }
 
 .cartBagMark {
-  position: absolute;
-  left: 50%;
-  top: 51%;
-  transform: translate(-50%, -50%);
-  color: rgba(207, 132, 113, 0.77);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 25px;
-  line-height: 1;
-  font-weight: 700;
+  position:
+    absolute;
+
+  left:
+    50%;
+
+  top:
+    51%;
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    );
+
+  color:
+    rgba(
+      207,
+      132,
+      113,
+      0.77
+    );
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size:
+    25px;
+
+  line-height:
+    1;
+
+  font-weight:
+    700;
 }
 
 .cartBagHandle {
-  position: absolute;
-  left: 50%;
-  top: 3px;
-  width: 34px;
-  height: 27px;
-  border: 5px solid var(--cart-gold);
-  border-bottom: 0;
-  border-radius: 22px 22px 0 0;
-  transform: translateX(-50%) scaleX(0.78);
-  transform-origin: center bottom;
-  filter: drop-shadow(0 2px 1px rgba(93, 65, 35, 0.13));
+  position:
+    absolute;
+
+  left:
+    50%;
+
+  top:
+    3px;
+
+  width:
+    34px;
+
+  height:
+    27px;
+
+  border:
+    5px
+    solid
+    var(--cart-gold);
+
+  border-bottom:
+    0;
+
+  border-radius:
+    22px
+    22px
+    0
+    0;
+
+  transform:
+    translateX(
+      -50%
+    )
+    scaleX(
+      0.78
+    );
+
+  transform-origin:
+    center
+    bottom;
 }
 
+
 /* =========================================================
-   4. HANGING PRICE TAG
+   PRICE TAG
 ========================================================= */
 
 .cartTag {
-  position: absolute;
-  right: -1px;
-  top: 22px;
-  width: 62px;
-  height: 31px;
-  transform-style: preserve-3d;
-  transform-origin: 12% 50%;
-  transform: translate(45px, -34px) rotateZ(14deg) rotateY(0deg);
-  opacity: 0;
+  position:
+    absolute;
+
+  right:
+    -1px;
+
+  top:
+    22px;
+
+  width:
+    62px;
+
+  height:
+    31px;
+
+  transform-style:
+    preserve-3d;
+
+  transform-origin:
+    12%
+    50%;
+
+  transform:
+    translate(
+      45px,
+      -34px
+    )
+    rotateZ(
+      14deg
+    )
+    rotateY(
+      0deg
+    );
+
+  opacity:
+    0;
+
   transition:
-    opacity 0.18s ease,
-    transform 0.72s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 6;
+    opacity
+    0.18s
+    ease,
+    transform
+    0.72s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+
+  z-index:
+    6;
+
+  pointer-events:
+    none;
 }
 
 .cartTag::before {
-  content: "";
-  position: absolute;
-  left: -3px;
-  top: 50%;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #efe1c5;
-  box-shadow: inset 0 0 0 1px rgba(110, 79, 44, 0.12);
-  transform: translateY(-50%);
+  position:
+    absolute;
+
+  left:
+    -3px;
+
+  top:
+    50%;
+
+  width:
+    8px;
+
+  height:
+    8px;
+
+  content:
+    "";
+
+  border-radius:
+    50%;
+
+  background:
+    #efe1c5;
+
+  transform:
+    translateY(
+      -50%
+    );
 }
 
 .cartTagFront,
 .cartTagBack {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 5px;
-  backface-visibility: hidden;
-  border: 1px solid rgba(173, 133, 77, 0.15);
-  background: linear-gradient(145deg, #fff9eb, #eddab8);
-  box-shadow: 0 6px 10px rgba(92, 66, 38, 0.17);
-  color: #635146;
-  font-size: 10px;
-  font-weight: 800;
-  white-space: nowrap;
+  position:
+    absolute;
+
+  inset:
+    0;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  border-radius:
+    5px;
+
+  backface-visibility:
+    hidden;
+
+  border:
+    1px
+    solid
+    rgba(
+      173,
+      133,
+      77,
+      0.15
+    );
+
+  background:
+    linear-gradient(
+      145deg,
+      #fff9eb,
+      #eddab8
+    );
+
+  box-shadow:
+    0
+    6px
+    10px
+    rgba(
+      92,
+      66,
+      38,
+      0.17
+    );
+
+  color:
+    #635146;
+
+  font-size:
+    10px;
+
+  font-weight:
+    800;
+
+  white-space:
+    nowrap;
 }
 
 .cartTagBack {
-  gap: 3px;
-  transform: rotateY(180deg);
-  color: #c47e69;
+  gap:
+    3px;
+
+  transform:
+    rotateY(
+      180deg
+    );
+
+  color:
+    #c47e69;
 }
 
+
 /* =========================================================
-   5. PUFF / CONFETTI
+   PUFF
 ========================================================= */
 
 .cartPuff {
-  position: absolute;
-  left: 50%;
-  top: 26%;
-  width: 0;
-  height: 0;
-  opacity: 0;
-  z-index: 8;
-  pointer-events: none;
+  position:
+    absolute;
+
+  left:
+    50%;
+
+  top:
+    26%;
+
+  width:
+    0;
+
+  height:
+    0;
+
+  opacity:
+    0;
+
+  z-index:
+    8;
+
+  pointer-events:
+    none;
 }
 
 .cartPuff span {
-  position: absolute;
-  display: block;
-  width: 4px;
-  height: 4px;
-  border-radius: 1px;
-  background: var(--cart-gold);
-  box-shadow: 0 2px 3px rgba(80, 56, 31, 0.12);
+  position:
+    absolute;
+
+  display:
+    block;
+
+  width:
+    4px;
+
+  height:
+    4px;
+
+  border-radius:
+    1px;
+
+  background:
+    var(--cart-gold);
+
+  box-shadow:
+    0
+    2px
+    3px
+    rgba(
+      80,
+      56,
+      31,
+      0.12
+    );
 }
 
 .cartPuff span:nth-child(1) {
-  transform: translate(-31px, 0) rotate(20deg);
+  transform:
+    translate(
+      -31px,
+      0
+    )
+    rotate(
+      20deg
+    );
 }
 
 .cartPuff span:nth-child(2) {
-  width: 3px;
-  height: 5px;
-  background: var(--cart-peach);
-  transform: translate(-18px, -16px) rotate(-12deg);
+  width:
+    3px;
+
+  height:
+    5px;
+
+  background:
+    var(--cart-peach);
+
+  transform:
+    translate(
+      -18px,
+      -16px
+    )
+    rotate(
+      -12deg
+    );
 }
 
 .cartPuff span:nth-child(3) {
-  width: 4px;
-  height: 3px;
-  background: #8a8275;
-  transform: translate(24px, -16px) rotate(8deg);
+  width:
+    4px;
+
+  height:
+    3px;
+
+  background:
+    #8a8275;
+
+  transform:
+    translate(
+      24px,
+      -16px
+    )
+    rotate(
+      8deg
+    );
 }
 
 .cartPuff span:nth-child(4) {
-  transform: translate(31px, 1px) rotate(35deg);
+  transform:
+    translate(
+      31px,
+      1px
+    )
+    rotate(
+      35deg
+    );
 }
+
 
 /* =========================================================
-   VIDEO TIMELINE STATES
+   CART ANIMATION
 ========================================================= */
 
-/* 0.18s — button presses/folds inward */
-.addToCart.phase-fold .cartPanelLeft {
-  transform: perspective(700px) rotateY(-82deg) translateX(7px);
+.addToCart.phase-fold
+  .cartPanelLeft {
+  transform:
+    perspective(
+      700px
+    )
+    rotateY(
+      -82deg
+    )
+    translateX(
+      7px
+    );
 }
 
-.addToCart.phase-fold .cartPanelMain {
-  transform: scaleX(0.82);
-  opacity: 0.15;
+.addToCart.phase-fold
+  .cartPanelMain {
+  transform:
+    scaleX(
+      0.82
+    );
+
+  opacity:
+    0.15;
 }
 
-.addToCart.phase-fold .cartPanelRight {
-  transform: perspective(700px) rotateY(82deg) translateX(-7px);
+.addToCart.phase-fold
+  .cartPanelRight {
+  transform:
+    perspective(
+      700px
+    )
+    rotateY(
+      82deg
+    )
+    translateX(
+      -7px
+    );
 }
 
-.addToCart.phase-fold .cartFace {
-  opacity: 0.1;
-  transform: scaleX(0.45) scaleY(0.8);
+.addToCart.phase-fold
+  .cartFace {
+  opacity:
+    0.1;
+
+  transform:
+    scaleX(
+      0.45
+    )
+    scaleY(
+      0.8
+    );
 }
 
-.addToCart.phase-fold .cartFolded {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-  transition-delay: 0.16s;
+.addToCart.phase-fold
+  .cartFolded {
+  opacity:
+    1;
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    )
+    scale(
+      1
+    );
+
+  transition-delay:
+    0.16s;
 }
 
-/* 1.0s — square turns into bag */
-.addToCart.phase-bag .cartFace,
-.addToCart.phase-puff .cartFace,
-.addToCart.phase-tag .cartFace,
-.addToCart.phase-flip .cartFace,
-.addToCart.phase-check .cartFace,
-.addToCart.phase-return .cartFace {
-  opacity: 0;
-  transform: scale(0.36);
+
+/* =========================================================
+   BAG PHASE
+========================================================= */
+
+.addToCart.phase-bag
+  .cartFace,
+.addToCart.phase-puff
+  .cartFace,
+.addToCart.phase-tag
+  .cartFace,
+.addToCart.phase-flip
+  .cartFace,
+.addToCart.phase-check
+  .cartFace,
+.addToCart.phase-return
+  .cartFace {
+  opacity:
+    0;
+
+  transform:
+    scale(
+      0.36
+    );
 }
 
-.addToCart.phase-bag .cartFolded,
-.addToCart.phase-puff .cartFolded,
-.addToCart.phase-tag .cartFolded,
-.addToCart.phase-flip .cartFolded,
-.addToCart.phase-check .cartFolded {
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.74);
+.addToCart.phase-bag
+  .cartFolded,
+.addToCart.phase-puff
+  .cartFolded,
+.addToCart.phase-tag
+  .cartFolded,
+.addToCart.phase-flip
+  .cartFolded,
+.addToCart.phase-check
+  .cartFolded {
+  opacity:
+    0;
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    )
+    scale(
+      0.74
+    );
 }
 
-.addToCart.phase-bag .cartBagScene,
-.addToCart.phase-puff .cartBagScene,
-.addToCart.phase-tag .cartBagScene,
-.addToCart.phase-flip .cartBagScene,
-.addToCart.phase-check .cartBagScene {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
+.addToCart.phase-bag
+  .cartBagScene,
+.addToCart.phase-puff
+  .cartBagScene,
+.addToCart.phase-tag
+  .cartBagScene,
+.addToCart.phase-flip
+  .cartBagScene,
+.addToCart.phase-check
+  .cartBagScene {
+  opacity:
+    1;
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    )
+    scale(
+      1
+    );
 }
 
-.addToCart.phase-bag .cartBagBody {
-  animation: bagOpen 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+.addToCart.phase-bag
+  .cartBagBody {
+  animation:
+    bagOpen
+    0.62s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    )
+    both;
 }
 
 @keyframes bagOpen {
   0% {
-    transform: translateY(10px) scaleY(0.73) scaleX(0.88);
+    transform:
+      translateY(
+        10px
+      )
+      scaleY(
+        0.73
+      )
+      scaleX(
+        0.88
+      );
   }
 
   58% {
-    transform: translateY(-2px) scaleY(1.03) scaleX(1.02);
+    transform:
+      translateY(
+        -2px
+      )
+      scaleY(
+        1.03
+      )
+      scaleX(
+        1.02
+      );
   }
 
   100% {
-    transform: translateY(0) scaleY(1) scaleX(1);
+    transform:
+      translateY(
+        0
+      )
+      scaleY(
+        1
+      )
+      scaleX(
+        1
+      );
   }
 }
 
-/* 2.14s — tiny puff */
-.addToCart.phase-puff .cartPuff {
-  opacity: 1;
-  animation: puffBurst 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+/* =========================================================
+   PUFF
+========================================================= */
+
+.addToCart.phase-puff
+  .cartPuff {
+  opacity:
+    1;
+
+  animation:
+    puffBurst
+    0.42s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    )
+    both;
 }
 
 @keyframes puffBurst {
   0% {
-    transform: translateY(8px) scale(0.25);
-    opacity: 0;
+    transform:
+      translateY(
+        8px
+      )
+      scale(
+        0.25
+      );
+
+    opacity:
+      0;
   }
 
   40% {
-    opacity: 1;
+    opacity:
+      1;
   }
 
   100% {
-    transform: translateY(-5px) scale(1);
-    opacity: 0.95;
+    transform:
+      translateY(
+        -5px
+      )
+      scale(
+        1
+      );
+
+    opacity:
+      0.95;
   }
 }
 
-/* 2.56s — tag drops in from above/right */
-.addToCart.phase-tag .cartTag,
-.addToCart.phase-flip .cartTag,
-.addToCart.phase-check .cartTag {
-  opacity: 1;
-  transform: translate(0, 0) rotateZ(7deg) rotateY(0deg);
+
+/* =========================================================
+   TAG
+========================================================= */
+
+.addToCart.phase-tag
+  .cartTag,
+.addToCart.phase-flip
+  .cartTag,
+.addToCart.phase-check
+  .cartTag {
+  opacity:
+    1;
+
+  transform:
+    translate(
+      0,
+      0
+    )
+    rotateZ(
+      7deg
+    )
+    rotateY(
+      0deg
+    );
 }
 
-/* 3.26s — tag flips */
-.addToCart.phase-flip .cartTag,
-.addToCart.phase-check .cartTag {
-  opacity: 1;
-  transform: translate(0, 0) rotateZ(7deg) rotateY(180deg);
+.addToCart.phase-flip
+  .cartTag,
+.addToCart.phase-check
+  .cartTag {
+  transform:
+    translate(
+      0,
+      0
+    )
+    rotateZ(
+      7deg
+    )
+    rotateY(
+      180deg
+    );
 }
 
-/* 3.52s — tiny success pop */
-.addToCart.phase-check .cartTag {
-  animation: tagSuccess 0.46s cubic-bezier(0.16, 1, 0.3, 1) both;
+.addToCart.phase-check
+  .cartTag {
+  animation:
+    tagSuccess
+    0.46s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    )
+    both;
 }
 
 @keyframes tagSuccess {
   0% {
-    margin-top: 0;
-    transform: translate(0, 0) rotateZ(7deg) rotateY(180deg) scale(0.92);
+    transform:
+      translate(
+        0,
+        0
+      )
+      rotateZ(
+        7deg
+      )
+      rotateY(
+        180deg
+      )
+      scale(
+        0.92
+      );
   }
 
   55% {
-    margin-top: -2px;
-    transform: translate(0, 0) rotateZ(7deg) rotateY(180deg) scale(1.06);
+    transform:
+      translate(
+        0,
+        0
+      )
+      rotateZ(
+        7deg
+      )
+      rotateY(
+        180deg
+      )
+      scale(
+        1.06
+      );
   }
 
   100% {
-    margin-top: 0;
-    transform: translate(0, 0) rotateZ(7deg) rotateY(180deg) scale(1);
+    transform:
+      translate(
+        0,
+        0
+      )
+      rotateZ(
+        7deg
+      )
+      rotateY(
+        180deg
+      )
+      scale(
+        1
+      );
   }
 }
 
-/* 4.66–5.3s — bag collapses to square and the button unfolds */
-.addToCart.phase-return .cartBagScene {
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.32) rotateZ(0deg);
-  transition-duration: 0.46s;
-}
-
-.addToCart.phase-return .cartTag {
-  opacity: 0;
-  transform: translate(0, -18px) rotateZ(7deg) rotateY(180deg) scale(0.76);
-  transition-duration: 0.28s;
-}
-
-.addToCart.phase-return .cartFolded {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-  transition-delay: 0.12s;
-}
-
-.addToCart.phase-return .cartFace {
-  opacity: 1;
-  transform: scaleX(1) scaleY(1);
-  transition-delay: 0.42s;
-}
-
-.addToCart.phase-return .cartPanelLeft,
-.addToCart.phase-return .cartPanelMain,
-.addToCart.phase-return .cartPanelRight {
-  transform: none;
-  opacity: 1;
-  transition-delay: 0.45s;
-}
-
-/* Hide square when normal */
-.addToCart.phase-idle .cartFolded,
-.addToCart.phase-idle .cartBagScene,
-.addToCart.phase-idle .cartPuff {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.addToCart.phase-idle .cartFace {
-  opacity: 1;
-  transform: scale(1);
-}
-
-/* Keep the paper square visible briefly during the return transition. */
-.addToCart.phase-return .cartFolded {
-  transition:
-    opacity 0.22s ease,
-    transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
-}
 
 /* =========================================================
-   REDUCED MOTION
+   RETURN
 ========================================================= */
 
-@media (prefers-reduced-motion: reduce) {
-  .cartFace,
-  .cartPanelLeft,
-  .cartPanelMain,
-  .cartPanelRight,
-  .cartFolded,
-  .cartBagScene,
-  .cartTag,
-  .cartPuff {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-  }
+.addToCart.phase-return
+  .cartBagScene {
+  opacity:
+    0;
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    )
+    scale(
+      0.32
+    );
+
+  transition-duration:
+    0.46s;
 }
+
+.addToCart.phase-return
+  .cartTag {
+  opacity:
+    0;
+
+  transform:
+    translate(
+      0,
+      -18px
+    )
+    rotateZ(
+      7deg
+    )
+    rotateY(
+      180deg
+    )
+    scale(
+      0.76
+    );
+
+  transition-duration:
+    0.28s;
+}
+
+.addToCart.phase-return
+  .cartFolded {
+  opacity:
+    1;
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    )
+    scale(
+      1
+    );
+
+  transition-delay:
+    0.12s;
+}
+
+.addToCart.phase-return
+  .cartFace {
+  opacity:
+    1;
+
+  transform:
+    scaleX(
+      1
+    )
+    scaleY(
+      1
+    );
+
+  transition-delay:
+    0.42s;
+}
+
+.addToCart.phase-return
+  .cartPanelLeft,
+.addToCart.phase-return
+  .cartPanelMain,
+.addToCart.phase-return
+  .cartPanelRight {
+  transform:
+    none;
+
+  opacity:
+    1;
+
+  transition-delay:
+    0.45s;
+}
+
+
+/* =========================================================
+   IDLE
+========================================================= */
+
+.addToCart.phase-idle
+  .cartFolded,
+.addToCart.phase-idle
+  .cartBagScene,
+.addToCart.phase-idle
+  .cartPuff {
+  opacity:
+    0;
+
+  pointer-events:
+    none;
+}
+
+.addToCart.phase-idle
+  .cartFace {
+  opacity:
+    1;
+
+  transform:
+    scale(
+      1
+    );
+}
+
 
 /* =========================================================
    VIEW ALL GRID
 ========================================================= */
 
 .allProductsGrid {
-  display: grid;
+  display:
+    grid;
 
   grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+    repeat(
+      4,
+      minmax(
+        0,
+        1fr
+      )
+    );
 
-  gap: 24px;
+  gap:
+    20px;
+
+  animation:
+    gridReveal
+    0.4s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    )
+    both;
 }
 
+
 /* =========================================================
-   LOADING / ERROR
+   EMPTY / LOADING / ERROR
 ========================================================= */
 
 .emptyState {
-  min-height: 220px;
+  min-height:
+    180px;
 
-  display: flex;
+  display:
+    flex;
 
-  align-items: center;
-  justify-content: center;
+  align-items:
+    center;
 
-  gap: 10px;
+  justify-content:
+    center;
 
-  padding: 25px;
+  gap:
+    9px;
 
-  border: 1px solid #eeeeee;
-  border-radius: 15px;
+  padding:
+    24px;
 
-  color: #777777;
+  border:
+    1px
+    solid
+    rgba(
+      208,
+      182,
+      203,
+      0.6
+    );
 
-  background: #ffffff;
+  border-radius:
+    15px;
 
-  font-size: 15px;
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.86
+    );
 
-  text-align: center;
+  color:
+    #777777;
+
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+
+  font-size:
+    13px;
+
+  text-align:
+    center;
+
+  box-sizing:
+    border-box;
 }
+
+.spin {
+  animation:
+    spin
+    0.8s
+    linear
+    infinite;
+}
+
+
+/* =========================================================
+   LARGE DESKTOP
+========================================================= */
+
+@media (min-width: 1450px) {
+  .section {
+    padding:
+      16px
+      2.4%
+      22px;
+  }
+
+  .imageWrapper {
+    height:
+      400px;
+  }
+
+  .productName {
+    font-size:
+      17px;
+  }
+
+  .cartPanelMain {
+    font-size:
+      15px;
+  }
+}
+
+
+/* =========================================================
+   LAPTOP
+========================================================= */
+
+@media (max-width: 1200px) {
+  .section {
+    padding:
+      12px
+      3%
+      20px;
+  }
+
+  .sectionHeader {
+    margin-bottom:
+      24px;
+  }
+
+  .imageWrapper {
+    height:
+      345px;
+  }
+
+  .productName {
+    font-size:
+      16px;
+  }
+
+  .allProductsGrid {
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    gap:
+      17px;
+  }
+
+  .cartFace {
+    grid-template-columns:
+      54px
+      minmax(
+        0,
+        1fr
+      )
+      70px;
+  }
+
+  .cartPanelMain {
+    font-size:
+      13px;
+  }
+
+  .cartPanelRight {
+    font-size:
+      9px;
+  }
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+  .section {
+    padding:
+      10px
+      3%
+      18px;
+  }
+
+  .sectionHeader {
+    margin-bottom:
+      21px;
+  }
+
+  .sectionTitle {
+    font-size:
+      25px;
+  }
+
+  .viewAllButton {
+    font-size:
+      12px;
+  }
+
+  .imageWrapper {
+    height:
+      300px;
+  }
+
+  .productName {
+    font-size:
+      15px;
+  }
+
+  .allProductsGrid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    gap:
+      15px;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 650px) {
+  .section {
+    width:
+      100%;
+
+    padding:
+      9px
+      9px
+      12px;
+
+    background-size:
+      150px
+      150px;
+
+    overflow:
+      hidden;
+  }
+
+  .section::before {
+    width:
+      300px;
+
+    height:
+      300px;
+
+    filter:
+      blur(80px);
+  }
+
+  .section::after {
+    width:
+      280px;
+
+    height:
+      280px;
+
+    filter:
+      blur(80px);
+  }
+
+
+  /* -------------------------------------------------------
+     HEADER
+  ------------------------------------------------------- */
+
+  .sectionHeader {
+    gap:
+      10px;
+
+    margin-bottom:
+      17px;
+  }
+
+  .sectionTitle {
+    font-size:
+      22px;
+
+    letter-spacing:
+      0.005em;
+  }
+
+  .sectionTitle::after {
+    width:
+      43px;
+
+    height:
+      1.5px;
+
+    margin-top:
+      8px;
+  }
+
+  .viewAllButton {
+    gap:
+      3px;
+
+    font-size:
+      10px;
+  }
+
+
+  /* -------------------------------------------------------
+     SWIPER
+  ------------------------------------------------------- */
+
+  .productsWrapper {
+    width:
+      100%;
+  }
+
+  .productSwiper {
+    padding:
+      0
+      0
+      8px
+      !important;
+
+    touch-action:
+      pan-y;
+  }
+
+
+  /* -------------------------------------------------------
+     CARD
+  ------------------------------------------------------- */
+
+  .productCard {
+    border-radius:
+      11px;
+
+    box-shadow:
+      0
+      3px
+      9px
+      rgba(
+        122,
+        82,
+        117,
+        0.065
+      );
+  }
+
+  .productCard:hover {
+    transform:
+      translateY(
+        -2px
+      );
+
+    box-shadow:
+      0
+      8px
+      17px
+      rgba(
+        122,
+        82,
+        117,
+        0.09
+      );
+  }
+
+
+  /* -------------------------------------------------------
+     NEW BADGE
+  ------------------------------------------------------- */
+
+  .topRibbon {
+    top:
+      8px;
+
+    left:
+      8px;
+  }
+
+  .newRibbon {
+    min-width:
+      39px;
+
+    min-height:
+      19px;
+
+    padding:
+      4px
+      8px;
+
+    font-size:
+      6.5px;
+
+    letter-spacing:
+      0.65px;
+  }
+
+
+  /* -------------------------------------------------------
+     IMAGE
+  ------------------------------------------------------- */
+
+  .imageWrapper {
+    height:
+      190px;
+
+    min-height:
+      190px;
+  }
+
+  .productImage {
+    padding:
+      7px;
+  }
+
+
+  /* -------------------------------------------------------
+     PRODUCT INFO
+  ------------------------------------------------------- */
+
+  .productInfo {
+    padding:
+      7px
+      6px
+      6px;
+  }
+
+
+  /* -------------------------------------------------------
+     TAGLINE
+  ------------------------------------------------------- */
+
+  .tagline {
+    min-height:
+      21px;
+
+    margin-bottom:
+      7px;
+
+    border-radius:
+      8px
+      8px
+      0
+      0;
+  }
+
+  .tagline span {
+    padding:
+      3px
+      5px;
+
+    font-size:
+      8px;
+  }
+
+
+  /* -------------------------------------------------------
+     NAME
+  ------------------------------------------------------- */
+
+  .productName {
+    min-height:
+      30px;
+
+    margin-bottom:
+      4px;
+
+    font-size:
+      11.5px;
+
+    line-height:
+      1.25;
+  }
+
+
+  /* -------------------------------------------------------
+     RATING
+  ------------------------------------------------------- */
+
+  .ratingRow {
+    gap:
+      3px;
+
+    min-height:
+      17px;
+
+    margin-bottom:
+      4px;
+  }
+
+  .ratingValue {
+    gap:
+      2px;
+
+    font-size:
+      7.5px;
+  }
+
+  .ratingValue svg {
+    width:
+      9px;
+
+    height:
+      9px;
+  }
+
+  .ratingDivider {
+    font-size:
+      8px;
+  }
+
+  .verifiedReview {
+    gap:
+      2px;
+
+    font-size:
+      7.5px;
+  }
+
+  .verifiedReview svg {
+    width:
+      8px;
+
+    height:
+      8px;
+  }
+
+
+  /* -------------------------------------------------------
+     PRICE
+  ------------------------------------------------------- */
+
+  .priceRow {
+    gap:
+      4px;
+
+    min-height:
+      19px;
+
+    margin-bottom:
+      5px;
+  }
+
+  .currentPrice {
+    font-size:
+      13px;
+  }
+
+  .oldPrice {
+    font-size:
+      7px;
+  }
+
+  .discount {
+    font-size:
+      6.5px;
+  }
+
+
+  /* -------------------------------------------------------
+     CART
+  ------------------------------------------------------- */
+
+  .addToCart {
+    min-height:
+      46px;
+  }
+
+  .cartStage {
+    height:
+      46px;
+  }
+
+  .cartFace {
+    grid-template-columns:
+      46px
+      minmax(
+        0,
+        1fr
+      )
+      60px;
+  }
+
+  .cartPanelMain {
+    padding:
+      0
+      5px;
+
+    font-size:
+      10px;
+  }
+
+  .cartPanelRight {
+    font-size:
+      8px;
+  }
+
+  .cartMiniBag {
+    width:
+      15px;
+
+    height:
+      16px;
+  }
+
+  .cartMiniBagHandle {
+    width:
+      7px;
+
+    height:
+      6px;
+
+    top:
+      -5px;
+  }
+
+  .cartFolded {
+    width:
+      56px;
+
+    height:
+      56px;
+  }
+
+  .cartBagScene {
+    transform:
+      translate(
+        -50%,
+        -50%
+      )
+      scale(
+        0.78
+      );
+  }
+
+  .addToCart.phase-bag
+    .cartBagScene,
+  .addToCart.phase-puff
+    .cartBagScene,
+  .addToCart.phase-tag
+    .cartBagScene,
+  .addToCart.phase-flip
+    .cartBagScene,
+  .addToCart.phase-check
+    .cartBagScene {
+    transform:
+      translate(
+        -50%,
+        -50%
+      )
+      scale(
+        0.78
+      );
+  }
+
+  .cartTag {
+    width:
+      56px;
+
+    height:
+      28px;
+
+    right:
+      -10px;
+  }
+
+  .cartTagFront,
+  .cartTagBack {
+    font-size:
+      8px;
+  }
+
+
+  /* -------------------------------------------------------
+     VIEW ALL GRID
+  ------------------------------------------------------- */
+
+  .allProductsGrid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    gap:
+      10px;
+  }
+
+  .allProductsGrid
+    .imageWrapper {
+    height:
+      190px;
+
+    min-height:
+      190px;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+  .section {
+    padding:
+      8px
+      7px
+      10px;
+
+    background-size:
+      135px
+      135px;
+  }
+
+  .sectionHeader {
+    margin-bottom:
+      15px;
+  }
+
+  .sectionTitle {
+    font-size:
+      20px;
+  }
+
+  .sectionTitle::after {
+    width:
+      38px;
+
+    margin-top:
+      7px;
+  }
+
+  .viewAllButton {
+    font-size:
+      9px;
+  }
+
+  .topRibbon {
+    top:
+      7px;
+
+    left:
+      7px;
+  }
+
+  .newRibbon {
+    min-width:
+      36px;
+
+    min-height:
+      18px;
+
+    padding:
+      3px
+      7px;
+
+    font-size:
+      6px;
+  }
+
+  .imageWrapper,
+  .allProductsGrid
+    .imageWrapper {
+    height:
+      174px;
+
+    min-height:
+      174px;
+  }
+
+  .productInfo {
+    padding:
+      6px
+      5px;
+  }
+
+  .tagline {
+    min-height:
+      20px;
+
+    margin-bottom:
+      6px;
+  }
+
+  .tagline span {
+    font-size:
+      7.5px;
+  }
+
+  .productName {
+    min-height:
+      29px;
+
+    font-size:
+      11px;
+  }
+
+  .ratingValue,
+  .verifiedReview {
+    font-size:
+      7px;
+  }
+
+  .currentPrice {
+    font-size:
+      12.5px;
+  }
+
+  .oldPrice {
+    font-size:
+      6.5px;
+  }
+
+  .discount {
+    font-size:
+      6px;
+  }
+
+  .addToCart {
+    min-height:
+      43px;
+  }
+
+  .cartStage {
+    height:
+      43px;
+  }
+
+  .cartFace {
+    grid-template-columns:
+      42px
+      minmax(
+        0,
+        1fr
+      )
+      56px;
+  }
+
+  .cartPanelMain {
+    font-size:
+      9px;
+  }
+
+  .cartPanelRight {
+    font-size:
+      7px;
+  }
+
+  .cartFolded {
+    width:
+      52px;
+
+    height:
+      52px;
+  }
+
+  .cartBagScene {
+    transform:
+      translate(
+        -50%,
+        -50%
+      )
+      scale(
+        0.72
+      );
+  }
+
+  .addToCart.phase-bag
+    .cartBagScene,
+  .addToCart.phase-puff
+    .cartBagScene,
+  .addToCart.phase-tag
+    .cartBagScene,
+  .addToCart.phase-flip
+    .cartBagScene,
+  .addToCart.phase-check
+    .cartBagScene {
+    transform:
+      translate(
+        -50%,
+        -50%
+      )
+      scale(
+        0.72
+      );
+  }
+
+  .cartTag {
+    width:
+      52px;
+
+    height:
+      27px;
+
+    right:
+      -8px;
+  }
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 360px) {
+  .section {
+    padding:
+      7px
+      6px
+      9px;
+
+    background-size:
+      125px
+      125px;
+  }
+
+  .sectionTitle {
+    font-size:
+      19px;
+  }
+
+  .viewAllButton {
+    font-size:
+      8.5px;
+  }
+
+  .imageWrapper,
+  .allProductsGrid
+    .imageWrapper {
+    height:
+      158px;
+
+    min-height:
+      158px;
+  }
+
+  .productInfo {
+    padding:
+      5px
+      4px;
+  }
+
+  .tagline {
+    min-height:
+      18px;
+
+    margin-bottom:
+      5px;
+  }
+
+  .tagline span {
+    padding:
+      2px
+      4px;
+
+    font-size:
+      7px;
+  }
+
+  .productName {
+    min-height:
+      27px;
+
+    font-size:
+      10px;
+  }
+
+  .ratingValue,
+  .verifiedReview {
+    font-size:
+      6.5px;
+  }
+
+  .ratingValue svg {
+    width:
+      8px;
+
+    height:
+      8px;
+  }
+
+  .verifiedReview svg {
+    width:
+      7px;
+
+    height:
+      7px;
+  }
+
+  .currentPrice {
+    font-size:
+      12px;
+  }
+
+  .oldPrice {
+    font-size:
+      6px;
+  }
+
+  .discount {
+    font-size:
+      5.7px;
+  }
+
+  .addToCart {
+    min-height:
+      40px;
+  }
+
+  .cartStage {
+    height:
+      40px;
+  }
+
+  .cartFace {
+    grid-template-columns:
+      37px
+      minmax(
+        0,
+        1fr
+      )
+      50px;
+  }
+
+  .cartPanelMain {
+    padding:
+      0
+      3px;
+
+    font-size:
+      8px;
+  }
+
+  .cartPanelRight {
+    padding:
+      0
+      3px;
+
+    font-size:
+      6.5px;
+  }
+
+  .cartMiniBag {
+    width:
+      13px;
+
+    height:
+      14px;
+  }
+
+  .cartMiniBagHandle {
+    width:
+      6px;
+
+    height:
+      5px;
+
+    top:
+      -5px;
+  }
+
+  .cartFolded {
+    width:
+      47px;
+
+    height:
+      47px;
+  }
+
+  .cartBagScene {
+    transform:
+      translate(
+        -50%,
+        -50%
+      )
+      scale(
+        0.66
+      );
+  }
+
+  .addToCart.phase-bag
+    .cartBagScene,
+  .addToCart.phase-puff
+    .cartBagScene,
+  .addToCart.phase-tag
+    .cartBagScene,
+  .addToCart.phase-flip
+    .cartBagScene,
+  .addToCart.phase-check
+    .cartBagScene {
+    transform:
+      translate(
+        -50%,
+        -50%
+      )
+      scale(
+        0.66
+      );
+  }
+
+  .cartTag {
+    width:
+      48px;
+
+    height:
+      24px;
+
+    right:
+      -7px;
+  }
+
+  .cartTagFront,
+  .cartTagBack {
+    font-size:
+      7px;
+  }
+
+  .allProductsGrid {
+    gap:
+      8px;
+  }
+}
+
 
 /* =========================================================
    ANIMATIONS
@@ -1068,25 +3807,122 @@ NO DISCOUNT BADGE
 
 @keyframes cardReveal {
   from {
-    opacity: 0;
-    transform: translateY(18px);
+    opacity:
+      0;
+
+    transform:
+      translateY(
+        18px
+      )
+      scale(
+        0.985
+      );
   }
 
   to {
-    opacity: 1;
-    transform: translateY(0);
+    opacity:
+      1;
+
+    transform:
+      translateY(
+        0
+      )
+      scale(
+        1
+      );
+  }
+}
+
+@keyframes gridReveal {
+  from {
+    opacity:
+      0;
+
+    transform:
+      translateY(
+        9px
+      );
+  }
+
+  to {
+    opacity:
+      1;
+
+    transform:
+      translateY(
+        0
+      );
+  }
+}
+
+@keyframes newBadgeIn {
+  0% {
+    opacity:
+      0;
+
+    transform:
+      translateY(
+        -7px
+      )
+      scale(
+        0.82
+      );
+  }
+
+  70% {
+    opacity:
+      1;
+
+    transform:
+      translateY(
+        1px
+      )
+      scale(
+        1.05
+      );
+  }
+
+  100% {
+    opacity:
+      1;
+
+    transform:
+      translateY(
+        0
+      )
+      scale(
+        1
+      );
+  }
+}
+
+@keyframes titleLineReveal {
+  from {
+    width:
+      0;
+
+    opacity:
+      0;
+  }
+
+  to {
+    width:
+      56px;
+
+    opacity:
+      1;
   }
 }
 
 @keyframes spin {
   to {
-    transform: rotate(360deg);
+    transform:
+      rotate(
+        360deg
+      );
   }
 }
 
-.spin {
-  animation: spin 0.8s linear infinite;
-}
 
 /* =========================================================
    FOCUS
@@ -1096,607 +3932,20 @@ NO DISCOUNT BADGE
 .productNameButton:focus-visible,
 .addToCart:focus-visible,
 .imageWrapper:focus-visible {
-  outline: 3px solid rgba(255, 49, 95, 0.35);
-  outline-offset: 3px;
+  outline:
+    3px
+    solid
+    rgba(
+      173,
+      89,
+      187,
+      0.32
+    );
+
+  outline-offset:
+    3px;
 }
 
-/* =========================================================
-   LARGE TABLET
-========================================================= */
-
-@media (max-width: 1200px) {
-  .section {
-    padding-inline: 3%;
-  }
-
-  .imageWrapper {
-    height: 350px;
-  }
-
-  .productName {
-    font-size: 17px;
-  }
-
-  .addToCart {
-    min-height: 52px;
-  }
-
-  .cartStage {
-    height: 52px;
-  }
-
-  .cartFace {
-    grid-template-columns: 56px minmax(0, 1fr) 84px;
-  }
-
-  .cartPanelMain {
-    font-size: 14px;
-  }
-
-  .cartPanelRight {
-    font-size: 12px;
-  }
-
-  .cartBagScene {
-    transform:
-      translate(-50%, -50%)
-      scale(0.92);
-  }
-
-  .addToCart.phase-bag .cartBagScene,
-  .addToCart.phase-tag .cartBagScene,
-  .addToCart.phase-flip .cartBagScene,
-  .addToCart.phase-complete .cartBagScene {
-    transform:
-      translate(-50%, -50%)
-      scale(0.92);
-  }
-
-  .allProductsGrid {
-    grid-template-columns:
-      repeat(3, minmax(0, 1fr));
-
-    gap: 18px;
-  }
-}
-
-/* =========================================================
-   TABLET
-========================================================= */
-
-@media (max-width: 900px) {
-  .section {
-    padding-top: 8px;
-  }
-
-  .sectionHeader {
-    margin-bottom: 30px;
-  }
-
-  .imageWrapper {
-    height: 310px;
-  }
-
-  .allProductsGrid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-
-    gap: 16px;
-  }
-}
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media (max-width: 650px) {
-  .section {
-    width: 100%;
-
-    padding: 8px 10px 10px;
-
-    overflow: hidden;
-  }
-
-  .container {
-    width: 100%;
-  }
-
-  /* ---------------- HEADER ---------------- */
-
-  .sectionHeader {
-    display: flex;
-
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 10px;
-
-    margin-bottom: 20px;
-  }
-
-  .sectionTitle {
-    font-size: 23px;
-
-    line-height: 1;
-
-    letter-spacing: -0.5px;
-  }
-
-  .viewAllButton {
-    flex-shrink: 0;
-
-    gap: 3px;
-
-    font-size: 13px;
-
-    white-space: nowrap;
-  }
-
-  /* ---------------- SWIPER ---------------- */
-
-  .productsWrapper {
-    width: 100%;
-
-    overflow: visible;
-  }
-
-  .productSwiper {
-    width: 100%;
-
-    overflow: visible !important;
-
-    padding: 0 0 8px !important;
-
-    touch-action: pan-y;
-  }
-
-  .productSwiper :global(.swiper-wrapper) {
-    align-items: stretch;
-  }
-
-  .productSwiper :global(.swiper-slide) {
-    height: auto;
-
-    display: flex;
-  }
-
-  /* ---------------- CARD ---------------- */
-
-  .productCard {
-    width: 100%;
-
-    border-radius: 11px;
-
-    box-shadow:
-      0 2px 7px rgba(0, 0, 0, 0.05);
-  }
-
-  .productCard:hover {
-    transform: translateY(-2px);
-
-    box-shadow:
-      0 8px 18px rgba(0, 0, 0, 0.08);
-  }
-
-  /* ---------------- NEW RIBBON ---------------- */
-
-  .topRibbon {
-    height: 21px;
-  }
-
-  .newRibbon {
-    width: 82%;
-
-    height: 21px;
-
-    border-radius: 0 0 16px 0;
-
-    font-size: 9px;
-  }
-
-  .emptyRibbon {
-    height: 21px;
-
-    border-radius: 0 0 0 16px;
-  }
-
-  /* ---------------- IMAGE ---------------- */
-
-  .imageWrapper {
-    height: 185px;
-    min-height: 185px;
-  }
-
-  .productImage {
-    padding: 7px;
-  }
-
-  /* ---------------- INFO ---------------- */
-
-  .productInfo {
-    padding: 7px 6px 6px;
-  }
-
-  /* ---------------- TAGLINE ---------------- */
-
-  .tagline {
-    min-height: 21px;
-
-    margin-bottom: 7px;
-
-    border-radius: 9px 9px 0 0;
-  }
-
-  .tagline span {
-    max-width: 100%;
-
-    padding: 3px 5px;
-
-    font-size: 8px;
-
-    white-space: nowrap;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-  }
-
-  /* ---------------- NAME ---------------- */
-
-  .productName {
-    min-height: 32px;
-
-    margin: 0 0 4px;
-
-    font-size: 12px;
-
-    line-height: 1.25;
-  }
-
-  /* ---------------- RATING ---------------- */
-
-  .ratingRow {
-    gap: 3px;
-
-    min-height: 17px;
-
-    margin-bottom: 4px;
-  }
-
-  .ratingValue {
-    gap: 2px;
-
-    font-size: 8px;
-  }
-
-  .ratingValue svg {
-    width: 10px;
-    height: 10px;
-  }
-
-  .ratingDivider {
-    font-size: 8px;
-  }
-
-  .verifiedReview {
-    gap: 2px;
-
-    font-size: 8px;
-  }
-
-  .verifiedReview svg {
-    width: 8px;
-    height: 8px;
-  }
-
-  /* ---------------- PRICE ---------------- */
-
-  .priceRow {
-    gap: 4px;
-
-    min-height: 21px;
-
-    margin-bottom: 6px;
-  }
-
-  .currentPrice {
-    font-size: 14px;
-  }
-
-  .oldPrice {
-    font-size: 8px;
-  }
-
-  .discount {
-    font-size: 7px;
-  }
-
-  /* ---------------- ADD TO CART ---------------- */
-
-  .addToCart {
-    min-height: 34px;
-
-    border-radius: 9px;
-
-    font-size: 9px;
-
-    letter-spacing: 0;
-  }
-
-  /* ---------------- VIEW ALL ---------------- */
-
-  .allProductsGrid {
-    display: grid;
-
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-
-    gap: 10px;
-  }
-
-  .allProductsGrid .productCard {
-    width: 100%;
-  }
-
-  .allProductsGrid .imageWrapper {
-    height: 185px;
-    min-height: 185px;
-  }
-}
-
-/* =========================================================
-   SMALL MOBILE
-========================================================= */
-
-@media (max-width: 420px) {
-  .section {
-    padding-inline: 8px;
-  }
-
-  .sectionHeader {
-    margin-bottom: 18px;
-  }
-
-  .sectionTitle {
-    font-size: 21px;
-  }
-
-  .viewAllButton {
-    font-size: 12px;
-  }
-
-  /* Smaller cards */
-
-  .imageWrapper {
-    height: 175px;
-    min-height: 175px;
-  }
-
-  .allProductsGrid .imageWrapper {
-    height: 175px;
-    min-height: 175px;
-  }
-
-  .productInfo {
-    padding: 6px 5px;
-  }
-
-  .tagline {
-    min-height: 20px;
-
-    margin-bottom: 6px;
-  }
-
-  .tagline span {
-    font-size: 7.5px;
-  }
-
-  .productName {
-    min-height: 30px;
-
-    font-size: 11.5px;
-  }
-
-  .ratingValue {
-    font-size: 7.5px;
-  }
-
-  .verifiedReview {
-    font-size: 7.5px;
-  }
-
-  .currentPrice {
-    font-size: 13px;
-  }
-
-  .oldPrice {
-    font-size: 7.5px;
-  }
-
-  .discount {
-    font-size: 7px;
-  }
-
-  .addToCart {
-    min-height: 45px;
-  }
-
-  .cartStage {
-    height: 45px;
-  }
-
-  .cartFace {
-    grid-template-columns: 44px minmax(0, 1fr) 70px;
-  }
-
-  .cartPanelMain {
-    padding-inline: 6px;
-    font-size: 11px;
-  }
-
-  .cartPanelRight {
-    padding-inline: 5px;
-    font-size: 9px;
-  }
-
-  .cartMiniBag {
-    width: 14px;
-    height: 16px;
-    border-width: 1.35px;
-  }
-
-  .cartMiniBagHandle {
-    width: 7px;
-    height: 6px;
-    top: -5px;
-    border-width: 1.35px;
-  }
-
-  .cartBagScene {
-    transform:
-      translate(-50%, -50%)
-      scale(0.76);
-  }
-
-  .addToCart.phase-bag .cartBagScene,
-  .addToCart.phase-tag .cartBagScene,
-  .addToCart.phase-flip .cartBagScene,
-  .addToCart.phase-complete .cartBagScene {
-    transform:
-      translate(-50%, -50%)
-      scale(0.76);
-  }
-
-  .cartTag {
-    right: -18px;
-    width: 58px;
-    height: 29px;
-  }
-
-  .cartTagFront,
-  .cartTagBack {
-    font-size: 8.5px;
-  }
-}
-
-/* =========================================================
-   VERY SMALL MOBILE
-========================================================= */
-
-@media (max-width: 360px) {
-  .section {
-    padding-inline: 7px;
-  }
-
-  .sectionTitle {
-    font-size: 19px;
-  }
-
-  .viewAllButton {
-    font-size: 11px;
-  }
-
-  .imageWrapper {
-    height: 160px;
-    min-height: 160px;
-  }
-
-  .allProductsGrid .imageWrapper {
-    height: 160px;
-    min-height: 160px;
-  }
-
-  .productInfo {
-    padding: 5px 4px;
-  }
-
-  .tagline {
-    min-height: 18px;
-    margin-bottom: 5px;
-  }
-
-  .tagline span {
-    padding: 2px 4px;
-    font-size: 7px;
-  }
-
-  .productName {
-    min-height: 28px;
-    font-size: 10.5px;
-  }
-
-  .ratingRow {
-    gap: 2px;
-  }
-
-  .ratingValue,
-  .verifiedReview {
-    font-size: 7px;
-  }
-
-  .ratingValue svg {
-    width: 8px;
-    height: 8px;
-  }
-
-  .verifiedReview svg {
-    width: 7px;
-    height: 7px;
-  }
-
-  .currentPrice {
-    font-size: 12px;
-  }
-
-  .addToCart {
-    min-height: 40px;
-  }
-
-  .cartStage {
-    height: 40px;
-  }
-
-  .cartFace {
-    grid-template-columns: 38px minmax(0, 1fr) 58px;
-  }
-
-  .cartPanelMain {
-    padding-inline: 4px;
-    font-size: 10px;
-  }
-
-  .cartPanelRight {
-    padding-inline: 4px;
-    font-size: 8px;
-  }
-
-  .cartBagScene {
-    transform:
-      translate(-50%, -50%)
-      scale(0.68);
-  }
-
-  .addToCart.phase-bag .cartBagScene,
-  .addToCart.phase-tag .cartBagScene,
-  .addToCart.phase-flip .cartBagScene,
-  .addToCart.phase-complete .cartBagScene {
-    transform:
-      translate(-50%, -50%)
-      scale(0.68);
-  }
-
-  .cartTag {
-    right: -13px;
-    width: 52px;
-    height: 26px;
-  }
-
-  .cartTagFront,
-  .cartTagBack {
-    font-size: 8px;
-  }
-}
 
 /* =========================================================
    REDUCED MOTION
@@ -1706,113 +3955,16 @@ NO DISCOUNT BADGE
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
+    animation-duration:
+      0.01ms !important;
 
-    animation-iteration-count: 1 !important;
+    animation-iteration-count:
+      1 !important;
 
-    transition-duration: 0.01ms !important;
+    transition-duration:
+      0.01ms !important;
 
-    scroll-behavior: auto !important;
-  }
-}
-
-/* =========================================================
-   CART RESPONSIVE SCALE
-========================================================= */
-
-@media (max-width: 600px) {
-  .addToCart {
-    min-height: 52px;
-  }
-
-  .cartStage {
-    height: 52px;
-  }
-
-  .cartFace {
-    grid-template-columns: 58px minmax(0, 1fr) 72px;
-  }
-
-  .cartPanelMain {
-    font-size: 13px;
-    padding-inline: 8px;
-  }
-
-  .cartPanelRight {
-    font-size: 10px;
-  }
-
-  .cartFolded {
-    width: 64px;
-    height: 64px;
-  }
-
-  .cartBagScene {
-    transform: translate(-50%, -50%) scale(0.92);
-  }
-
-  .addToCart.phase-bag .cartBagScene,
-  .addToCart.phase-puff .cartBagScene,
-  .addToCart.phase-tag .cartBagScene,
-  .addToCart.phase-flip .cartBagScene,
-  .addToCart.phase-check .cartBagScene {
-    transform: translate(-50%, -50%) scale(0.92);
-  }
-
-  .cartTag {
-    right: 1px;
-    width: 59px;
-    height: 30px;
-  }
-}
-
-@media (max-width: 430px) {
-  .addToCart {
-    min-height: 46px;
-  }
-
-  .cartStage {
-    height: 46px;
-  }
-
-  .cartFace {
-    grid-template-columns: 48px minmax(0, 1fr) 62px;
-  }
-
-  .cartPanelMain {
-    font-size: 11px;
-    padding-inline: 6px;
-  }
-
-  .cartPanelRight {
-    font-size: 9px;
-  }
-
-  .cartMiniBag {
-    width: 15px;
-    height: 16px;
-  }
-
-  .cartMiniBagHandle {
-    width: 8px;
-    height: 7px;
-    top: -6px;
-  }
-
-  .cartFolded {
-    width: 56px;
-    height: 56px;
-  }
-
-  .cartBagScene {
-    transform: translate(-50%, -50%) scale(0.78);
-  }
-
-  .addToCart.phase-bag .cartBagScene,
-  .addToCart.phase-puff .cartBagScene,
-  .addToCart.phase-tag .cartBagScene,
-  .addToCart.phase-flip .cartBagScene,
-  .addToCart.phase-check .cartBagScene {
-    transform: translate(-50%, -50%) scale(0.78);
+    scroll-behavior:
+      auto !important;
   }
 }

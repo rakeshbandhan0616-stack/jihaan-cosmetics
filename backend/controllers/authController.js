@@ -2,9 +2,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import mongoose from "mongoose";
+import nodemailer from "nodemailer";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/User.js";
-import { sendWhatsAppOtp } from "../services/whatsappService.js";
 
 /* =========================================================
    ROLE CONFIGURATION
@@ -33,7 +33,7 @@ const googleClient = new OAuth2Client(
 );
 
 /* =========================================================
-   OTP CONFIGURATION
+   EMAIL OTP CONFIGURATION
 ========================================================= */
 
 const OTP_LENGTH = 6;
@@ -49,8 +49,147 @@ const OTP_RESEND_COOLDOWN_SECONDS = 60;
 
 const RESET_TOKEN_EXPIRY = "10m";
 
-const OTP_COLLECTION_NAME =
-  "otpverifications";
+const EMAIL_OTP_COLLECTION_NAME =
+  "emailotpverifications";
+
+/* =========================================================
+   EMAIL TRANSPORTER
+
+   Configure these environment variables:
+
+   SMTP_HOST
+   SMTP_PORT
+   SMTP_USER
+   SMTP_PASS
+   SMTP_FROM
+
+   For Gmail SMTP:
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=465
+   SMTP_USER=yourgmail@gmail.com
+   SMTP_PASS=your_16_character_app_password
+   SMTP_FROM=yourgmail@gmail.com
+
+   Use a Gmail App Password, not your normal Gmail password.
+========================================================= */
+
+const emailTransporter = nodemailer.createTransport({
+  host:
+    process.env.SMTP_HOST ||
+    "smtp.gmail.com",
+
+  port:
+    Number(
+      process.env.SMTP_PORT ||
+      465,
+    ),
+
+  secure:
+    String(
+      process.env.SMTP_SECURE ??
+        "true",
+    ).toLowerCase() ===
+    "true",
+
+  auth: {
+    user:
+      process.env.SMTP_USER,
+
+    pass:
+      process.env.SMTP_PASS,
+  },
+});
+
+const getEmailFromAddress = () =>
+  process.env.SMTP_FROM ||
+  process.env.SMTP_USER;
+
+/* =========================================================
+   SEND EMAIL OTP
+========================================================= */
+
+const sendEmailOtp = async ({
+  email,
+  otp,
+  purpose,
+}) => {
+  const from =
+    getEmailFromAddress();
+
+  if (
+    !process.env.SMTP_USER ||
+    !process.env.SMTP_PASS ||
+    !from
+  ) {
+    throw new Error(
+      "Email SMTP configuration is missing. Please configure SMTP_USER, SMTP_PASS and SMTP_FROM.",
+    );
+  }
+
+  const isRegistration =
+    purpose ===
+    "registration";
+
+  const subject =
+    isRegistration
+      ? "Jihaan Cosmetics - Verify Your Email"
+      : "Jihaan Cosmetics - Password Reset OTP";
+
+  const title =
+    isRegistration
+      ? "Verify your email address"
+      : "Reset your password";
+
+  const description =
+    isRegistration
+      ? "Use the OTP below to verify your email and complete your Jihaan Cosmetics account registration."
+      : "Use the OTP below to verify your identity and create a new password for your Jihaan Cosmetics account.";
+
+  await emailTransporter.sendMail({
+    from,
+    to: email,
+    subject,
+
+    text:
+      `${title}\n\n` +
+      `${description}\n\n` +
+      `Your OTP is: ${otp}\n\n` +
+      `This OTP expires in ${OTP_EXPIRY_MINUTES} minutes.\n` +
+      `If you did not request this, you can safely ignore this email.\n\n` +
+      `Jihaan Cosmetics`,
+
+    html: `
+      <div style="margin:0;padding:32px 16px;background:#f8f6f3;font-family:Arial,sans-serif;">
+        <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:16px;padding:32px;box-shadow:0 8px 30px rgba(0,0,0,.06);">
+          <h2 style="margin:0 0 12px;color:#222;">${title}</h2>
+
+          <p style="margin:0 0 20px;color:#666;line-height:1.6;">
+            ${description}
+          </p>
+
+          <div style="margin:24px 0;padding:18px;text-align:center;background:#f6f1eb;border-radius:12px;">
+            <div style="font-size:13px;color:#777;margin-bottom:8px;">
+              Your verification code
+            </div>
+
+            <div style="font-size:34px;font-weight:700;letter-spacing:8px;color:#222;">
+              ${otp}
+            </div>
+          </div>
+
+          <p style="margin:0;color:#777;font-size:13px;line-height:1.6;">
+            This OTP expires in ${OTP_EXPIRY_MINUTES} minutes.
+            If you did not request this email, you can safely ignore it.
+          </p>
+
+          <p style="margin:24px 0 0;color:#333;font-weight:600;">
+            Jihaan Cosmetics
+          </p>
+        </div>
+      </div>
+    `,
+  });
+};
 
 /* =========================================================
    CREATE JWT TOKEN
@@ -74,87 +213,6 @@ const createToken = (user) => {
       expiresIn: "7d",
     },
   );
-};
-
-/* =========================================================
-   CREATE SHORT-LIVED SOCIAL REGISTRATION TOKEN
-
-   This token is NOT the final login token.
-
-   Flow:
-
-   Social login
-       ↓
-   Mobile number
-       ↓
-   WhatsApp OTP
-       ↓
-   OTP verification
-       ↓
-   Account creation
-========================================================= */
-
-const createSocialPendingToken = ({
-  provider,
-  providerId,
-  email,
-  name,
-  profileImage,
-}) => {
-  if (!process.env.JWT_SECRET) {
-    throw new Error(
-      "JWT_SECRET is missing in the .env file",
-    );
-  }
-
-  return jwt.sign(
-    {
-      type: "social-registration",
-      provider,
-      providerId,
-      email,
-      name,
-      profileImage: profileImage || "",
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "10m",
-    },
-  );
-};
-
-/* =========================================================
-   VERIFY SOCIAL REGISTRATION TOKEN
-========================================================= */
-
-const verifySocialPendingToken = (token) => {
-  if (!token) {
-    throw new Error(
-      "Social registration token is required",
-    );
-  }
-
-  if (!process.env.JWT_SECRET) {
-    throw new Error(
-      "JWT_SECRET is missing in the .env file",
-    );
-  }
-
-  const decoded = jwt.verify(
-    token,
-    process.env.JWT_SECRET,
-  );
-
-  if (
-    decoded.type !==
-    "social-registration"
-  ) {
-    throw new Error(
-      "Invalid social registration token",
-    );
-  }
-
-  return decoded;
 };
 
 /* =========================================================
@@ -384,89 +442,81 @@ const completeLogin = async (
 };
 
 /* =========================================================
-   MONGODB OTP COLLECTION
+   EMAIL OTP COLLECTION
 ========================================================= */
 
-const getOtpCollection = async () => {
-  if (
-    mongoose.connection.readyState !==
-    1
-  ) {
-    throw new Error(
-      "MongoDB connection is not ready",
-    );
-  }
-
-  const collection =
-    mongoose.connection.collection(
-      OTP_COLLECTION_NAME,
-    );
-
-  /*
-   * TTL index.
-   *
-   * MongoDB automatically removes documents
-   * after expiresAt.
-   */
-  try {
-    await collection.createIndex(
-      {
-        expiresAt: 1,
-      },
-      {
-        expireAfterSeconds: 0,
-        name: "otp_expiry_ttl",
-      },
-    );
-  } catch (error) {
-    /*
-     * Index may already exist.
-     * Do not break OTP requests because of
-     * an already-created index.
-     */
+const getEmailOtpCollection =
+  async () => {
     if (
-      !String(
-        error?.message || "",
-      ).includes(
-        "already exists",
-      )
+      mongoose.connection
+        .readyState !==
+      1
     ) {
-      console.error(
-        "OTP TTL INDEX ERROR:",
-        error,
+      throw new Error(
+        "MongoDB connection is not ready",
       );
     }
-  }
 
-  try {
-    await collection.createIndex(
-      {
-        phone: 1,
-        purpose: 1,
-        challengeKey: 1,
-      },
-      {
-        name:
-          "otp_lookup_index",
-      },
-    );
-  } catch (error) {
-    if (
-      !String(
-        error?.message || "",
-      ).includes(
-        "already exists",
-      )
-    ) {
-      console.error(
-        "OTP LOOKUP INDEX ERROR:",
-        error,
+    const collection =
+      mongoose.connection.collection(
+        EMAIL_OTP_COLLECTION_NAME,
       );
-    }
-  }
 
-  return collection;
-};
+    try {
+      await collection.createIndex(
+        {
+          expiresAt: 1,
+        },
+        {
+          expireAfterSeconds: 0,
+          name:
+            "email_otp_expiry_ttl",
+        },
+      );
+    } catch (error) {
+      if (
+        !String(
+          error?.message || "",
+        ).includes(
+          "already exists",
+        )
+      ) {
+        console.error(
+          "EMAIL OTP TTL INDEX ERROR:",
+          error,
+        );
+      }
+    }
+
+    try {
+      await collection.createIndex(
+        {
+          email: 1,
+          purpose: 1,
+          consumedAt: 1,
+        },
+        {
+          name:
+            "email_otp_lookup_index",
+        },
+      );
+    } catch (error) {
+      if (
+        !String(
+          error?.message || "",
+        ).includes(
+          "already exists",
+        )
+      ) {
+        console.error(
+          "EMAIL OTP LOOKUP INDEX ERROR:",
+          error,
+        );
+      }
+    }
+
+    return collection;
+  };
 
 /* =========================================================
    HASH OTP
@@ -505,9 +555,6 @@ const generateOtp = () => {
 
 /* =========================================================
    HASH CHALLENGE KEY
-
-   Prevent storing social tokens directly
-   inside OTP records.
 ========================================================= */
 
 const hashChallengeKey = (
@@ -522,38 +569,7 @@ const hashChallengeKey = (
 };
 
 /* =========================================================
-   INVALIDATE EXISTING OTP
-========================================================= */
-
-const invalidateExistingOtp = async ({
-  phone,
-  purpose,
-  challengeKey,
-}) => {
-  const collection =
-    await getOtpCollection();
-
-  await collection.updateMany(
-    {
-      phone,
-      purpose,
-      challengeKey,
-      consumedAt: null,
-      expiresAt: {
-        $gt: new Date(),
-      },
-    },
-    {
-      $set: {
-        consumedAt:
-          new Date(),
-      },
-    },
-  );
-};
-
-/* =========================================================
-   CHECK RESEND COOLDOWN
+   RESEND COOLDOWN
 ========================================================= */
 
 const getResendCooldown = (
@@ -584,551 +600,591 @@ const getResendCooldown = (
 };
 
 /* =========================================================
-   CREATE OTP CHALLENGE
+   CREATE EMAIL OTP CHALLENGE
 ========================================================= */
 
-const createOtpChallenge = async ({
-  phone,
-  purpose,
-  challengeKey,
-  userId = null,
-}) => {
-  const collection =
-    await getOtpCollection();
+const createEmailOtpChallenge =
+  async ({
+    email,
+    purpose,
+    registrationData = null,
+    userId = null,
+  }) => {
+    const collection =
+      await getEmailOtpCollection();
 
-  const existing =
-    await collection.findOne(
-      {
-        phone,
-        purpose,
-        challengeKey,
-        consumedAt: null,
-        expiresAt: {
-          $gt: new Date(),
+    const existing =
+      await collection.findOne(
+        {
+          email,
+          purpose,
+          consumedAt: null,
+          expiresAt: {
+            $gt: new Date(),
+          },
         },
-      },
-      {
-        sort: {
-          createdAt: -1,
+        {
+          sort: {
+            createdAt: -1,
+          },
         },
-      },
-    );
-
-  const cooldown =
-    getResendCooldown(
-      existing,
-    );
-
-  if (cooldown > 0) {
-    const error =
-      new Error(
-        "Please wait before requesting another OTP",
       );
 
-    error.code =
-      "OTP_RESEND_COOLDOWN";
+    const cooldown =
+      getResendCooldown(
+        existing,
+      );
 
-    error.retryAfter =
-      cooldown;
+    if (cooldown > 0) {
+      const error =
+        new Error(
+          "Please wait before requesting another OTP",
+        );
 
-    throw error;
-  }
+      error.code =
+        "OTP_RESEND_COOLDOWN";
 
-  /*
-   * Invalidate older OTP.
-   */
-  if (existing) {
-    await collection.updateMany(
-      {
-        phone,
-        purpose,
-        challengeKey,
-        consumedAt: null,
-      },
-      {
-        $set: {
-          consumedAt:
-            new Date(),
+      error.retryAfter =
+        cooldown;
+
+      throw error;
+    }
+
+    if (existing) {
+      await collection.updateMany(
+        {
+          email,
+          purpose,
+          consumedAt: null,
         },
-      },
-    );
-  }
+        {
+          $set: {
+            consumedAt:
+              new Date(),
+          },
+        },
+      );
+    }
 
-  const otp =
-    generateOtp();
+    const otp =
+      generateOtp();
 
-  const otpHash =
-    hashOtp(otp);
+    const now =
+      new Date();
 
-  const now =
-    new Date();
+    const expiresAt =
+      new Date(
+        now.getTime() +
+          OTP_EXPIRY_MS,
+      );
 
-  const expiresAt =
-    new Date(
-      now.getTime() +
-        OTP_EXPIRY_MS,
-    );
+    const record = {
+      email,
+      purpose,
 
-  const record = {
-    phone,
+      userId:
+        userId
+          ? new mongoose.Types.ObjectId(
+              userId,
+            )
+          : null,
 
-    purpose,
+      otpHash:
+        hashOtp(otp),
 
-    challengeKey,
+      attempts: 0,
 
-    userId:
-      userId
-        ? new mongoose.Types.ObjectId(
-            userId,
-          )
-        : null,
+      maxAttempts:
+        OTP_MAX_ATTEMPTS,
 
-    otpHash,
+      registrationData,
 
-    attempts: 0,
+      createdAt: now,
 
-    maxAttempts:
-      OTP_MAX_ATTEMPTS,
+      lastSentAt: now,
 
-    createdAt: now,
+      expiresAt,
 
-    lastSentAt: now,
+      consumedAt: null,
 
-    expiresAt,
+      verifiedAt: null,
 
-    consumedAt: null,
+      resetUsedAt: null,
+    };
 
-    whatsappMessageId:
-      null,
-  };
+    const insertResult =
+      await collection.insertOne(
+        record,
+      );
 
-  const insertResult =
-    await collection.insertOne(
-      record,
-    );
-
-  /*
-   * Send OTP only after creating the
-   * challenge. If WhatsApp fails, invalidate
-   * the challenge.
-   */
-  try {
-    const whatsappResult =
-      await sendWhatsAppOtp({
-        phone,
+    try {
+      await sendEmailOtp({
+        email,
         otp,
+        purpose,
       });
+    } catch (error) {
+      await collection.updateOne(
+        {
+          _id:
+            insertResult.insertedId,
+        },
+        {
+          $set: {
+            consumedAt:
+              new Date(),
+          },
+        },
+      );
+
+      throw error;
+    }
+
+    return {
+      challengeId:
+        insertResult.insertedId.toString(),
+
+      expiresIn:
+        OTP_EXPIRY_MINUTES *
+        60,
+
+      resendAfter:
+        OTP_RESEND_COOLDOWN_SECONDS,
+    };
+  };
+
+/* =========================================================
+   VERIFY EMAIL OTP CHALLENGE
+========================================================= */
+
+const verifyEmailOtpChallenge =
+  async ({
+    email,
+    purpose,
+    otp,
+  }) => {
+    const collection =
+      await getEmailOtpCollection();
+
+    const record =
+      await collection.findOne(
+        {
+          email,
+          purpose,
+          consumedAt: null,
+          expiresAt: {
+            $gt: new Date(),
+          },
+        },
+        {
+          sort: {
+            createdAt: -1,
+          },
+        },
+      );
+
+    if (!record) {
+      return {
+        success: false,
+        code:
+          "OTP_INVALID_OR_EXPIRED",
+        message:
+          "OTP is invalid or has expired.",
+      };
+    }
+
+    if (
+      record.attempts >=
+      record.maxAttempts
+    ) {
+      await collection.updateOne(
+        {
+          _id:
+            record._id,
+        },
+        {
+          $set: {
+            consumedAt:
+              new Date(),
+          },
+        },
+      );
+
+      return {
+        success: false,
+        code:
+          "OTP_MAX_ATTEMPTS",
+        message:
+          "Too many incorrect OTP attempts. Please request a new OTP.",
+      };
+    }
+
+    const submittedHash =
+      hashOtp(otp);
+
+    if (
+      submittedHash !==
+      record.otpHash
+    ) {
+      const newAttempts =
+        (record.attempts || 0) +
+        1;
+
+      const update = {
+        $set: {
+          attempts:
+            newAttempts,
+        },
+      };
+
+      if (
+        newAttempts >=
+        record.maxAttempts
+      ) {
+        update.$set.consumedAt =
+          new Date();
+      }
+
+      await collection.updateOne(
+        {
+          _id:
+            record._id,
+        },
+        update,
+      );
+
+      return {
+        success: false,
+        code:
+          "OTP_INCORRECT",
+        message:
+          newAttempts >=
+          record.maxAttempts
+            ? "Too many incorrect OTP attempts. Please request a new OTP."
+            : "Incorrect OTP.",
+        attemptsRemaining:
+          Math.max(
+            0,
+            record.maxAttempts -
+              newAttempts,
+          ),
+      };
+    }
+
+    const verifiedAt =
+      new Date();
 
     await collection.updateOne(
       {
         _id:
-          insertResult.insertedId,
-      },
-      {
-        $set: {
-          whatsappMessageId:
-            whatsappResult.messageId,
-        },
-      },
-    );
-  } catch (error) {
-    await collection.updateOne(
-      {
-        _id:
-          insertResult.insertedId,
+          record._id,
       },
       {
         $set: {
           consumedAt:
-            new Date(),
+            verifiedAt,
+
+          verifiedAt,
         },
       },
     );
 
-    throw error;
+    return {
+      success: true,
+
+      code:
+        "OTP_VERIFIED",
+
+      message:
+        "OTP verified successfully.",
+
+      record,
+    };
+  };
+
+/* =========================================================
+   MASK PHONE NUMBER
+========================================================= */
+
+const maskPhone = (
+  phone,
+) => {
+  if (!phone) {
+    return "";
   }
 
-  return {
-    challengeId:
-      insertResult.insertedId.toString(),
+  const normalized =
+    normalizePhone(phone);
 
-    expiresIn:
-      OTP_EXPIRY_MINUTES *
-      60,
+  if (
+    normalized.length !==
+    10
+  ) {
+    return "**********";
+  }
 
-    resendAfter:
-      OTP_RESEND_COOLDOWN_SECONDS,
-  };
+  return `${normalized.slice(
+    0,
+    2,
+  )}******${normalized.slice(
+    -2,
+  )}`;
 };
 
 /* =========================================================
-   VERIFY OTP CHALLENGE
+   MASK EMAIL
 ========================================================= */
 
-const verifyOtpChallenge = async ({
-  phone,
-  purpose,
-  challengeKey,
-  otp,
-}) => {
-  const collection =
-    await getOtpCollection();
-
-  const record =
-    await collection.findOne(
-      {
-        phone,
-        purpose,
-        challengeKey,
-        consumedAt: null,
-        expiresAt: {
-          $gt: new Date(),
-        },
-      },
-      {
-        sort: {
-          createdAt: -1,
-        },
-      },
-    );
-
-  if (!record) {
-    return {
-      success: false,
-      code:
-        "OTP_INVALID_OR_EXPIRED",
-      message:
-        "OTP is invalid or has expired.",
-    };
+const maskEmail = (
+  email,
+) => {
+  if (!email) {
+    return "";
   }
 
-  if (
-    record.attempts >=
-    record.maxAttempts
-  ) {
-    await collection.updateOne(
-      {
-        _id: record._id,
-      },
-      {
-        $set: {
-          consumedAt:
-            new Date(),
-        },
-      },
-    );
+  const [local, domain] =
+    String(email).split("@");
 
-    return {
-      success: false,
-      code:
-        "OTP_MAX_ATTEMPTS",
-      message:
-        "Too many incorrect OTP attempts. Please request a new OTP.",
-    };
+  if (
+    !local ||
+    !domain
+  ) {
+    return email;
   }
 
-  const submittedHash =
-    hashOtp(otp);
+  if (local.length <= 2) {
+    return `${local[0] || ""}***@${domain}`;
+  }
 
-  if (
-    submittedHash !==
-    record.otpHash
-  ) {
-    const newAttempts =
-      (record.attempts || 0) +
-      1;
+  return `${local.slice(
+    0,
+    2,
+  )}***@${domain}`;
+};
 
-    const update = {
-      $set: {
-        attempts:
-          newAttempts,
-      },
-    };
+/* =========================================================
+   REGISTRATION DATA VALIDATION
+========================================================= */
+
+const validateRegistrationData =
+  ({
+    name,
+    email,
+    phone,
+    password,
+  }) => {
+    const errors = {};
+
+    const normalizedName =
+      normalizeName(name);
+
+    const normalizedEmail =
+      String(
+        email || "",
+      )
+        .trim()
+        .toLowerCase();
+
+    const normalizedPhone =
+      normalizePhone(phone);
 
     if (
-      newAttempts >=
-      record.maxAttempts
+      normalizedName.length <
+      2
     ) {
-      update.$set.consumedAt =
-        new Date();
+      errors.name =
+        "Name must contain at least 2 characters";
     }
 
-    await collection.updateOne(
-      {
-        _id: record._id,
-      },
-      update,
-    );
+    if (
+      !isValidEmail(
+        normalizedEmail,
+      )
+    ) {
+      errors.email =
+        "Please enter a valid email address";
+    }
+
+    if (
+      !isValidPhone(
+        normalizedPhone,
+      )
+    ) {
+      errors.phone =
+        "Please enter a valid 10-digit Indian mobile number";
+    }
+
+    if (
+      !password ||
+      String(password).length <
+        6
+    ) {
+      errors.password =
+        "Password must contain at least 6 characters";
+    }
 
     return {
-      success: false,
-      code:
-        "OTP_INCORRECT",
-      message:
-        newAttempts >=
-        record.maxAttempts
-          ? "Too many incorrect OTP attempts. Please request a new OTP."
-          : "Incorrect OTP.",
-    };
-  }
+      valid:
+        Object.keys(errors)
+          .length === 0,
 
-  await collection.updateOne(
-    {
-      _id: record._id,
-    },
-    {
-      $set: {
-        consumedAt:
-          new Date(),
-        verifiedAt:
-          new Date(),
+      errors,
+
+      data: {
+        name:
+          normalizedName,
+
+        email:
+          normalizedEmail,
+
+        phone:
+          normalizedPhone,
+
+        password:
+          String(password || ""),
       },
-    },
-  );
-
-  return {
-    success: true,
-    record,
+    };
   };
-};
+
+/* =========================================================
+   REGISTRATION DUPLICATE CHECK
+========================================================= */
+
+const checkRegistrationDuplicates =
+  async ({
+    email,
+    phone,
+  }) => {
+    const conditions = [
+      {
+        email,
+        role: CUSTOMER_ROLE,
+      },
+    ];
+
+    if (phone) {
+      conditions.push({
+        phone,
+        role: CUSTOMER_ROLE,
+      });
+    }
+
+    const existing =
+      await User.findOne({
+        $or: conditions,
+      }).select(
+        "_id name email phone role authProvider isEmailVerified isPhoneVerified",
+      );
+
+    if (!existing) {
+      return {
+        exists: false,
+      };
+    }
+
+    if (
+      existing.email ===
+      email
+    ) {
+      return {
+        exists: true,
+        field: "email",
+        message:
+          "An account with this email already exists.",
+        user: existing,
+      };
+    }
+
+    if (
+      phone &&
+      existing.phone ===
+        phone
+    ) {
+      return {
+        exists: true,
+        field: "phone",
+        message:
+          "An account with this phone number already exists.",
+        user: existing,
+      };
+    }
+
+    return {
+      exists: true,
+      field: "account",
+      message:
+        "An account with these details already exists.",
+      user: existing,
+    };
+  };
 
 /* =========================================================
    CREATE PASSWORD RESET TOKEN
 ========================================================= */
 
-const createPasswordResetToken = ({
-  userId,
-  challengeId,
-}) => {
-  if (!process.env.JWT_SECRET) {
-    throw new Error(
-      "JWT_SECRET is missing in the .env file",
+const createPasswordResetToken =
+  (user) => {
+    if (
+      !process.env.JWT_SECRET
+    ) {
+      throw new Error(
+        "JWT_SECRET is missing in the .env file",
+      );
+    }
+
+    return jwt.sign(
+      {
+        id: user._id.toString(),
+
+        purpose:
+          "password-reset",
+      },
+
+      process.env.JWT_SECRET,
+
+      {
+        expiresIn:
+          RESET_TOKEN_EXPIRY,
+      },
     );
-  }
-
-  return jwt.sign(
-    {
-      type:
-        "password-reset",
-
-      userId:
-        userId.toString(),
-
-      challengeId:
-        challengeId.toString(),
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn:
-        RESET_TOKEN_EXPIRY,
-    },
-  );
-};
+  };
 
 /* =========================================================
    VERIFY PASSWORD RESET TOKEN
 ========================================================= */
 
-const verifyPasswordResetToken = (
-  token,
-) => {
-  if (!token) {
-    throw new Error(
-      "Password reset token is required",
-    );
-  }
+const verifyPasswordResetToken =
+  (token) => {
+    if (
+      !process.env.JWT_SECRET
+    ) {
+      throw new Error(
+        "JWT_SECRET is missing in the .env file",
+      );
+    }
 
-  if (!process.env.JWT_SECRET) {
-    throw new Error(
-      "JWT_SECRET is missing in the .env file",
-    );
-  }
-
-  const decoded =
-    jwt.verify(
-      token,
-      process.env.JWT_SECRET,
-    );
-
-  if (
-    decoded.type !==
-    "password-reset"
-  ) {
-    throw new Error(
-      "Invalid password reset token",
-    );
-  }
-
-  return decoded;
-};
-/* =========================================================
-   STAFF LOGIN
-
-   POST /api/auth/admin-login
-========================================================= */
-
-export const adminLogin =
-  async (
-    req,
-    res,
-  ) => {
     try {
-      const rawEmail =
-        req.body?.email ??
-        req.body?.identifier ??
-        req.body?.login ??
-        "";
-
-      const rawPassword =
-        req.body?.password ??
-        "";
-
-      const normalizedEmail =
-        String(
-          rawEmail,
-        )
-          .trim()
-          .toLowerCase();
-
-      const password =
-        String(
-          rawPassword,
+      const decoded =
+        jwt.verify(
+          token,
+          process.env.JWT_SECRET,
         );
 
       if (
-        !normalizedEmail ||
-        !password
+        decoded?.purpose !==
+        "password-reset"
       ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Email and password are required.",
-        });
+        return null;
       }
 
-      if (
-        !isValidEmail(
-          normalizedEmail,
-        )
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Please enter a valid staff email address.",
-        });
-      }
-
-      const staff =
-        await User.findOne({
-          email:
-            normalizedEmail,
-
-          role: {
-            $in:
-              STAFF_ROLES,
-          },
-        }).select(
-          "+password",
-        );
-
-      if (!staff) {
-        return res.status(401).json({
-          success: false,
-          message:
-            "Staff account not found. Check the email and staff role.",
-        });
-      }
-
-      if (
-        !STAFF_ROLES.includes(
-          staff.role,
-        )
-      ) {
-        return res.status(403).json({
-          success: false,
-          message:
-            "This account does not have permission to access the staff portal.",
-        });
-      }
-
-      if (
-        !checkAccountStatus(
-          staff,
-          res,
-        )
-      ) {
-        return;
-      }
-
-      if (!staff.password) {
-        return res.status(401).json({
-          success: false,
-          message:
-            "This staff account does not have a valid password.",
-        });
-      }
-
-      const isPasswordValid =
-        await bcrypt.compare(
-          password,
-          staff.password,
-        );
-
-      if (
-        !isPasswordValid
-      ) {
-        return res.status(401).json({
-          success: false,
-          message:
-            "Invalid staff email or password.",
-        });
-      }
-
-      const roleMessages = {
-        superadmin:
-          "Superadmin login successful.",
-
-        admin:
-          "Admin login successful.",
-
-        accounts:
-          "Accounts login successful.",
-
-        logistics:
-          "Logistics login successful.",
-      };
-
-      return completeLogin(
-        staff,
-        res,
-        roleMessages[
-          staff.role
-        ] ||
-          "Staff login successful.",
-      );
-    } catch (error) {
-      console.error(
-        "STAFF LOGIN ERROR:",
-        error,
-      );
-
-      return res.status(500).json({
-        success: false,
-        message:
-          "Server error during staff login.",
-        error:
-          process.env.NODE_ENV ===
-          "development"
-            ? error.message
-            : undefined,
-      });
+      return decoded;
+    } catch {
+      return null;
     }
   };
 
 /* =========================================================
-   USER REGISTRATION
-
-   POST /api/auth/register
+   REGISTER USER
 ========================================================= */
 
 export const registerUser =
@@ -1142,201 +1198,394 @@ export const registerUser =
         email,
         phone,
         password,
-        confirmPassword,
       } =
-        req.body;
+        req.body || {};
+
+      const validation =
+        validateRegistrationData(
+          {
+            name,
+            email,
+            phone,
+            password,
+          },
+        );
 
       if (
-        !name ||
-        !email ||
-        !phone ||
-        !password
+        !validation.valid
       ) {
-        return res.status(400).json({
+        return res.status(
+          400,
+        ).json({
           success: false,
+
           message:
-            "Name, email, phone, and password are required",
+            "Please correct the registration details.",
+
+          errors:
+            validation.errors,
         });
       }
 
-      const normalizedName =
-        normalizeName(name);
+      const {
+        data,
+      } = validation;
+
+      const duplicate =
+        await checkRegistrationDuplicates(
+          {
+            email:
+              data.email,
+
+            phone:
+              data.phone,
+          },
+        );
+
+      if (
+        duplicate.exists
+      ) {
+        return res.status(
+          409,
+        ).json({
+          success: false,
+
+          message:
+            duplicate.message,
+
+          field:
+            duplicate.field,
+
+          account:
+            duplicate.user
+              ? {
+                  id:
+                    duplicate.user._id.toString(),
+
+                  name:
+                    duplicate.user.name,
+
+                  email:
+                    duplicate.user.email,
+
+                  phone:
+                    maskPhone(
+                      duplicate.user.phone,
+                    ),
+
+                  authProvider:
+                    duplicate.user.authProvider ||
+                    "local",
+                }
+              : null,
+        });
+      }
+
+      const challenge =
+        await createEmailOtpChallenge(
+          {
+            email:
+              data.email,
+
+            purpose:
+              "registration",
+
+            registrationData: {
+              name:
+                data.name,
+
+              email:
+                data.email,
+
+              phone:
+                data.phone,
+
+              password:
+                data.password,
+            },
+          },
+        );
+
+      return res.status(
+        200,
+      ).json({
+        success: true,
+
+        requiresOtp: true,
+
+        message:
+          "OTP sent to your email. Please verify your email to complete registration.",
+
+        email:
+          data.email,
+
+        maskedEmail:
+          maskEmail(
+            data.email,
+          ),
+
+        challengeId:
+          challenge.challengeId,
+
+        expiresIn:
+          challenge.expiresIn,
+
+        resendAfter:
+          challenge.resendAfter,
+      });
+    } catch (error) {
+      console.error(
+        "REGISTER USER ERROR:",
+        error,
+      );
+
+      if (
+        error?.code ===
+        "OTP_RESEND_COOLDOWN"
+      ) {
+        return res.status(
+          429,
+        ).json({
+          success: false,
+
+          message:
+            error.message,
+
+          retryAfter:
+            error.retryAfter,
+        });
+      }
+
+      if (
+        error?.code ===
+        11000
+      ) {
+        return res.status(
+          409,
+        ).json({
+          success: false,
+
+          message:
+            "An account with these details already exists.",
+        });
+      }
+
+      return res.status(
+        500,
+      ).json({
+        success: false,
+
+        message:
+          "Unable to start registration. Please try again.",
+      });
+    }
+  };
+
+/* =========================================================
+   VERIFY REGISTRATION OTP
+========================================================= */
+
+export const verifyRegistrationOtp =
+  async (
+    req,
+    res,
+  ) => {
+    try {
+      const {
+        email,
+        otp,
+      } =
+        req.body || {};
 
       const normalizedEmail =
         String(
-          email,
+          email || "",
         )
           .trim()
           .toLowerCase();
 
-      const normalizedPhone =
-        normalizePhone(phone);
-
-      if (
-        normalizedName.length <
-        2
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Name must contain at least 2 characters",
-        });
-      }
-
-      if (
-        normalizedName.length >
-        80
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Name cannot exceed 80 characters",
-        });
-      }
+      const normalizedOtp =
+        String(
+          otp || "",
+        ).trim();
 
       if (
         !isValidEmail(
           normalizedEmail,
         )
       ) {
-        return res.status(400).json({
+        return res.status(
+          400,
+        ).json({
           success: false,
+
           message:
-            "Please enter a valid email address",
+            "Please enter a valid email address.",
         });
       }
 
       if (
-        !isValidPhone(
-          normalizedPhone,
+        !/^\d{6}$/.test(
+          normalizedOtp,
         )
       ) {
-        return res.status(400).json({
+        return res.status(
+          400,
+        ).json({
           success: false,
+
           message:
-            "Please enter a valid 10-digit mobile number",
+            "Please enter the 6-digit OTP.",
         });
       }
+
+      const verification =
+        await verifyEmailOtpChallenge(
+          {
+            email:
+              normalizedEmail,
+
+            purpose:
+              "registration",
+
+            otp:
+              normalizedOtp,
+          },
+        );
 
       if (
-        String(password).length <
-        4
+        !verification.success
       ) {
-        return res.status(400).json({
+        return res.status(
+          400,
+        ).json({
           success: false,
+
           message:
-            "Password must contain at least 4 characters",
+            verification.message,
+
+          code:
+            verification.code,
+
+          attemptsRemaining:
+            verification.attemptsRemaining,
         });
       }
+
+      const registrationData =
+        verification.record
+          ?.registrationData;
 
       if (
-        confirmPassword !==
-          undefined &&
-        password !==
-          confirmPassword
+        !registrationData
       ) {
-        return res.status(400).json({
+        return res.status(
+          400,
+        ).json({
           success: false,
+
           message:
-            "Passwords do not match",
+            "Registration session has expired. Please register again.",
         });
       }
 
-      const existingUser =
-        await User.findOne({
-          $or: [
-            {
-              email:
-                normalizedEmail,
-            },
-            {
-              phone:
-                normalizedPhone,
-            },
-          ],
-        });
+      const duplicate =
+        await checkRegistrationDuplicates(
+          {
+            email:
+              normalizedEmail,
 
-      if (existingUser) {
-        return res.status(409).json({
+            phone:
+              registrationData.phone,
+          },
+        );
+
+      if (
+        duplicate.exists
+      ) {
+        return res.status(
+          409,
+        ).json({
           success: false,
+
           message:
-            "Email or phone number is already registered",
+            duplicate.message,
+
+          field:
+            duplicate.field,
+
+          account:
+            duplicate.user
+              ? {
+                  id:
+                    duplicate.user._id.toString(),
+
+                  name:
+                    duplicate.user.name,
+
+                  email:
+                    duplicate.user.email,
+
+                  phone:
+                    maskPhone(
+                      duplicate.user.phone,
+                    ),
+
+                  authProvider:
+                    duplicate.user.authProvider ||
+                    "local",
+                }
+              : null,
         });
       }
 
       const hashedPassword =
         await bcrypt.hash(
-          password,
+          registrationData.password,
           12,
         );
-
-      const profileImage =
-        req.file
-          ? `/uploads/users/${req.file.filename}`
-          : "";
 
       const user =
         await User.create({
           name:
-            normalizedName,
+            registrationData.name,
 
           email:
             normalizedEmail,
 
           phone:
-            normalizedPhone,
+            registrationData.phone,
 
           password:
             hashedPassword,
 
+          role:
+            CUSTOMER_ROLE,
+
           authProvider:
             "local",
 
-          profileImage,
+          isEmailVerified:
+            true,
 
-          role:
-            CUSTOMER_ROLE,
+          isPhoneVerified:
+            false,
 
           isActive:
             true,
 
           isBlocked:
             false,
-
-          isEmailVerified:
-            false,
-
-          /*
-           * Kept false because the current
-           * local-registration frontend does not
-           * use the social OTP flow.
-           */
-          isPhoneVerified:
-            false,
         });
 
-      const token =
-        createToken(user);
-
-      setAuthCookie(
+      return completeLogin(
+        user,
         res,
-        token,
+        "Registration successful. Welcome to Jihaan Cosmetics!",
       );
-
-      return res.status(201).json({
-        success: true,
-
-        message:
-          "Registration successful",
-
-        token,
-
-        user:
-          getUserResponse(user),
-      });
     } catch (error) {
       console.error(
-        "USER REGISTRATION ERROR:",
+        "VERIFY REGISTRATION OTP ERROR:",
         error,
       );
 
@@ -1344,25 +1593,201 @@ export const registerUser =
         error?.code ===
         11000
       ) {
-        return res.status(409).json({
+        return res.status(
+          409,
+        ).json({
           success: false,
+
           message:
-            "Email or phone number is already registered",
+            "An account with these details already exists.",
         });
       }
 
-      return res.status(500).json({
+      return res.status(
+        500,
+      ).json({
         success: false,
+
         message:
-          "Server error during registration",
+          "Unable to complete registration. Please try again.",
       });
     }
   };
 
 /* =========================================================
+   RESEND REGISTRATION OTP
+========================================================= */
+
+export const resendRegistrationOtp =
+  async (
+    req,
+    res,
+  ) => {
+    try {
+      const {
+        email,
+      } =
+        req.body || {};
+
+      const normalizedEmail =
+        String(
+          email || "",
+        )
+          .trim()
+          .toLowerCase();
+
+      if (
+        !isValidEmail(
+          normalizedEmail,
+        )
+      ) {
+        return res.status(
+          400,
+        ).json({
+          success: false,
+
+          message:
+            "Please enter a valid email address.",
+        });
+      }
+
+      const collection =
+        await getEmailOtpCollection();
+
+      const previous =
+        await collection.findOne(
+          {
+            email:
+              normalizedEmail,
+
+            purpose:
+              "registration",
+
+            consumedAt:
+              null,
+          },
+
+          {
+            sort: {
+              createdAt:
+                -1,
+            },
+          },
+        );
+
+      if (!previous) {
+        return res.status(
+          404,
+        ).json({
+          success: false,
+
+          message:
+            "Registration session not found. Please start registration again.",
+        });
+      }
+
+      const registrationData =
+        previous.registrationData;
+
+      if (
+        !registrationData
+      ) {
+        return res.status(
+          400,
+        ).json({
+          success: false,
+
+          message:
+            "Registration session is invalid. Please register again.",
+        });
+      }
+
+      const challenge =
+        await createEmailOtpChallenge(
+          {
+            email:
+              normalizedEmail,
+
+            purpose:
+              "registration",
+
+            registrationData,
+
+            userId:
+              null,
+          },
+        );
+
+      return res.status(
+        200,
+      ).json({
+        success: true,
+
+        message:
+          "A new OTP has been sent to your email.",
+
+        requiresOtp:
+          true,
+
+        email:
+          normalizedEmail,
+
+        maskedEmail:
+          maskEmail(
+            normalizedEmail,
+          ),
+
+        challengeId:
+          challenge.challengeId,
+
+        expiresIn:
+          challenge.expiresIn,
+
+        resendAfter:
+          challenge.resendAfter,
+      });
+    } catch (error) {
+      console.error(
+        "RESEND REGISTRATION OTP ERROR:",
+        error,
+      );
+
+      if (
+        error?.code ===
+        "OTP_RESEND_COOLDOWN"
+      ) {
+        return res.status(
+          429,
+        ).json({
+          success: false,
+
+          message:
+            error.message,
+
+          retryAfter:
+            error.retryAfter,
+        });
+      }
+
+      return res.status(
+        500,
+      ).json({
+        success: false,
+
+        message:
+          "Unable to resend OTP. Please try again.",
+      });
+    }
+  };
+  /* =========================================================
    USER LOGIN
 
    POST /api/auth/login
+
+   Supports:
+   - email + password
+   - phone + password
+   - identifier + password
 ========================================================= */
 
 export const userLogin =
@@ -1371,95 +1796,66 @@ export const userLogin =
     res,
   ) => {
     try {
-      const {
-        identifier,
-        login,
-        email,
-        phone,
-        password,
-      } =
-        req.body;
+      const identifier =
+        String(
+          req.body?.identifier ??
+            req.body?.login ??
+            req.body?.email ??
+            req.body?.phone ??
+            "",
+        ).trim();
 
-      const loginInput =
-        identifier ??
-        login ??
-        email ??
-        phone;
+      const password =
+        String(
+          req.body?.password ??
+            "",
+        );
 
       if (
-        !loginInput ||
+        !identifier ||
         !password
       ) {
         return res.status(400).json({
           success: false,
           message:
-            "Email/phone and password are required",
+            "Email/phone and password are required.",
         });
       }
 
-      const loginValue =
-        String(
-          loginInput,
-        ).trim();
+      const normalizedIdentifier =
+        identifier.toLowerCase();
 
-      let userQuery;
+      const normalizedPhone =
+        normalizePhone(
+          identifier,
+        );
+
+      const conditions = [
+        {
+          email:
+            normalizedIdentifier,
+          role:
+            CUSTOMER_ROLE,
+        },
+      ];
 
       if (
-        loginValue.includes("@")
+        isValidPhone(
+          normalizedPhone,
+        )
       ) {
-        const normalizedEmail =
-          loginValue.toLowerCase();
-
-        if (
-          !isValidEmail(
-            normalizedEmail,
-          )
-        ) {
-          return res.status(400).json({
-            success: false,
-            message:
-              "Please enter a valid email address",
-          });
-        }
-
-        userQuery = {
-          email:
-            normalizedEmail,
-
-          role:
-            CUSTOMER_ROLE,
-        };
-      } else {
-        const normalizedPhone =
-          normalizePhone(
-            loginValue,
-          );
-
-        if (
-          !isValidPhone(
-            normalizedPhone,
-          )
-        ) {
-          return res.status(400).json({
-            success: false,
-            message:
-              "Please enter a valid email or 10-digit mobile number",
-          });
-        }
-
-        userQuery = {
+        conditions.push({
           phone:
             normalizedPhone,
-
           role:
             CUSTOMER_ROLE,
-        };
+        });
       }
 
       const user =
-        await User.findOne(
-          userQuery,
-        ).select(
+        await User.findOne({
+          $or: conditions,
+        }).select(
           "+password",
         );
 
@@ -1467,7 +1863,7 @@ export const userLogin =
         return res.status(401).json({
           success: false,
           message:
-            "Invalid email/phone or password",
+            "Invalid email/phone or password.",
         });
       }
 
@@ -1484,30 +1880,28 @@ export const userLogin =
         return res.status(401).json({
           success: false,
           message:
-            "This account uses social login. Please continue with Google or Facebook.",
+            "This account does not have a password. Please use the appropriate social login method or reset your password.",
         });
       }
 
-      const isPasswordValid =
+      const passwordValid =
         await bcrypt.compare(
           password,
           user.password,
         );
 
-      if (
-        !isPasswordValid
-      ) {
+      if (!passwordValid) {
         return res.status(401).json({
           success: false,
           message:
-            "Invalid email/phone or password",
+            "Invalid email/phone or password.",
         });
       }
 
       return completeLogin(
         user,
         res,
-        "Login successful",
+        "Login successful.",
       );
     } catch (error) {
       console.error(
@@ -1518,7 +1912,12 @@ export const userLogin =
       return res.status(500).json({
         success: false,
         message:
-          "Server error during login",
+          "Server error during login.",
+        error:
+          process.env.NODE_ENV ===
+          "development"
+            ? error.message
+            : undefined,
       });
     }
   };
@@ -1527,6 +1926,27 @@ export const userLogin =
    GOOGLE LOGIN
 
    POST /api/auth/google
+
+   Flow:
+
+   Existing Google account
+        ↓
+   Login immediately
+
+   Existing email account
+        ↓
+   Link Google account
+        ↓
+   Login immediately
+
+   New Google account
+        ↓
+   Create account
+        ↓
+   Login immediately
+
+   IMPORTANT:
+   Google login does NOT use WhatsApp OTP.
 ========================================================= */
 
 export const googleLogin =
@@ -1538,42 +1958,45 @@ export const googleLogin =
       const {
         credential,
         idToken,
+        token,
       } =
         req.body || {};
 
       const googleToken =
         credential ||
-        idToken;
+        idToken ||
+        token;
 
       if (!googleToken) {
         return res.status(400).json({
           success: false,
           message:
-            "Google credential is required",
+            "Google credential is required.",
         });
       }
 
       if (
         !process.env.GOOGLE_CLIENT_ID
       ) {
+        console.error(
+          "GOOGLE_CLIENT_ID is missing.",
+        );
+
         return res.status(500).json({
           success: false,
           message:
-            "Google authentication is not configured on the server",
+            "Google authentication is not configured.",
         });
       }
 
       const ticket =
-        await googleClient.verifyIdToken(
-          {
-            idToken:
-              googleToken,
+        await googleClient.verifyIdToken({
+          idToken:
+            googleToken,
 
-            audience:
-              process.env
-                .GOOGLE_CLIENT_ID,
-          },
-        );
+          audience:
+            process.env.GOOGLE_CLIENT_ID,
+        });
 
       const payload =
         ticket.getPayload();
@@ -1582,14 +2005,14 @@ export const googleLogin =
         return res.status(401).json({
           success: false,
           message:
-            "Unable to verify Google account",
+            "Unable to verify Google account.",
         });
       }
 
       const googleId =
         payload.sub;
 
-      const googleEmail =
+      const email =
         String(
           payload.email ||
             "",
@@ -1597,14 +2020,14 @@ export const googleLogin =
           .trim()
           .toLowerCase();
 
-      const googleName =
+      const name =
         normalizeName(
           payload.name ||
             payload.given_name ||
-            "Google User",
+            "Jihaan User",
         );
 
-      const googleImage =
+      const picture =
         payload.picture ||
         "";
 
@@ -1616,33 +2039,36 @@ export const googleLogin =
         return res.status(401).json({
           success: false,
           message:
-            "Google account ID was not provided",
+            "Google account ID is missing.",
         });
       }
 
-      if (!googleEmail) {
+      if (!email) {
         return res.status(400).json({
           success: false,
           message:
-            "Google did not provide an email address",
+            "Your Google account does not provide an email address.",
         });
       }
 
       if (!emailVerified) {
-        return res.status(403).json({
+        return res.status(401).json({
           success: false,
           message:
-            "Your Google email address is not verified",
+            "Your Google email address is not verified.",
         });
       }
 
       /*
-       * FIND BY GOOGLE ID
+       * STEP 1:
+       * Find account using Google ID.
        */
 
       let user =
         await User.findOne({
           googleId,
+          role:
+            CUSTOMER_ROLE,
         });
 
       if (user) {
@@ -1654,43 +2080,30 @@ export const googleLogin =
         ) {
           return;
         }
-
-        user.isEmailVerified =
-          true;
 
         return completeLogin(
           user,
           res,
-          "Google login successful",
+          "Google login successful.",
         );
       }
 
       /*
-       * FIND BY EMAIL
+       * STEP 2:
+       * Find existing account by email.
+       *
+       * We link the Google ID to the existing account.
+       * No WhatsApp OTP is required.
        */
 
       user =
         await User.findOne({
-          email:
-            googleEmail,
+          email,
+          role:
+            CUSTOMER_ROLE,
         });
 
       if (user) {
-        /*
-         * UPDATED BEHAVIOR:
-         *
-         * If an existing account already uses
-         * this verified email, attach the Google
-         * account and login immediately.
-         *
-         * The existing authProvider is preserved.
-         *
-         * Therefore an old local account keeps
-         * its password login.
-         *
-         * NO OTP.
-         */
-
         if (
           !checkAccountStatus(
             user,
@@ -1700,129 +2113,143 @@ export const googleLogin =
           return;
         }
 
-        user.googleId =
-          googleId;
+        if (
+          !user.googleId
+        ) {
+          user.googleId =
+            googleId;
+        }
+
+        if (
+          !user.profileImage &&
+          picture
+        ) {
+          user.profileImage =
+            picture;
+        }
 
         user.isEmailVerified =
           true;
 
-        /*
-         * Do not replace an existing profile image.
-         * Only use Google's image if the account
-         * doesn't already have one.
-         */
-
         if (
-          !user.profileImage &&
-          googleImage
+          !user.authProvider ||
+          user.authProvider ===
+            "local"
         ) {
-          user.profileImage =
-            googleImage;
+          /*
+           * Keep local authentication information
+           * intact if the user already has a password.
+           */
+          if (!user.password) {
+            user.authProvider =
+              "google";
+          }
         }
-
-        /*
-         * IMPORTANT:
-         *
-         * Do NOT change:
-         *
-         * authProvider: "local"
-         *
-         * to:
-         *
-         * authProvider: "google"
-         *
-         * for an existing local account.
-         *
-         * This preserves the old password login.
-         */
 
         await user.save();
 
         return completeLogin(
           user,
           res,
-          "Google login successful",
+          "Google login successful.",
         );
       }
 
       /*
-       * NEW SOCIAL USER
+       * STEP 3:
+       * New Google user.
        *
-       * Do not create the account yet.
-       *
-       * First collect phone and verify
-       * WhatsApp OTP.
+       * Create the account immediately.
+       * There is NO phone number OTP.
+       * There is NO WhatsApp verification.
        */
 
-      const socialToken =
-        createSocialPendingToken(
-          {
-            provider:
-              "google",
+      const userData = {
+        name:
+          name ||
+          "Jihaan User",
 
-            providerId:
-              googleId,
+        email,
 
-            email:
-              googleEmail,
+        googleId,
 
-            name:
-              googleName,
+        profileImage:
+          picture,
 
-            profileImage:
-              googleImage,
-          },
-        );
+        role:
+          CUSTOMER_ROLE,
 
-      return res.status(200).json({
-        success: true,
-
-        requiresPhone:
-          true,
-
-        requiresOtp:
-          true,
-
-        provider:
+        authProvider:
           "google",
 
-        socialToken,
+        isEmailVerified:
+          true,
 
-        user: {
-          name:
-            googleName,
+        isPhoneVerified:
+          false,
 
-          email:
-            googleEmail,
+        isActive:
+          true,
 
-          profileImage:
-            googleImage,
-        },
+        isBlocked:
+          false,
+      };
 
-        message:
-          "Google account verified. Please provide your mobile number and verify OTP to complete registration.",
-      });
+      user =
+        await User.create(
+          userData,
+        );
+
+      return completeLogin(
+        user,
+        res,
+        "Google account created successfully. Welcome to Jihaan Cosmetics!",
+      );
     } catch (error) {
       console.error(
         "GOOGLE LOGIN ERROR:",
         error,
       );
 
+      /*
+       * Mongoose duplicate key.
+       * This can happen when the same email is being
+       * created concurrently.
+       */
+
       if (
-        error?.name ===
-        "TokenExpiredError"
+        error?.code ===
+        11000
+      ) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "An account with this Google email already exists. Please try logging in again.",
+        });
+      }
+
+      if (
+        error?.message?.includes(
+          "Wrong number of segments",
+        ) ||
+        error?.message?.includes(
+          "Invalid token",
+        ) ||
+        error?.message?.includes(
+          "Token used too late",
+        )
       ) {
         return res.status(401).json({
           success: false,
           message:
-            "Google login session expired. Please try again.",
+            "Invalid or expired Google credential.",
         });
       }
 
-      return res.status(401).json({
+      return res.status(500).json({
         success: false,
         message:
-          "Google authentication failed",
+          "Server error during Google login.",
         error:
           process.env.NODE_ENV ===
           "development"
@@ -1836,6 +2263,27 @@ export const googleLogin =
    FACEBOOK LOGIN
 
    POST /api/auth/facebook
+
+   Flow:
+
+   Existing Facebook account
+        ↓
+   Login immediately
+
+   Existing email account
+        ↓
+   Link Facebook account
+        ↓
+   Login immediately
+
+   New Facebook account
+        ↓
+   Create account
+        ↓
+   Login immediately
+
+   IMPORTANT:
+   Facebook login does NOT use WhatsApp OTP.
 ========================================================= */
 
 export const facebookLogin =
@@ -1846,51 +2294,59 @@ export const facebookLogin =
     try {
       const {
         accessToken,
+        token,
       } =
         req.body || {};
 
-      if (!accessToken) {
+      const facebookToken =
+        accessToken ||
+        token;
+
+      if (!facebookToken) {
         return res.status(400).json({
           success: false,
           message:
-            "Facebook access token is required",
+            "Facebook access token is required.",
         });
       }
 
-      if (
-        !process.env.FACEBOOK_APP_ID ||
-        !process.env.FACEBOOK_APP_SECRET
-      ) {
-        return res.status(500).json({
-          success: false,
-          message:
-            "Facebook authentication is not configured on the server",
-        });
-      }
+      const appId =
+        process.env.FACEBOOK_APP_ID;
+
+      const appSecret =
+        process.env.FACEBOOK_APP_SECRET;
 
       const graphVersion =
-        process.env
-          .FACEBOOK_GRAPH_VERSION;
+        process.env.FACEBOOK_GRAPH_VERSION ||
+        "v24.0";
 
-      if (!graphVersion) {
+      if (
+        !appId ||
+        !appSecret
+      ) {
+        console.error(
+          "Facebook authentication environment variables are missing.",
+        );
+
         return res.status(500).json({
           success: false,
           message:
-            "FACEBOOK_GRAPH_VERSION is not configured",
+            "Facebook authentication is not configured.",
         });
       }
 
       /*
-       * VERIFY ACCESS TOKEN
+       * First verify the user's access token
+       * against the Facebook application.
        */
 
       const appAccessToken =
-        `${process.env.FACEBOOK_APP_ID}|${process.env.FACEBOOK_APP_SECRET}`;
+        `${appId}|${appSecret}`;
 
       const debugUrl =
         `https://graph.facebook.com/${graphVersion}/debug_token` +
         `?input_token=${encodeURIComponent(
-          accessToken,
+          facebookToken,
         )}` +
         `&access_token=${encodeURIComponent(
           appAccessToken,
@@ -1901,64 +2357,46 @@ export const facebookLogin =
           debugUrl,
         );
 
-      if (
-        !debugResponse.ok
-      ) {
-        const debugText =
-          await debugResponse.text();
-
-        console.error(
-          "FACEBOOK DEBUG TOKEN ERROR:",
-          debugText,
-        );
-
-        return res.status(401).json({
-          success: false,
-          message:
-            "Unable to verify Facebook access token",
-        });
-      }
-
       const debugData =
         await debugResponse.json();
 
-      const tokenData =
-        debugData?.data;
-
-      if (!tokenData?.is_valid) {
+      if (
+        !debugResponse.ok ||
+        !debugData?.data?.is_valid
+      ) {
         return res.status(401).json({
           success: false,
           message:
-            "Invalid or expired Facebook access token",
+            "Invalid or expired Facebook access token.",
         });
       }
+
+      const tokenData =
+        debugData.data;
 
       if (
         tokenData.app_id &&
         String(
           tokenData.app_id,
         ) !==
-          String(
-            process.env
-              .FACEBOOK_APP_ID,
-          )
+          String(appId)
       ) {
         return res.status(401).json({
           success: false,
           message:
-            "Facebook access token belongs to a different application",
+            "Facebook token does not belong to this application.",
         });
       }
 
       /*
-       * FETCH FACEBOOK PROFILE
+       * Get Facebook profile information.
        */
 
       const profileUrl =
         `https://graph.facebook.com/${graphVersion}/me` +
         `?fields=id,name,email,picture.type(large)` +
         `&access_token=${encodeURIComponent(
-          accessToken,
+          facebookToken,
         )}`;
 
       const profileResponse =
@@ -1966,80 +2404,65 @@ export const facebookLogin =
           profileUrl,
         );
 
-      if (
-        !profileResponse.ok
-      ) {
-        const profileText =
-          await profileResponse.text();
+      const profileData =
+        await profileResponse.json();
 
+      if (
+        !profileResponse.ok ||
+        !profileData?.id
+      ) {
         console.error(
           "FACEBOOK PROFILE ERROR:",
-          profileText,
+          profileData,
         );
 
         return res.status(401).json({
           success: false,
           message:
-            "Unable to retrieve Facebook profile",
+            "Unable to retrieve your Facebook account information.",
         });
       }
 
-      const profile =
-        await profileResponse.json();
-
       const facebookId =
-        profile?.id;
+        profileData.id;
 
-      const facebookName =
-        normalizeName(
-          profile?.name ||
-            "Facebook User",
-        );
-
-      const facebookEmail =
+      const email =
         String(
-          profile?.email ||
+          profileData.email ||
             "",
         )
           .trim()
           .toLowerCase();
 
-      const facebookImage =
-        profile?.picture
+      const name =
+        normalizeName(
+          profileData.name ||
+            "Jihaan User",
+        );
+
+      const picture =
+        profileData?.picture
           ?.data?.url ||
         "";
 
-      if (!facebookId) {
-        return res.status(401).json({
-          success: false,
-          message:
-            "Facebook account ID was not provided",
-        });
-      }
-
-      /*
-       * Facebook may not return an email
-       * depending on the account or permission.
-       *
-       * The current account flow requires
-       * an email for the customer account.
-       */
-
-      if (!facebookEmail) {
+      if (!email) {
         return res.status(400).json({
           success: false,
           message:
-            "Facebook did not provide an email address. Please use another login method.",
+            "Your Facebook account does not provide an email address. Please use email registration instead.",
         });
       }
 
       /*
-       * FIND BY FACEBOOK ID
+       * STEP 1:
+       * Find account by Facebook ID.
        */
 
       let user =
         await User.findOne({
           facebookId,
+          role:
+            CUSTOMER_ROLE,
         });
 
       if (user) {
@@ -2051,41 +2474,30 @@ export const facebookLogin =
         ) {
           return;
         }
-
-        user.isEmailVerified =
-          true;
 
         return completeLogin(
           user,
           res,
-          "Facebook login successful",
+          "Facebook login successful.",
         );
       }
 
       /*
-       * FIND BY EMAIL
+       * STEP 2:
+       * Find existing customer by email.
+       *
+       * Link Facebook account.
+       * No WhatsApp OTP is required.
        */
 
       user =
         await User.findOne({
-          email:
-            facebookEmail,
+          email,
+          role:
+            CUSTOMER_ROLE,
         });
 
       if (user) {
-        /*
-         * UPDATED BEHAVIOR:
-         *
-         * Existing account with the same email
-         * can login using Facebook immediately.
-         *
-         * The existing authProvider is preserved.
-         *
-         * Existing password is NOT removed.
-         *
-         * NO OTP.
-         */
-
         if (
           !checkAccountStatus(
             user,
@@ -2095,111 +2507,110 @@ export const facebookLogin =
           return;
         }
 
-        user.facebookId =
-          facebookId;
+        if (
+          !user.facebookId
+        ) {
+          user.facebookId =
+            facebookId;
+        }
+
+        if (
+          !user.profileImage &&
+          picture
+        ) {
+          user.profileImage =
+            picture;
+        }
 
         user.isEmailVerified =
           true;
 
-        /*
-         * Keep an existing profile image.
-         */
-
         if (
-          !user.profileImage &&
-          facebookImage
+          !user.authProvider ||
+          user.authProvider ===
+            "local"
         ) {
-          user.profileImage =
-            facebookImage;
+          if (!user.password) {
+            user.authProvider =
+              "facebook";
+          }
         }
-
-        /*
-         * IMPORTANT:
-         *
-         * Do not change the existing
-         * authProvider.
-         *
-         * This means a local account remains
-         * capable of logging in with its old
-         * email/mobile + password.
-         */
 
         await user.save();
 
         return completeLogin(
           user,
           res,
-          "Facebook login successful",
+          "Facebook login successful.",
         );
       }
 
       /*
-       * NEW SOCIAL USER
+       * STEP 3:
+       * Create a new Facebook account immediately.
        *
-       * Do not create the account yet.
-       *
-       * First collect phone and verify
-       * WhatsApp OTP.
+       * NO phone number is required.
+       * NO WhatsApp OTP is required.
        */
 
-      const socialToken =
-        createSocialPendingToken(
-          {
-            provider:
-              "facebook",
-
-            providerId:
-              facebookId,
-
-            email:
-              facebookEmail,
-
-            name:
-              facebookName,
-
-            profileImage:
-              facebookImage,
-          },
-        );
-
-      return res.status(200).json({
-        success: true,
-
-        requiresPhone:
-          true,
-
-        requiresOtp:
-          true,
-
-        provider:
-          "facebook",
-
-        socialToken,
-
-        user: {
+      user =
+        await User.create({
           name:
-            facebookName,
+            name ||
+            "Jihaan User",
 
-          email:
-            facebookEmail,
+          email,
+
+          facebookId,
 
           profileImage:
-            facebookImage,
-        },
+            picture,
 
-        message:
-          "Facebook account verified. Please provide your mobile number and verify OTP to complete registration.",
-      });
+          role:
+            CUSTOMER_ROLE,
+
+          authProvider:
+            "facebook",
+
+          isEmailVerified:
+            true,
+
+          isPhoneVerified:
+            false,
+
+          isActive:
+            true,
+
+          isBlocked:
+            false,
+        });
+
+      return completeLogin(
+        user,
+        res,
+        "Facebook account created successfully. Welcome to Jihaan Cosmetics!",
+      );
     } catch (error) {
       console.error(
         "FACEBOOK LOGIN ERROR:",
         error,
       );
 
-      return res.status(401).json({
+      if (
+        error?.code ===
+        11000
+      ) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "An account with this Facebook email already exists. Please try logging in again.",
+        });
+      }
+
+      return res.status(500).json({
         success: false,
         message:
-          "Facebook authentication failed",
+          "Server error during Facebook login.",
         error:
           process.env.NODE_ENV ===
           "development"
@@ -2209,137 +2620,242 @@ export const facebookLogin =
     }
   };
   /* =========================================================
-   SOCIAL SEND OTP
-
-   POST /api/auth/social/send-otp
-
-   Body:
-   {
-     socialToken,
-     phone
-   }
-
-   WhatsApp OTP is sent here.
+   ADMIN LOGIN
 ========================================================= */
 
-export const sendSocialOtp =
+export const adminLogin =
   async (
     req,
     res,
   ) => {
     try {
       const {
-        socialToken,
-        phone,
+        identifier,
+        email,
+        password,
       } =
         req.body || {};
 
-      if (!socialToken) {
+      const loginIdentifier =
+        String(
+          identifier ??
+            email ??
+            "",
+        )
+          .trim()
+          .toLowerCase();
+
+      const loginPassword =
+        String(
+          password || "",
+        );
+
+      if (
+        !loginIdentifier ||
+        !loginPassword
+      ) {
         return res.status(400).json({
           success: false,
           message:
-            "Social registration token is required",
+            "Email and password are required.",
         });
       }
 
-      if (!phone) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Mobile number is required",
-        });
-      }
+      const user =
+        await User.findOne({
+          email:
+            loginIdentifier,
 
-      let decoded;
+          role: {
+            $in:
+              STAFF_ROLES,
+          },
+        }).select(
+          "+password",
+        );
 
-      try {
-        decoded =
-          verifySocialPendingToken(
-            socialToken,
-          );
-      } catch {
+      if (!user) {
         return res.status(401).json({
           success: false,
           message:
-            "Social registration session expired. Please login with Google/Facebook again.",
+            "Invalid email or password.",
         });
       }
 
       if (
-        !SOCIAL_PROVIDERS.includes(
-          decoded.provider,
+        !checkAccountStatus(
+          user,
+          res,
         )
       ) {
-        return res.status(400).json({
+        return;
+      }
+
+      if (!user.password) {
+        return res.status(401).json({
           success: false,
           message:
-            "Invalid social authentication provider",
+            "This account does not have a password configured.",
         });
       }
 
-      const normalizedPhone =
-        normalizePhone(phone);
-
-      if (
-        !isValidPhone(
-          normalizedPhone,
-        )
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Please enter a valid 10-digit mobile number",
-        });
-      }
-
-      const existingPhone =
-        await User.findOne({
-          phone:
-            normalizedPhone,
-        });
-
-      if (existingPhone) {
-        return res.status(409).json({
-          success: false,
-          message:
-            "This mobile number is already registered. Please login using your existing account.",
-        });
-      }
-
-      const challengeKey =
-        hashChallengeKey(
-          `${decoded.provider}:${decoded.providerId}:${normalizedPhone}`,
+      const passwordValid =
+        await bcrypt.compare(
+          loginPassword,
+          user.password,
         );
 
-      const result =
-        await createOtpChallenge({
-          phone:
-            normalizedPhone,
-
-          purpose:
-            "social-registration",
-
-          challengeKey,
+      if (!passwordValid) {
+        return res.status(401).json({
+          success: false,
+          message:
+            "Invalid email or password.",
         });
+      }
+
+      return completeLogin(
+        user,
+        res,
+        "Admin login successful.",
+      );
+    } catch (error) {
+      console.error(
+        "ADMIN LOGIN ERROR:",
+        error,
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Server error during admin login.",
+        error:
+          process.env.NODE_ENV ===
+          "development"
+            ? error.message
+            : undefined,
+      });
+    }
+  };
+
+/* =========================================================
+   FORGOT PASSWORD
+
+   Flow:
+
+   User enters email
+        ↓
+   Backend finds account
+        ↓
+   Email OTP is generated
+        ↓
+   OTP sent to Gmail/email
+        ↓
+   User verifies OTP
+        ↓
+   Backend returns reset token + account info
+        ↓
+   User creates new password
+
+   WhatsApp OTP is NOT used.
+========================================================= */
+
+export const forgotPassword =
+  async (
+    req,
+    res,
+  ) => {
+    try {
+      const email =
+        String(
+          req.body?.email ||
+            "",
+        )
+          .trim()
+          .toLowerCase();
+
+      if (
+        !isValidEmail(email)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please enter a valid email address.",
+        });
+      }
+
+      const user =
+        await User.findOne({
+          email,
+          role:
+            CUSTOMER_ROLE,
+        });
+
+      /*
+       * For security, do not expose whether
+       * an email exists in the database.
+       *
+       * However, the frontend still receives
+       * a generic success response.
+       */
+
+      if (!user) {
+        return res.status(200).json({
+          success: true,
+          requiresOtp: true,
+          message:
+            "If an account exists with this email, a password reset OTP has been sent.",
+          email,
+          maskedEmail:
+            maskEmail(email),
+        });
+      }
+
+      if (
+        !checkAccountStatus(
+          user,
+          res,
+        )
+      ) {
+        return;
+      }
+
+      const challenge =
+        await createEmailOtpChallenge(
+          {
+            email,
+            purpose:
+              "forgot-password",
+
+            userId:
+              user._id.toString(),
+          },
+        );
 
       return res.status(200).json({
         success: true,
 
+        requiresOtp: true,
+
         message:
-          "OTP sent successfully to your WhatsApp number.",
+          "Password reset OTP has been sent to your email.",
 
-        expiresIn:
-          result.expiresIn,
+        email,
 
-        resendAfter:
-          result.resendAfter,
+        maskedEmail:
+          maskEmail(email),
 
         challengeId:
-          result.challengeId,
+          challenge.challengeId,
+
+        expiresIn:
+          challenge.expiresIn,
+
+        resendAfter:
+          challenge.resendAfter,
       });
     } catch (error) {
       console.error(
-        "SEND SOCIAL OTP ERROR:",
+        "FORGOT PASSWORD ERROR:",
         error,
       );
 
@@ -2349,9 +2865,295 @@ export const sendSocialOtp =
       ) {
         return res.status(429).json({
           success: false,
+          message:
+            error.message,
+          retryAfter:
+            error.retryAfter,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to send password reset OTP. Please try again.",
+      });
+    }
+  };
+
+/* =========================================================
+   VERIFY FORGOT PASSWORD OTP
+
+   Returns:
+
+   - resetToken
+   - user information
+   - masked phone
+   - email
+   - name
+
+   Frontend can then move to the
+   "Create New Password" screen.
+========================================================= */
+
+export const verifyForgotPasswordOtp =
+  async (
+    req,
+    res,
+  ) => {
+    try {
+      const {
+        email,
+        otp,
+      } =
+        req.body || {};
+
+      const normalizedEmail =
+        String(
+          email || "",
+        )
+          .trim()
+          .toLowerCase();
+
+      const normalizedOtp =
+        String(
+          otp || "",
+        ).trim();
+
+      if (
+        !isValidEmail(
+          normalizedEmail,
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please enter a valid email address.",
+        });
+      }
+
+      if (
+        !/^\d{6}$/.test(
+          normalizedOtp,
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please enter the 6-digit OTP.",
+        });
+      }
+
+      const verification =
+        await verifyEmailOtpChallenge(
+          {
+            email:
+              normalizedEmail,
+
+            purpose:
+              "forgot-password",
+
+            otp:
+              normalizedOtp,
+          },
+        );
+
+      if (
+        !verification.success
+      ) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            verification.message,
 
           code:
-            "OTP_RESEND_COOLDOWN",
+            verification.code,
+
+          attemptsRemaining:
+            verification.attemptsRemaining,
+        });
+      }
+
+      const user =
+        await User.findOne({
+          email:
+            normalizedEmail,
+
+          role:
+            CUSTOMER_ROLE,
+        });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Account not found.",
+        });
+      }
+
+      if (
+        !checkAccountStatus(
+          user,
+          res,
+        )
+      ) {
+        return;
+      }
+
+      const resetToken =
+        createPasswordResetToken(
+          user,
+        );
+
+      return res.status(200).json({
+        success: true,
+
+        message:
+          "OTP verified successfully. You can now create a new password.",
+
+        resetToken,
+
+        user: {
+          id:
+            user._id.toString(),
+
+          name:
+            user.name,
+
+          email:
+            user.email,
+
+          phone:
+            maskPhone(
+              user.phone,
+            ),
+        },
+      });
+    } catch (error) {
+      console.error(
+        "VERIFY FORGOT PASSWORD OTP ERROR:",
+        error,
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to verify OTP. Please try again.",
+      });
+    }
+  };
+
+/* =========================================================
+   RESEND FORGOT PASSWORD OTP
+========================================================= */
+
+export const resendForgotPasswordOtp =
+  async (
+    req,
+    res,
+  ) => {
+    try {
+      const email =
+        String(
+          req.body?.email ||
+            "",
+        )
+          .trim()
+          .toLowerCase();
+
+      if (
+        !isValidEmail(email)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please enter a valid email address.",
+        });
+      }
+
+      const user =
+        await User.findOne({
+          email,
+          role:
+            CUSTOMER_ROLE,
+        });
+
+      /*
+       * Keep response generic when account
+       * does not exist.
+       */
+
+      if (!user) {
+        return res.status(200).json({
+          success: true,
+
+          message:
+            "If an account exists with this email, a new OTP has been sent.",
+
+          email,
+
+          maskedEmail:
+            maskEmail(email),
+        });
+      }
+
+      if (
+        !checkAccountStatus(
+          user,
+          res,
+        )
+      ) {
+        return;
+      }
+
+      const challenge =
+        await createEmailOtpChallenge(
+          {
+            email,
+
+            purpose:
+              "forgot-password",
+
+            userId:
+              user._id.toString(),
+          },
+        );
+
+      return res.status(200).json({
+        success: true,
+
+        requiresOtp:
+          true,
+
+        message:
+          "A new password reset OTP has been sent to your email.",
+
+        email,
+
+        maskedEmail:
+          maskEmail(email),
+
+        challengeId:
+          challenge.challengeId,
+
+        expiresIn:
+          challenge.expiresIn,
+
+        resendAfter:
+          challenge.resendAfter,
+      });
+    } catch (error) {
+      console.error(
+        "RESEND FORGOT PASSWORD OTP ERROR:",
+        error,
+      );
+
+      if (
+        error?.code ===
+        "OTP_RESEND_COOLDOWN"
+      ) {
+        return res.status(429).json({
+          success: false,
 
           message:
             error.message,
@@ -2365,764 +3167,13 @@ export const sendSocialOtp =
         success: false,
 
         message:
-          error?.message ||
-          "Unable to send OTP at this time",
+          "Unable to resend password reset OTP.",
       });
     }
   };
 
 /* =========================================================
-   COMPLETE SOCIAL REGISTRATION
-
-   POST /api/auth/social/complete
-
-   Body:
-   {
-     socialToken,
-     phone,
-     otp
-   }
-========================================================= */
-
-export const completeSocialRegistration =
-  async (
-    req,
-    res,
-  ) => {
-    try {
-      const {
-        socialToken,
-        phone,
-        otp,
-      } =
-        req.body || {};
-
-      const normalizedPhone =
-        normalizePhone(phone);
-
-      const normalizedOtp =
-        String(
-          otp || "",
-        ).trim();
-
-      if (!socialToken) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Social registration token is required",
-        });
-      }
-
-      if (
-        !isValidPhone(
-          normalizedPhone,
-        )
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Please enter a valid Indian mobile number",
-        });
-      }
-
-      if (
-        !/^[0-9]{6}$/.test(
-          normalizedOtp,
-        )
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Please enter a valid 6-digit OTP",
-        });
-      }
-
-      let socialData;
-
-      try {
-        socialData =
-          verifySocialPendingToken(
-            socialToken,
-          );
-      } catch {
-        return res.status(401).json({
-          success: false,
-          message:
-            "Social registration session expired. Please login with Google/Facebook again.",
-        });
-      }
-
-      if (
-        !SOCIAL_PROVIDERS.includes(
-          socialData.provider,
-        )
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Invalid social login provider",
-        });
-      }
-
-      const existingPhone =
-        await User.findOne({
-          phone:
-            normalizedPhone,
-        });
-
-      if (existingPhone) {
-        return res.status(409).json({
-          success: false,
-          message:
-            "This mobile number is already registered. Please login using your existing account.",
-        });
-      }
-
-      const challengeKey =
-        hashChallengeKey(
-          `${socialData.provider}:${socialData.providerId}:${normalizedPhone}`,
-        );
-
-      const verification =
-        await verifyOtpChallenge({
-          phone:
-            normalizedPhone,
-
-          purpose:
-            "social-registration",
-
-          challengeKey,
-
-          otp:
-            normalizedOtp,
-        });
-
-      if (
-        !verification.success
-      ) {
-        const status =
-          verification.code ===
-          "OTP_MAX_ATTEMPTS"
-            ? 429
-            : 400;
-
-        return res.status(
-          status,
-        ).json({
-          success: false,
-
-          code:
-            verification.code,
-
-          message:
-            verification.message,
-        });
-      }
-
-      /*
-       * Re-check the social account immediately
-       * before creating the account.
-       */
-
-      const existingSocial =
-        socialData.provider ===
-        "google"
-          ? await User.findOne({
-              googleId:
-                socialData.providerId,
-            })
-          : await User.findOne({
-              facebookId:
-                socialData.providerId,
-            });
-
-      if (existingSocial) {
-        if (
-          !checkAccountStatus(
-            existingSocial,
-            res,
-          )
-        ) {
-          return;
-        }
-
-        return completeLogin(
-          existingSocial,
-          res,
-          `${
-            socialData.provider ===
-            "google"
-              ? "Google"
-              : "Facebook"
-          } login successful`,
-        );
-      }
-
-      /*
-       * Re-check email because a customer may have
-       * registered with the same email while the OTP
-       * was being completed.
-       */
-
-      const existingEmail =
-        await User.findOne({
-          email:
-            String(
-              socialData.email ||
-                "",
-            )
-              .trim()
-              .toLowerCase(),
-        });
-
-      if (existingEmail) {
-        return res.status(409).json({
-          success: false,
-          accountExists:
-            true,
-          requiresExistingLogin:
-            true,
-          message:
-            "An account already exists with this email. Please log in using your existing login method.",
-        });
-      }
-
-      const userData = {
-        name:
-          normalizeName(
-            socialData.name ||
-              "Customer",
-          ),
-
-        email:
-          String(
-            socialData.email ||
-              "",
-          )
-            .trim()
-            .toLowerCase(),
-
-        phone:
-          normalizedPhone,
-
-        authProvider:
-          socialData.provider,
-
-        role:
-          CUSTOMER_ROLE,
-
-        profileImage:
-          socialData.profileImage ||
-          "",
-
-        isActive:
-          true,
-
-        isBlocked:
-          false,
-
-        isEmailVerified:
-          true,
-
-        isPhoneVerified:
-          true,
-      };
-
-      if (
-        socialData.provider ===
-        "google"
-      ) {
-        userData.googleId =
-          socialData.providerId;
-      }
-
-      if (
-        socialData.provider ===
-        "facebook"
-      ) {
-        userData.facebookId =
-          socialData.providerId;
-      }
-
-      const user =
-        await User.create(
-          userData,
-        );
-
-      return completeLogin(
-        user,
-        res,
-        "Registration completed successfully",
-      );
-    } catch (error) {
-      console.error(
-        "COMPLETE SOCIAL REGISTRATION ERROR:",
-        error,
-      );
-
-      if (
-        error?.code ===
-        11000
-      ) {
-        return res.status(409).json({
-          success: false,
-          message:
-            "Email, phone number, or social account is already registered",
-        });
-      }
-
-      return res.status(500).json({
-        success: false,
-        message:
-          "Unable to complete social registration",
-      });
-    }
-  };
-
-/* =========================================================
-   FORGOT PASSWORD
-
-   POST /api/auth/forgot-password
-
-   Body:
-   {
-     identifier
-   }
-
-   Identifier may be:
-   - Email
-   - Mobile number
-
-   Response intentionally remains generic so that
-   account existence is not exposed.
-========================================================= */
-
-export const forgotPassword =
-  async (
-    req,
-    res,
-  ) => {
-    const genericResponse =
-      () =>
-        res.status(200).json({
-          success: true,
-          message:
-            "If an account exists with these details, a password reset OTP has been sent to the registered WhatsApp number.",
-        });
-
-    try {
-      const identifier =
-        String(
-          req.body?.identifier ??
-            req.body?.email ??
-            req.body?.phone ??
-            "",
-        ).trim();
-
-      if (!identifier) {
-        return genericResponse();
-      }
-
-      let user = null;
-
-      if (
-        identifier.includes("@")
-      ) {
-        const normalizedEmail =
-          identifier
-            .toLowerCase();
-
-        if (
-          !isValidEmail(
-            normalizedEmail,
-          )
-        ) {
-          return genericResponse();
-        }
-
-        user =
-          await User.findOne({
-            email:
-              normalizedEmail,
-
-            role:
-              CUSTOMER_ROLE,
-          });
-      } else {
-        const normalizedPhone =
-          normalizePhone(
-            identifier,
-          );
-
-        if (
-          !isValidPhone(
-            normalizedPhone,
-          )
-        ) {
-          return genericResponse();
-        }
-
-        user =
-          await User.findOne({
-            phone:
-              normalizedPhone,
-
-            role:
-              CUSTOMER_ROLE,
-          });
-      }
-
-      if (!user) {
-        return genericResponse();
-      }
-
-      if (
-        user.isBlocked === true ||
-        user.isActive === false
-      ) {
-        return genericResponse();
-      }
-
-      /*
-       * Social-only accounts should continue
-       * using their social provider.
-       */
-
-      if (
-        SOCIAL_PROVIDERS.includes(
-          user.authProvider,
-        ) &&
-        !user.password
-      ) {
-        return genericResponse();
-      }
-
-      if (
-        !user.phone ||
-        !isValidPhone(
-          normalizePhone(
-            user.phone,
-          ),
-        )
-      ) {
-        return genericResponse();
-      }
-
-      const normalizedPhone =
-        normalizePhone(
-          user.phone,
-        );
-
-      const challengeKey =
-        hashChallengeKey(
-          `forgot-password:${user._id.toString()}`,
-        );
-
-      try {
-        await createOtpChallenge({
-          phone:
-            normalizedPhone,
-
-          purpose:
-            "forgot-password",
-
-          challengeKey,
-
-          userId:
-            user._id,
-        });
-      } catch (error) {
-        if (
-          error?.code ===
-          "OTP_RESEND_COOLDOWN"
-        ) {
-          /*
-           * Keep response generic.
-           * Do not reveal whether account exists.
-           */
-          return genericResponse();
-        }
-
-        throw error;
-      }
-
-      return genericResponse();
-    } catch (error) {
-      console.error(
-        "FORGOT PASSWORD ERROR:",
-        error,
-      );
-
-      /*
-       * Do not reveal internal details
-       * through this endpoint.
-       */
-
-      return res.status(200).json({
-        success: true,
-        message:
-          "If an account exists with these details, a password reset OTP has been sent to the registered WhatsApp number.",
-      });
-    }
-  };
-
-/* =========================================================
-   FORGOT PASSWORD - VERIFY OTP
-
-   POST /api/auth/forgot-password/verify-otp
-
-   Body:
-   {
-     identifier,
-     otp
-   }
-
-   Returns a short-lived password reset token.
-========================================================= */
-
-export const verifyForgotPasswordOtp =
-  async (
-    req,
-    res,
-  ) => {
-    try {
-      const identifier =
-        String(
-          req.body?.identifier ??
-            req.body?.email ??
-            req.body?.phone ??
-            "",
-        ).trim();
-
-      const otp =
-        String(
-          req.body?.otp ??
-            "",
-        )
-          .replace(
-            /\D/g,
-            "",
-          )
-          .trim();
-
-      if (!identifier) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Email or mobile number is required",
-        });
-      }
-
-      if (
-        otp.length !==
-        OTP_LENGTH
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Please enter a valid 6-digit OTP",
-        });
-      }
-
-      let normalizedEmail =
-        "";
-
-      let normalizedPhone =
-        "";
-
-      if (
-        identifier.includes("@")
-      ) {
-        normalizedEmail =
-          identifier
-            .toLowerCase();
-
-        if (
-          !isValidEmail(
-            normalizedEmail,
-          )
-        ) {
-          return res.status(400).json({
-            success: false,
-            message:
-              "Please enter a valid email address",
-          });
-        }
-      } else {
-        normalizedPhone =
-          normalizePhone(
-            identifier,
-          );
-
-        if (
-          !isValidPhone(
-            normalizedPhone,
-          )
-        ) {
-          return res.status(400).json({
-            success: false,
-            message:
-              "Please enter a valid 10-digit mobile number",
-          });
-        }
-      }
-
-      const query =
-        normalizedEmail
-          ? {
-              email:
-                normalizedEmail,
-
-              role:
-                CUSTOMER_ROLE,
-            }
-          : {
-              phone:
-                normalizedPhone,
-
-              role:
-                CUSTOMER_ROLE,
-            };
-
-      const user =
-        await User.findOne(
-          query,
-        );
-
-      if (!user) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Invalid or expired OTP",
-        });
-      }
-
-      if (
-        user.isBlocked === true ||
-        user.isActive === false
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Invalid or expired OTP",
-        });
-      }
-
-      if (
-        SOCIAL_PROVIDERS.includes(
-          user.authProvider,
-        ) &&
-        !user.password
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "This account uses social login. Please continue with Google or Facebook.",
-        });
-      }
-
-      const registeredPhone =
-        normalizePhone(
-          user.phone,
-        );
-
-      if (
-        !isValidPhone(
-          registeredPhone,
-        )
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Invalid or expired OTP",
-        });
-      }
-
-      const challengeKey =
-        hashChallengeKey(
-          `forgot-password:${user._id.toString()}`,
-        );
-
-      const verification =
-        await verifyOtpChallenge({
-          phone:
-            registeredPhone,
-
-          purpose:
-            "forgot-password",
-
-          challengeKey,
-
-          otp,
-        });
-
-      if (
-        !verification.success
-      ) {
-        const status =
-          verification.code ===
-          "OTP_MAX_ATTEMPTS"
-            ? 429
-            : 400;
-
-        return res.status(
-          status,
-        ).json({
-          success: false,
-
-          code:
-            verification.code,
-
-          message:
-            verification.message,
-        });
-      }
-
-      const resetToken =
-        createPasswordResetToken({
-          userId:
-            user._id,
-
-          challengeId:
-            verification.record
-              ._id,
-        });
-
-      return res.status(200).json({
-        success: true,
-
-        message:
-          "OTP verified successfully",
-
-        resetToken,
-
-        expiresIn:
-          10 * 60,
-      });
-    } catch (error) {
-      console.error(
-        "VERIFY FORGOT PASSWORD OTP ERROR:",
-        error,
-      );
-
-      return res.status(500).json({
-        success: false,
-        message:
-          "Unable to verify OTP",
-      });
-    }
-  };
-  /* =========================================================
    RESET PASSWORD
-
-   POST /api/auth/reset-password
-
-   Body:
-   {
-     resetToken,
-     newPassword,
-     confirmPassword
-   }
 ========================================================= */
 
 export const resetPassword =
@@ -3133,70 +3184,86 @@ export const resetPassword =
     try {
       const {
         resetToken,
+        token,
+        password,
         newPassword,
         confirmPassword,
       } =
         req.body || {};
 
-      if (!resetToken) {
+      const passwordResetToken =
+        resetToken ||
+        token;
+
+      const finalPassword =
+        newPassword ||
+        password;
+
+      if (
+        !passwordResetToken
+      ) {
         return res.status(400).json({
           success: false,
           message:
-            "Password reset token is required",
+            "Password reset token is required.",
         });
       }
 
-      if (!newPassword) {
+      if (
+        !finalPassword
+      ) {
         return res.status(400).json({
           success: false,
           message:
-            "New password is required",
+            "New password is required.",
         });
       }
 
       if (
         String(
-          newPassword,
-        ).length < 4
+          finalPassword,
+        ).length < 6
       ) {
         return res.status(400).json({
           success: false,
           message:
-            "Password must contain at least 4 characters",
+            "New password must contain at least 6 characters.",
         });
       }
 
       if (
         confirmPassword !==
           undefined &&
-        newPassword !==
-          confirmPassword
+        String(
+          finalPassword,
+        ) !==
+          String(
+            confirmPassword,
+          )
       ) {
         return res.status(400).json({
           success: false,
           message:
-            "Passwords do not match",
+            "Passwords do not match.",
         });
       }
 
-      let decoded;
+      const decoded =
+        verifyPasswordResetToken(
+          passwordResetToken,
+        );
 
-      try {
-        decoded =
-          verifyPasswordResetToken(
-            resetToken,
-          );
-      } catch (error) {
+      if (!decoded) {
         return res.status(401).json({
           success: false,
           message:
-            "Password reset session has expired. Please request a new OTP.",
+            "Password reset token is invalid or expired. Please request a new OTP.",
         });
       }
 
       const user =
         await User.findById(
-          decoded.userId,
+          decoded.id,
         ).select(
           "+password",
         );
@@ -3205,117 +3272,54 @@ export const resetPassword =
         return res.status(404).json({
           success: false,
           message:
-            "User account not found",
+            "Account not found.",
         });
       }
 
       if (
-        user.isBlocked === true ||
-        user.isActive === false
+        !checkAccountStatus(
+          user,
+          res,
+        )
       ) {
-        return res.status(403).json({
-          success: false,
-          message:
-            "Account is not available",
-        });
+        return;
       }
 
-      if (!user.password) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "This account uses social login and does not have a password to reset.",
-        });
-      }
-
-      /*
-       * Verify that the OTP referenced by the
-       * reset token was genuinely verified.
-       */
-
-      const collection =
-        await getOtpCollection();
-
-      const challenge =
-        await collection.findOne({
-          _id:
-            new mongoose.Types.ObjectId(
-              decoded.challengeId,
-            ),
-
-          userId:
-            user._id,
-
-          purpose:
-            "forgot-password",
-
-          verifiedAt: {
-            $exists: true,
-            $ne: null,
-          },
-        });
-
-      if (!challenge) {
-        return res.status(401).json({
-          success: false,
-          message:
-            "Password reset verification is invalid or expired.",
-        });
-      }
-
-      const samePassword =
-        await bcrypt.compare(
-          newPassword,
-          user.password,
-        );
-
-      if (samePassword) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "New password must be different from your current password",
-        });
-      }
-
-      user.password =
+      const hashedPassword =
         await bcrypt.hash(
-          newPassword,
+          String(
+            finalPassword,
+          ),
           12,
         );
 
-      user.authProvider =
-        "local";
+      user.password =
+        hashedPassword;
 
-      user.googleId =
-        null;
+      /*
+       * A successful password reset establishes
+       * local password authentication.
+       *
+       * Social IDs are intentionally preserved,
+       * so Google/Facebook login continues to work.
+       */
 
-      user.facebookId =
-        null;
+      if (
+        !user.authProvider ||
+        user.authProvider ===
+          "local"
+      ) {
+        user.authProvider =
+          "local";
+      }
 
       await user.save();
 
-      /*
-       * Consume the reset challenge so that the
-       * same OTP cannot be reused.
-       */
-
-      await collection.updateOne(
-        {
-          _id:
-            challenge._id,
-        },
-        {
-          $set: {
-            resetUsedAt:
-              new Date(),
-          },
-        },
-      );
-
       return res.status(200).json({
         success: true,
+
         message:
-          "Password reset successfully. You can now login with your new password.",
+          "Password reset successful. You can now login with your new password.",
       });
     } catch (error) {
       console.error(
@@ -3326,54 +3330,61 @@ export const resetPassword =
       return res.status(500).json({
         success: false,
         message:
-          "Unable to reset password",
+          "Unable to reset password. Please try again.",
       });
     }
   };
 
 /* =========================================================
-   LOGOUT
-
-   POST /api/auth/logout
+   LOGOUT USER
 ========================================================= */
 
 export const logoutUser =
   async (
-    _req,
+    req,
     res,
   ) => {
-    const isProduction =
-      process.env.NODE_ENV ===
-      "production";
+    try {
+      res.clearCookie(
+        "token",
+        {
+          httpOnly: true,
 
-    res.clearCookie(
-      "token",
-      {
-        httpOnly: true,
+          secure:
+            process.env.NODE_ENV ===
+            "production",
 
-        secure:
-          isProduction,
+          sameSite:
+            process.env.NODE_ENV ===
+            "production"
+              ? "none"
+              : "lax",
+        },
+      );
 
-        sameSite:
-          isProduction
-            ? "none"
-            : "lax",
-      },
-    );
+      return res.status(200).json({
+        success: true,
 
-    return res.status(200).json({
-      success: true,
+        message:
+          "Logout successful.",
+      });
+    } catch (error) {
+      console.error(
+        "LOGOUT ERROR:",
+        error,
+      );
 
-      message:
-        "Logout successful",
-    });
+      return res.status(500).json({
+        success: false,
+
+        message:
+          "Unable to logout.",
+      });
+    }
   };
 
 /* =========================================================
-   CURRENT USER / STAFF
-
-   GET /api/auth/me
-   GET /api/auth/staff/me
+   GET CURRENT USER
 ========================================================= */
 
 export const getCurrentUser =
@@ -3381,29 +3392,74 @@ export const getCurrentUser =
     req,
     res,
   ) => {
-    if (!req.user) {
-      return res.status(401).json({
+    try {
+      /*
+       * auth middleware should attach req.user.
+       *
+       * Depending on your middleware implementation,
+       * it may contain either the complete user object
+       * or only the decoded JWT payload.
+       */
+
+      const userId =
+        req.user?._id ||
+        req.user?.id ||
+        req.auth?.id;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+
+          message:
+            "Authentication required.",
+        });
+      }
+
+      const user =
+        await User.findById(
+          userId,
+        );
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "User account not found.",
+        });
+      }
+
+      if (
+        !checkAccountStatus(
+          user,
+          res,
+        )
+      ) {
+        return;
+      }
+
+      return res.status(200).json({
+        success: true,
+
+        user:
+          getUserResponse(user),
+      });
+    } catch (error) {
+      console.error(
+        "GET CURRENT USER ERROR:",
+        error,
+      );
+
+      return res.status(500).json({
         success: false,
 
         message:
-          "Not authenticated",
+          "Unable to retrieve current user.",
       });
     }
-
-    return res.status(200).json({
-      success: true,
-
-      user:
-        getUserResponse(
-          req.user,
-        ),
-    });
   };
-
-/* =========================================================
+  /* =========================================================
    UPDATE CUSTOMER PROFILE
-
-   PUT /api/auth/profile
 ========================================================= */
 
 export const updateProfile =
@@ -3412,28 +3468,50 @@ export const updateProfile =
     res,
   ) => {
     try {
-      const {
-        name,
-        phone,
-      } =
-        req.body;
+      const userId =
+        req.user?._id ||
+        req.user?.id ||
+        req.auth?.id;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message:
+            "Authentication required.",
+        });
+      }
 
       const user =
         await User.findById(
-          req.user._id,
+          userId,
         );
 
       if (!user) {
         return res.status(404).json({
           success: false,
-
           message:
-            "User not found",
+            "User account not found.",
         });
       }
 
+      if (
+        !checkAccountStatus(
+          user,
+          res,
+        )
+      ) {
+        return;
+      }
+
+      const {
+        name,
+        phone,
+        profileImage,
+      } =
+        req.body || {};
+
       /*
-       * NAME
+       * Name
        */
 
       if (
@@ -3448,21 +3526,8 @@ export const updateProfile =
         ) {
           return res.status(400).json({
             success: false,
-
             message:
-              "Name must contain at least 2 characters",
-          });
-        }
-
-        if (
-          normalizedName.length >
-          80
-        ) {
-          return res.status(400).json({
-            success: false,
-
-            message:
-              "Name cannot exceed 80 characters",
+              "Name must contain at least 2 characters.",
           });
         }
 
@@ -3471,7 +3536,11 @@ export const updateProfile =
       }
 
       /*
-       * PHONE
+       * Phone
+       *
+       * Phone is optional for social accounts.
+       * If supplied, it must be a valid Indian
+       * mobile number.
        */
 
       if (
@@ -3483,62 +3552,66 @@ export const updateProfile =
           );
 
         if (
+          normalizedPhone &&
           !isValidPhone(
             normalizedPhone,
           )
         ) {
           return res.status(400).json({
             success: false,
-
             message:
-              "Please enter a valid 10-digit mobile number",
+              "Please enter a valid 10-digit Indian mobile number.",
           });
         }
-
-        const phoneExists =
-          await User.findOne({
-            phone:
-              normalizedPhone,
-
-            _id: {
-              $ne:
-                user._id,
-            },
-          });
-
-        if (phoneExists) {
-          return res.status(409).json({
-            success: false,
-
-            message:
-              "Phone number is already registered",
-          });
-        }
-
-        /*
-         * If phone changes, phone must be
-         * verified again.
-         */
 
         if (
-          user.phone !==
           normalizedPhone
         ) {
+          const existingPhone =
+            await User.findOne({
+              phone:
+                normalizedPhone,
+
+              _id: {
+                $ne:
+                  user._id,
+              },
+            });
+
+          if (
+            existingPhone
+          ) {
+            return res.status(409).json({
+              success: false,
+              message:
+                "This phone number is already associated with another account.",
+            });
+          }
+
+          user.phone =
+            normalizedPhone;
+        } else {
+          user.phone =
+            null;
+
           user.isPhoneVerified =
             false;
         }
-
-        user.phone =
-          normalizedPhone;
       }
 
       /*
-       * PROFILE IMAGE
+       * Profile image
        */
 
-      if (req.file) {
+      if (
+        profileImage !==
+          undefined
+      ) {
         user.profileImage =
-          `/uploads/users/${req.file.filename}`;
+          String(
+            profileImage ||
+              "",
+          ).trim();
       }
 
       await user.save();
@@ -3547,7 +3620,7 @@ export const updateProfile =
         success: true,
 
         message:
-          "Profile updated successfully",
+          "Profile updated successfully.",
 
         user:
           getUserResponse(user),
@@ -3566,7 +3639,7 @@ export const updateProfile =
           success: false,
 
           message:
-            "Phone number is already registered",
+            "The provided information is already associated with another account.",
         });
       }
 
@@ -3574,25 +3647,13 @@ export const updateProfile =
         success: false,
 
         message:
-          "Unable to update profile",
+          "Unable to update profile.",
       });
     }
   };
 
 /* =========================================================
    UPDATE STAFF PROFILE
-
-   Staff can update:
-   - Name
-   - Email
-
-   Staff cannot update:
-   - Role
-   - Active status
-   - Block status
-   - Password
-
-   PUT /api/auth/staff/profile
 ========================================================= */
 
 export const updateStaffProfile =
@@ -3601,15 +3662,23 @@ export const updateStaffProfile =
     res,
   ) => {
     try {
-      const {
-        name,
-        email,
-      } =
-        req.body || {};
+      const userId =
+        req.user?._id ||
+        req.user?.id ||
+        req.auth?.id;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+
+          message:
+            "Authentication required.",
+        });
+      }
 
       const user =
         await User.findById(
-          req.user._id,
+          userId,
         );
 
       if (!user) {
@@ -3617,7 +3686,7 @@ export const updateStaffProfile =
           success: false,
 
           message:
-            "Staff account not found",
+            "Staff account not found.",
         });
       }
 
@@ -3630,13 +3699,25 @@ export const updateStaffProfile =
           success: false,
 
           message:
-            "Staff account access only",
+            "You are not authorized to update staff profile.",
         });
       }
 
-      /*
-       * NAME
-       */
+      if (
+        !checkAccountStatus(
+          user,
+          res,
+        )
+      ) {
+        return;
+      }
+
+      const {
+        name,
+        phone,
+        profileImage,
+      } =
+        req.body || {};
 
       if (
         name !== undefined
@@ -3652,19 +3733,7 @@ export const updateStaffProfile =
             success: false,
 
             message:
-              "Name must contain at least 2 characters",
-          });
-        }
-
-        if (
-          normalizedName.length >
-          80
-        ) {
-          return res.status(400).json({
-            success: false,
-
-            message:
-              "Name cannot exceed 80 characters",
+              "Name must contain at least 2 characters.",
           });
         }
 
@@ -3672,55 +3741,67 @@ export const updateStaffProfile =
           normalizedName;
       }
 
-      /*
-       * EMAIL
-       */
-
       if (
-        email !== undefined
+        phone !== undefined
       ) {
-        const normalizedEmail =
-          String(
-            email,
-          )
-            .trim()
-            .toLowerCase();
+        const normalizedPhone =
+          normalizePhone(
+            phone,
+          );
 
         if (
-          !isValidEmail(
-            normalizedEmail,
+          normalizedPhone &&
+          !isValidPhone(
+            normalizedPhone,
           )
         ) {
           return res.status(400).json({
             success: false,
 
             message:
-              "Please enter a valid email address",
+              "Please enter a valid 10-digit Indian mobile number.",
           });
         }
 
-        const emailExists =
-          await User.findOne({
-            email:
-              normalizedEmail,
+        if (
+          normalizedPhone
+        ) {
+          const existingPhone =
+            await User.findOne({
+              phone:
+                normalizedPhone,
 
-            _id: {
-              $ne:
-                user._id,
-            },
-          });
+              _id: {
+                $ne:
+                  user._id,
+              },
+            });
 
-        if (emailExists) {
-          return res.status(409).json({
-            success: false,
+          if (
+            existingPhone
+          ) {
+            return res.status(409).json({
+              success: false,
 
-            message:
-              "Email address is already registered",
-          });
+              message:
+                "This phone number is already associated with another account.",
+            });
+          }
+
+          user.phone =
+            normalizedPhone;
         }
+      }
 
-        user.email =
-          normalizedEmail;
+      if (
+        profileImage !==
+          undefined
+      ) {
+        user.profileImage =
+          String(
+            profileImage ||
+              "",
+          ).trim();
       }
 
       await user.save();
@@ -3729,7 +3810,7 @@ export const updateStaffProfile =
         success: true,
 
         message:
-          "Staff profile updated successfully",
+          "Staff profile updated successfully.",
 
         user:
           getUserResponse(user),
@@ -3748,7 +3829,7 @@ export const updateStaffProfile =
           success: false,
 
           message:
-            "Email address is already registered",
+            "The provided information is already associated with another account.",
         });
       }
 
@@ -3756,7 +3837,7 @@ export const updateStaffProfile =
         success: false,
 
         message:
-          "Unable to update staff profile",
+          "Unable to update staff profile.",
       });
     }
   };
@@ -3764,11 +3845,16 @@ export const updateStaffProfile =
 /* =========================================================
    CHANGE PASSWORD
 
-   PUT /api/auth/change-password
+   For an already authenticated user.
 
-   Staff endpoint can also use this controller:
+   POST /api/auth/change-password
 
-   PUT /api/auth/staff/change-password
+   Body:
+   {
+      currentPassword,
+      newPassword,
+      confirmPassword
+   }
 ========================================================= */
 
 export const changePassword =
@@ -3777,70 +3863,85 @@ export const changePassword =
     res,
   ) => {
     try {
+      const userId =
+        req.user?._id ||
+        req.user?.id ||
+        req.auth?.id;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+
+          message:
+            "Authentication required.",
+        });
+      }
+
       const {
         currentPassword,
+        oldPassword,
         newPassword,
+        password,
         confirmPassword,
       } =
-        req.body;
+        req.body || {};
 
-      /*
-       * REQUIRED
-       */
+      const current =
+        currentPassword ??
+        oldPassword ??
+        "";
+
+      const nextPassword =
+        newPassword ??
+        password ??
+        "";
 
       if (
-        !currentPassword ||
-        !newPassword ||
-        !confirmPassword
+        !current ||
+        !nextPassword
       ) {
         return res.status(400).json({
           success: false,
 
           message:
-            "All password fields are required",
+            "Current password and new password are required.",
         });
       }
-
-      /*
-       * PASSWORD LENGTH
-       */
 
       if (
         String(
-          newPassword,
-        ).length < 4
+          nextPassword,
+        ).length < 6
       ) {
         return res.status(400).json({
           success: false,
 
           message:
-            "New password must contain at least 4 characters",
+            "New password must contain at least 6 characters.",
         });
       }
-
-      /*
-       * PASSWORD CONFIRMATION
-       */
 
       if (
-        newPassword !==
-        confirmPassword
+        confirmPassword !==
+          undefined &&
+        String(
+          nextPassword,
+        ) !==
+          String(
+            confirmPassword,
+          )
       ) {
         return res.status(400).json({
           success: false,
 
           message:
-            "New passwords do not match",
+            "New password and confirm password do not match.",
         });
       }
-
-      /*
-       * USER
-       */
 
       const user =
         await User.findById(
-          req.user._id,
+          userId,
         ).select(
           "+password",
         );
@@ -3850,114 +3951,81 @@ export const changePassword =
           success: false,
 
           message:
-            "User not found",
-        });
-      }
-
-      /*
-       * ACCOUNT STATUS
-       */
-
-      if (
-        user.isBlocked ===
-        true
-      ) {
-        return res.status(403).json({
-          success: false,
-
-          message:
-            "Your account has been blocked",
+            "User account not found.",
         });
       }
 
       if (
-        user.isActive ===
-        false
+        !checkAccountStatus(
+          user,
+          res,
+        )
       ) {
-        return res.status(403).json({
-          success: false,
-
-          message:
-            "Your account is inactive",
-        });
+        return;
       }
 
       /*
-       * CURRENT PASSWORD
+       * Social-only accounts may not have a password.
+       * In that case the user should use forgot-password
+       * instead of change-password.
        */
 
       if (!user.password) {
-        return res.status(401).json({
-          success: false,
-
-          message:
-            "Current password is incorrect",
-        });
-      }
-
-      const isCurrentPasswordValid =
-        await bcrypt.compare(
-          currentPassword,
-          user.password,
-        );
-
-      if (
-        !isCurrentPasswordValid
-      ) {
-        return res.status(401).json({
-          success: false,
-
-          message:
-            "Current password is incorrect",
-        });
-      }
-
-      /*
-       * PREVENT SAME PASSWORD
-       */
-
-      const isSamePassword =
-        await bcrypt.compare(
-          newPassword,
-          user.password,
-        );
-
-      if (
-        isSamePassword
-      ) {
         return res.status(400).json({
           success: false,
 
           message:
-            "New password must be different from your current password",
+            "This account does not currently have a password. Please use the forgot-password flow to create one.",
         });
       }
 
-      /*
-       * HASH NEW PASSWORD
-       */
+      const currentPasswordValid =
+        await bcrypt.compare(
+          String(current),
+          user.password,
+        );
+
+      if (
+        !currentPasswordValid
+      ) {
+        return res.status(401).json({
+          success: false,
+
+          message:
+            "Current password is incorrect.",
+        });
+      }
+
+      const samePassword =
+        await bcrypt.compare(
+          String(nextPassword),
+          user.password,
+        );
+
+      if (samePassword) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "New password must be different from your current password.",
+        });
+      }
 
       user.password =
         await bcrypt.hash(
-          newPassword,
+          String(
+            nextPassword,
+          ),
           12,
         );
 
-      /*
-       * SAVE
-       */
-
       await user.save();
-
-      /*
-       * RESPONSE
-       */
 
       return res.status(200).json({
         success: true,
 
         message:
-          "Password changed successfully",
+          "Password changed successfully.",
       });
     } catch (error) {
       console.error(
@@ -3969,29 +4037,48 @@ export const changePassword =
         success: false,
 
         message:
-          "Unable to change password",
+          "Unable to change password. Please try again.",
       });
     }
   };
 
 /* =========================================================
-   EXPORT SUMMARY
+   OPTIONAL EMAIL OTP HEALTH CHECK
 
-   Controllers exported from this file:
+   This helper is intentionally not exported as a route.
+   It can be used internally when debugging SMTP.
+========================================================= */
 
-   adminLogin
-   registerUser
-   userLogin
-   googleLogin
-   facebookLogin
-   sendSocialOtp
-   completeSocialRegistration
-   forgotPassword
-   verifyForgotPasswordOtp
-   resetPassword
-   logoutUser
-   getCurrentUser
-   updateProfile
-   updateStaffProfile
-   changePassword
+const verifyEmailTransport =
+  async () => {
+    try {
+      if (
+        !process.env.SMTP_USER ||
+        !process.env.SMTP_PASS
+      ) {
+        return false;
+      }
+
+      await emailTransporter.verify();
+
+      return true;
+    } catch (error) {
+      console.error(
+        "EMAIL TRANSPORT VERIFICATION ERROR:",
+        error,
+      );
+
+      return false;
+    }
+  };
+
+/*
+ * Keep the helper referenced so bundlers/lint configurations
+ * do not remove or complain about the transport verification
+ * utility in projects that explicitly import this controller.
+ */
+void verifyEmailTransport;
+
+/* =========================================================
+   END OF AUTH CONTROLLER
 ========================================================= */
