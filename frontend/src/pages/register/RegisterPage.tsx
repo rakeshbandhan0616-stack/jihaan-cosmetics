@@ -14,7 +14,6 @@ import {
   Lock,
   Mail,
   ShieldCheck,
-  Smartphone,
   UserRound,
 } from "lucide-react";
 import { FaFacebookF, FaGoogle } from "react-icons/fa6";
@@ -31,10 +30,6 @@ type RegisterForm = {
   confirmPassword: string;
 };
 
-type SocialRegistrationForm = {
-  phone: string;
-  otp: string;
-};
 
 type RegisterResponse = {
   success?: boolean;
@@ -45,6 +40,11 @@ type RegisterResponse = {
   requiresPhone?: boolean;
   requiresOtp?: boolean;
   provider?: "google" | "facebook";
+  email?: string;
+  maskedEmail?: string;
+  challengeId?: string;
+  expiresIn?: number;
+  resendAfter?: number;
   user?: {
     id: string;
     name: string;
@@ -172,11 +172,6 @@ const RegisterPage = () => {
     confirmPassword: "",
   });
 
-  const [socialForm, setSocialForm] =
-    useState<SocialRegistrationForm>({
-      phone: "",
-      otp: "",
-    });
 
   const [showPassword, setShowPassword] =
     useState(false);
@@ -187,6 +182,15 @@ const RegisterPage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const [emailOtpStep, setEmailOtpStep] = useState(false);
+  const [registrationOtp, setRegistrationOtp] = useState("");
+  const [registrationOtpEmail, setRegistrationOtpEmail] =
+    useState("");
+  const [isOtpSubmitting, setIsOtpSubmitting] =
+    useState(false);
+  const [isOtpResending, setIsOtpResending] =
+    useState(false);
+
   const [isSubmitting, setIsSubmitting] =
     useState(false);
 
@@ -196,26 +200,7 @@ const RegisterPage = () => {
   const [isFacebookLoading, setIsFacebookLoading] =
     useState(false);
 
-  const [isOtpSending, setIsOtpSending] =
-    useState(false);
 
-  const [isOtpSubmitting, setIsOtpSubmitting] =
-    useState(false);
-
-  const [socialRegistration, setSocialRegistration] =
-    useState<{
-      active: boolean;
-      provider: "google" | "facebook" | null;
-      token: string;
-      name: string;
-      email: string;
-    }>({
-      active: false,
-      provider: null,
-      token: "",
-      name: "",
-      email: "",
-    });
 
   /*
    * ---------------------------------------------------------
@@ -390,69 +375,271 @@ const RegisterPage = () => {
           credentials: "include",
           body: JSON.stringify({
             name: form.name.trim(),
-            email: form.email
-              .trim()
-              .toLowerCase(),
+            email: form.email.trim().toLowerCase(),
             phone: normalizePhone(form.phone),
             password: form.password,
           }),
         },
       );
 
-      let data: RegisterResponse;
-
-      try {
-        data =
-          (await response.json()) as RegisterResponse;
-      } catch {
-        throw new Error(
-          "Invalid response received from the server.",
-        );
-      }
+      const data =
+        (await response.json()) as RegisterResponse;
 
       if (!response.ok) {
         throw new Error(
           data.message ||
-            "Unable to create your account.",
+            "Unable to start registration.",
         );
       }
 
-      setSuccess(
+      if (data.requiresOtp) {
+        const email =
+          String(
+            data.email ||
+              form.email,
+          )
+            .trim()
+            .toLowerCase();
+
+        setRegistrationOtpEmail(email);
+        setRegistrationOtp("");
+        setEmailOtpStep(true);
+
+        setSuccess(
+          data.message ||
+            "A verification OTP has been sent to your email.",
+        );
+
+        return;
+      }
+
+      /*
+       * Backward-compatible handling in case the backend
+       * returns a login response directly.
+       */
+
+      const token =
+        data.token ||
+        data.accessToken ||
+        data.data?.token ||
+        data.data?.accessToken;
+
+      const user =
+        data.user ||
+        data.data?.user;
+
+      if (token && user) {
+        storeAuthenticatedUser(token, user);
+
+        setSuccess(
+          "Registration successful. Redirecting...",
+        );
+
+        setTimeout(() => {
+          redirectAfterLogin(user);
+        }, 500);
+
+        return;
+      }
+
+      throw new Error(
         data.message ||
-          "Registration successful. Redirecting to login...",
+          "Registration started but no verification step was returned.",
       );
-
-      setForm({
-        name: "",
-        email: "",
-        phone: "",
-        password: "",
-        confirmPassword: "",
-      });
-
-      setTimeout(() => {
-        navigate("/login", {
-          replace: true,
-          state: {
-            message:
-              "Registration successful. Please log in.",
-            email:
-              form.email
-                .trim()
-                .toLowerCase(),
-          },
-        });
-      }, 900);
     } catch (registerError) {
       const message =
         registerError instanceof Error
           ? registerError.message
-          : "Unable to create your account. Please try again.";
+          : "Unable to start registration. Please try again.";
 
       setError(message);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleRegistrationOtpChange = (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const value =
+      event.target.value
+        .replace(/\D/g, "")
+        .slice(0, 6);
+
+    setRegistrationOtp(value);
+    setError("");
+  };
+
+  const handleVerifyRegistrationOtp = async (
+    event: FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault();
+
+    clearMessages();
+
+    if (!registrationOtpEmail) {
+      setError(
+        "Registration session has expired. Please register again.",
+      );
+      return;
+    }
+
+    if (!/^\d{6}$/.test(registrationOtp)) {
+      setError(
+        "Please enter the 6-digit OTP sent to your email.",
+      );
+      return;
+    }
+
+    setIsOtpSubmitting(true);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/auth/register/verify-otp`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            email: registrationOtpEmail,
+            otp: registrationOtp,
+          }),
+        },
+      );
+
+      const data =
+        (await response.json()) as RegisterResponse;
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Unable to verify OTP.",
+        );
+      }
+
+      const token =
+        data.token ||
+        data.accessToken ||
+        data.data?.token ||
+        data.data?.accessToken;
+
+      const user =
+        data.user ||
+        data.data?.user;
+
+      if (!token || !user) {
+        throw new Error(
+          "Email verified, but login information was not returned.",
+        );
+      }
+
+      storeAuthenticatedUser(token, user);
+
+      setEmailOtpStep(false);
+      setRegistrationOtp("");
+      setRegistrationOtpEmail("");
+
+      setSuccess(
+        "Email verified successfully. Redirecting...",
+      );
+
+      setTimeout(() => {
+        redirectAfterLogin(user);
+      }, 500);
+    } catch (otpError) {
+      const message =
+        otpError instanceof Error
+          ? otpError.message
+          : "Unable to verify OTP. Please try again.";
+
+      setError(message);
+    } finally {
+      setIsOtpSubmitting(false);
+    }
+  };
+
+  const handleResendRegistrationOtp = async () => {
+    clearMessages();
+
+    if (!registrationOtpEmail) {
+      setError(
+        "Registration session has expired. Please register again.",
+      );
+      return;
+    }
+
+    setIsOtpResending(true);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/auth/register/resend-otp`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            email: registrationOtpEmail,
+          }),
+        },
+      );
+
+      const data =
+        (await response.json()) as RegisterResponse;
+
+      if (!response.ok) {
+        const retryAfter =
+          (data as RegisterResponse & {
+            retryAfter?: number;
+          }).retryAfter;
+
+        if (retryAfter) {
+          throw new Error(
+            `${data.message || "Please wait before requesting another OTP."} Try again in ${retryAfter} seconds.`,
+          );
+        }
+
+        throw new Error(
+          data.message ||
+            "Unable to resend OTP.",
+        );
+      }
+
+      setRegistrationOtp("");
+
+      setSuccess(
+        data.message ||
+          "A new OTP has been sent to your email.",
+      );
+    } catch (resendError) {
+      const message =
+        resendError instanceof Error
+          ? resendError.message
+          : "Unable to resend OTP.";
+
+      setError(message);
+    } finally {
+      setIsOtpResending(false);
+    }
+  };
+
+  const cancelEmailOtpVerification = () => {
+    setEmailOtpStep(false);
+    setRegistrationOtp("");
+    setRegistrationOtpEmail("");
+
+    setForm((previous) => ({
+      ...previous,
+      password: "",
+      confirmPassword: "",
+    }));
+
+    clearMessages();
   };
 
   /*
@@ -528,36 +715,12 @@ const RegisterPage = () => {
       }
 
       /*
-       * New Google account.
-       * Backend returns socialToken and asks for
-       * mobile verification.
+       * Google authentication creates/logs in the account
+       * immediately. There is no phone number or WhatsApp OTP.
        */
-      const socialToken =
-        data.socialToken ||
-        data.data?.socialToken;
-
-      if (
-        socialToken &&
-        data.requiresPhone
-      ) {
-        setSocialRegistration({
-          active: true,
-          provider: "google",
-          token: socialToken,
-          name: user?.name || "",
-          email: user?.email || "",
-        });
-
-        setSuccess(
-          "Google account verified. Please add your mobile number to continue.",
-        );
-
-        return;
-      }
-
       throw new Error(
         data.message ||
-          "Google registration could not be completed.",
+          "Google authentication completed but login information was not returned.",
       );
     } catch (googleError) {
       const message =
@@ -805,34 +968,12 @@ const RegisterPage = () => {
             }
 
             /*
-             * New Facebook account.
+             * Facebook authentication creates/logs in the account
+             * immediately. There is no phone number or WhatsApp OTP.
              */
-            const socialToken =
-              data.socialToken ||
-              data.data?.socialToken;
-
-            if (
-              socialToken &&
-              data.requiresPhone
-            ) {
-              setSocialRegistration({
-                active: true,
-                provider: "facebook",
-                token: socialToken,
-                name: user?.name || "",
-                email: user?.email || "",
-              });
-
-              setSuccess(
-                "Facebook account verified. Please add your mobile number to continue.",
-              );
-
-              return;
-            }
-
             throw new Error(
               data.message ||
-                "Facebook registration could not be completed.",
+                "Facebook authentication completed but login information was not returned.",
             );
           } catch (facebookError) {
             const message =
@@ -859,223 +1000,6 @@ const RegisterPage = () => {
       setError(message);
       setIsFacebookLoading(false);
     }
-  };
-
-  /*
-   * ---------------------------------------------------------
-   * Social Registration + Mobile OTP
-   * ---------------------------------------------------------
-   */
-
-  const handleSocialFormChange = (
-    event: ChangeEvent<HTMLInputElement>,
-  ) => {
-    const { name, value } = event.target;
-
-    setSocialForm((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
-
-    clearMessages();
-  };
-
-  const validateSocialPhone = () => {
-    const phone = normalizePhone(
-      socialForm.phone,
-    );
-
-    if (!/^[6-9][0-9]{9}$/.test(phone)) {
-      setError(
-        "Please enter a valid 10-digit Indian mobile number.",
-      );
-      return null;
-    }
-
-    return phone;
-  };
-
-  const handleSendOtp = async () => {
-    clearMessages();
-
-    const phone = validateSocialPhone();
-
-    if (!phone) {
-      return;
-    }
-
-    if (!socialRegistration.token) {
-      setError(
-        "Your registration session has expired. Please start again.",
-      );
-      return;
-    }
-
-    setIsOtpSending(true);
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/auth/social/send-otp`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type":
-              "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            socialToken:
-              socialRegistration.token,
-            phone,
-          }),
-        },
-      );
-
-      const data =
-        (await response.json()) as RegisterResponse;
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Unable to send OTP.",
-        );
-      }
-
-      setSuccess(
-        "OTP has been sent to your mobile number.",
-      );
-    } catch (otpError) {
-      const message =
-        otpError instanceof Error
-          ? otpError.message
-          : "Unable to send OTP.";
-
-      setError(message);
-    } finally {
-      setIsOtpSending(false);
-    }
-  };
-
-  const handleCompleteSocialRegistration =
-    async (
-      event: FormEvent<HTMLFormElement>,
-    ) => {
-      event.preventDefault();
-
-      clearMessages();
-
-      const phone =
-        validateSocialPhone();
-
-      if (!phone) {
-        return;
-      }
-
-      if (!socialForm.otp.trim()) {
-        setError("Please enter the OTP.");
-        return;
-      }
-
-      if (socialForm.otp.trim().length < 4) {
-        setError("Please enter a valid OTP.");
-        return;
-      }
-
-      if (!socialRegistration.token) {
-        setError(
-          "Your registration session has expired. Please start again.",
-        );
-        return;
-      }
-
-      setIsOtpSubmitting(true);
-
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/auth/social/complete`,
-          {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type":
-                "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify({
-              socialToken:
-                socialRegistration.token,
-              phone,
-              otp: socialForm.otp.trim(),
-            }),
-          },
-        );
-
-        const data =
-          (await response.json()) as RegisterResponse;
-
-        if (!response.ok) {
-          throw new Error(
-            data.message ||
-              "Unable to complete registration.",
-          );
-        }
-
-        const token =
-          data.token ||
-          data.accessToken ||
-          data.data?.token ||
-          data.data?.accessToken;
-
-        const user =
-          data.user ||
-          data.data?.user;
-
-        if (!token || !user) {
-          throw new Error(
-            "Registration completed but login information was not returned.",
-          );
-        }
-
-        storeAuthenticatedUser(
-          token,
-          user,
-        );
-
-        setSuccess(
-          "Account created successfully. Redirecting...",
-        );
-
-        setTimeout(() => {
-          redirectAfterLogin(user);
-        }, 600);
-      } catch (registrationError) {
-        const message =
-          registrationError instanceof Error
-            ? registrationError.message
-            : "Unable to complete registration.";
-
-        setError(message);
-      } finally {
-        setIsOtpSubmitting(false);
-      }
-    };
-
-  const cancelSocialRegistration = () => {
-    setSocialRegistration({
-      active: false,
-      provider: null,
-      token: "",
-      name: "",
-      email: "",
-    });
-
-    setSocialForm({
-      phone: "",
-      otp: "",
-    });
-
-    clearMessages();
   };
 
   /*
@@ -1133,20 +1057,20 @@ const RegisterPage = () => {
       <section className={styles.registerCard}>
         <div className={styles.cardHeader}>
           <span className={styles.eyebrow}>
-            {socialRegistration.active
-              ? "ONE LAST STEP"
+            {emailOtpStep
+              ? "VERIFY YOUR EMAIL"
               : "WELCOME TO JINI"}
           </span>
 
           <h1>
-            {socialRegistration.active
-              ? "Verify your mobile"
+            {emailOtpStep
+              ? "Check your email"
               : "Create your account"}
           </h1>
 
           <p className={styles.intro}>
-            {socialRegistration.active
-              ? "Add your mobile number and verify it with OTP to secure your account."
+            {emailOtpStep
+              ? "Enter the verification code sent to your email to complete your Jini Cosmetics account."
               : "Join Jini Cosmetics and discover beauty essentials made for you."}
           </p>
         </div>
@@ -1173,109 +1097,49 @@ const RegisterPage = () => {
           </p>
         )}
 
-        {socialRegistration.active ? (
-          /*
-           * =====================================================
-           * SOCIAL REGISTRATION
-           * =====================================================
-           */
+        {emailOtpStep ? (
           <form
             className={styles.form}
-            onSubmit={
-              handleCompleteSocialRegistration
-            }
+            onSubmit={handleVerifyRegistrationOtp}
           >
             <div className={styles.socialAccount}>
-              <div
-                className={
-                  styles.socialAccountIcon
-                }
-              >
-                {socialRegistration.provider ===
-                "facebook" ? (
-                  <FaFacebookF size={18} aria-hidden="true" />
-                ) : (
-                  <FaGoogle className={styles.googleG} aria-hidden="true" />
-                )}
+              <div className={styles.socialAccountIcon}>
+                <Mail
+                  size={18}
+                  aria-hidden="true"
+                />
               </div>
 
               <div>
-                <strong>
-                  {socialRegistration.name ||
-                    "Social account"}
-                </strong>
-
-                <span>
-                  {socialRegistration.email}
-                </span>
+                <strong>Verify your email</strong>
+                <span>{registrationOtpEmail}</span>
               </div>
             </div>
 
-            <div className={styles.field}>
-              <label htmlFor="social-phone">
-                Mobile number
-              </label>
-
-              <div
-                className={
-                  styles.inputWrapper
-                }
-              >
-                <Smartphone
-                  size={18}
-                  className={styles.inputIcon}
-                  aria-hidden="true"
-                />
-
-                <input
-                  id="social-phone"
-                  name="phone"
-                  type="tel"
-                  inputMode="numeric"
-                  maxLength={10}
-                  placeholder="Enter 10-digit mobile number"
-                  value={socialForm.phone}
-                  onChange={
-                    handleSocialFormChange
-                  }
-                  autoComplete="tel"
-                  required
-                />
-              </div>
-            </div>
+            <p className={styles.helperText}>
+              We sent a 6-digit verification code to your email address.
+              Enter the code below to complete your registration.
+            </p>
 
             <div className={styles.field}>
-              <div
-                className={
-                  styles.passwordLabel
-                }
-              >
-                <label htmlFor="social-otp">
-                  Verification OTP
+              <div className={styles.passwordLabel}>
+                <label htmlFor="registration-otp">
+                  Email verification OTP
                 </label>
 
                 <button
                   type="button"
-                  className={
-                    styles.resendButton
-                  }
-                  onClick={handleSendOtp}
-                  disabled={
-                    isOtpSending ||
-                    !socialForm.phone
-                  }
+                  className={styles.resendButton}
+                  onClick={handleResendRegistrationOtp}
+                  disabled={isOtpResending}
                 >
-                  {isOtpSending
+                  {isOtpResending
                     ? "Sending..."
-                    : "Send OTP"}
+                    : "Resend OTP"}
                 </button>
               </div>
 
-              <div
-                className={
-                  styles.inputWrapper
-                }
-              >
+              <div className={styles.inputWrapper}>
                 <ShieldCheck
                   size={18}
                   className={styles.inputIcon}
@@ -1283,32 +1147,32 @@ const RegisterPage = () => {
                 />
 
                 <input
-                  id="social-otp"
-                  name="otp"
+                  id="registration-otp"
+                  name="registrationOtp"
                   type="text"
                   inputMode="numeric"
-                  maxLength={6}
-                  placeholder="Enter OTP"
-                  value={socialForm.otp}
-                  onChange={
-                    handleSocialFormChange
-                  }
                   autoComplete="one-time-code"
+                  maxLength={6}
+                  placeholder="Enter 6-digit OTP"
+                  value={registrationOtp}
+                  onChange={handleRegistrationOtpChange}
+                  required
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              className={
-                styles.submitButton
+              className={styles.submitButton}
+              disabled={
+                isOtpSubmitting ||
+                registrationOtp.length !== 6
               }
-              disabled={isOtpSubmitting}
             >
               <span>
                 {isOtpSubmitting
-                  ? "Creating account..."
-                  : "Verify & create account"}
+                  ? "Verifying..."
+                  : "Verify email & create account"}
               </span>
 
               {!isOtpSubmitting && (
@@ -1322,9 +1186,7 @@ const RegisterPage = () => {
             <button
               type="button"
               className={styles.backButton}
-              onClick={
-                cancelSocialRegistration
-              }
+              onClick={cancelEmailOtpVerification}
             >
               ← Back to registration
             </button>

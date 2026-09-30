@@ -26,10 +26,6 @@ type LoginForm = {
   password: string;
 };
 
-type SocialRegistrationForm = {
-  phone: string;
-  otp: string;
-};
 
 type LocationState = {
   message?: string;
@@ -57,23 +53,13 @@ type LoginResponse = {
   message?: string;
   token?: string;
   accessToken?: string;
-  socialToken?: string;
-  requiresPhone?: boolean;
-  requiresOtp?: boolean;
-  provider?: "google" | "facebook";
   user?: LoginUser;
   data?: {
     token?: string;
     accessToken?: string;
-    socialToken?: string;
-    requiresPhone?: boolean;
-    requiresOtp?: boolean;
-    provider?: "google" | "facebook";
     user?: LoginUser;
   };
 };
-
-type SocialLoginResponse = LoginResponse;
 
 type GoogleCredentialResponse = {
   credential?: string;
@@ -175,11 +161,6 @@ const LoginPage = () => {
     password: "",
   });
 
-  const [socialForm, setSocialForm] =
-    useState<SocialRegistrationForm>({
-      phone: "",
-      otp: "",
-    });
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -191,24 +172,7 @@ const LoginPage = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isFacebookLoading, setIsFacebookLoading] =
     useState(false);
-  const [isOtpSending, setIsOtpSending] = useState(false);
-  const [isOtpSubmitting, setIsOtpSubmitting] =
-    useState(false);
 
-  const [socialRegistration, setSocialRegistration] =
-    useState<{
-      active: boolean;
-      provider: "google" | "facebook" | null;
-      token: string;
-      name: string;
-      email: string;
-    }>({
-      active: false,
-      provider: null,
-      token: "",
-      name: "",
-      email: "",
-    });
 
   /*
    * ---------------------------------------------------------
@@ -517,36 +481,12 @@ const LoginPage = () => {
       }
 
       /*
-       * New Google account.
-       * Backend asks the frontend to collect phone number
-       * and complete OTP validation.
+       * Google authentication always creates/logs in the account
+       * immediately. No phone number or WhatsApp OTP is required.
        */
-      const socialToken =
-        data.socialToken ||
-        data.data?.socialToken;
-
-      if (
-        socialToken &&
-        data.requiresPhone
-      ) {
-        setSocialRegistration({
-          active: true,
-          provider: "google",
-          token: socialToken,
-          name: user?.name || "",
-          email: user?.email || "",
-        });
-
-        setSuccess(
-          "Google account verified. Please add your mobile number to continue.",
-        );
-
-        return;
-      }
-
       throw new Error(
         data.message ||
-          "Google authentication could not be completed.",
+          "Google authentication completed but login information was not returned.",
       );
     } catch (googleError) {
       const message =
@@ -844,34 +784,12 @@ const LoginPage = () => {
             }
 
             /*
-             * New Facebook account
+             * Facebook authentication always creates/logs in the account
+             * immediately. No phone number or WhatsApp OTP is required.
              */
-            const socialToken =
-              data.socialToken ||
-              data.data?.socialToken;
-
-            if (
-              socialToken &&
-              data.requiresPhone
-            ) {
-              setSocialRegistration({
-                active: true,
-                provider: "facebook",
-                token: socialToken,
-                name: user?.name || "",
-                email: user?.email || "",
-              });
-
-              setSuccess(
-                "Facebook account verified. Please add your mobile number to continue.",
-              );
-
-              return;
-            }
-
             throw new Error(
               data.message ||
-                "Facebook authentication could not be completed.",
+                "Facebook authentication completed but login information was not returned.",
             );
           } catch (facebookError) {
             const message =
@@ -898,227 +816,6 @@ const LoginPage = () => {
       setError(message);
       setIsFacebookLoading(false);
     }
-  };
-
-  /*
-   * ---------------------------------------------------------
-   * Social registration / phone OTP
-   * ---------------------------------------------------------
-   */
-
-  const handleSocialFormChange = (
-    event: ChangeEvent<HTMLInputElement>,
-  ) => {
-    const { name, value } = event.target;
-
-    setSocialForm((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
-
-    setError("");
-    setSuccess("");
-  };
-
-  const normalizePhone = (value: string) => {
-    const digits = value.replace(/\D/g, "");
-
-    if (
-      digits.startsWith("91") &&
-      digits.length === 12
-    ) {
-      return digits.slice(2);
-    }
-
-    return digits;
-  };
-
-  const validatePhone = () => {
-    const phone = normalizePhone(
-      socialForm.phone,
-    );
-
-    if (!/^[6-9][0-9]{9}$/.test(phone)) {
-      setError(
-        "Please enter a valid 10-digit mobile number.",
-      );
-      return null;
-    }
-
-    return phone;
-  };
-
-  const handleSendOtp = async () => {
-    clearMessages();
-
-    if (!socialRegistration.token) {
-      setError(
-        "Your social registration session has expired. Please start again.",
-      );
-      return;
-    }
-
-    const phone = validatePhone();
-
-    if (!phone) {
-      return;
-    }
-
-    setIsOtpSending(true);
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/auth/social/send-otp`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            socialToken: socialRegistration.token,
-            phone,
-          }),
-        },
-      );
-
-      const data =
-        (await response.json()) as LoginResponse;
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Unable to send OTP.",
-        );
-      }
-
-      setSuccess(
-        "OTP has been sent to your mobile number.",
-      );
-    } catch (otpError) {
-      const message =
-        otpError instanceof Error
-          ? otpError.message
-          : "Unable to send OTP.";
-
-      setError(message);
-    } finally {
-      setIsOtpSending(false);
-    }
-  };
-
-  const handleCompleteSocialRegistration = async (
-    event: FormEvent<HTMLFormElement>,
-  ) => {
-    event.preventDefault();
-
-    clearMessages();
-
-    const phone = validatePhone();
-
-    if (!phone) {
-      return;
-    }
-
-    if (!socialForm.otp.trim()) {
-      setError("Please enter the OTP.");
-      return;
-    }
-
-    if (socialForm.otp.trim().length < 4) {
-      setError("Please enter a valid OTP.");
-      return;
-    }
-
-    if (!socialRegistration.token) {
-      setError(
-        "Your social registration session has expired. Please start again.",
-      );
-      return;
-    }
-
-    setIsOtpSubmitting(true);
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/auth/social/complete`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            socialToken:
-              socialRegistration.token,
-            phone,
-            otp: socialForm.otp.trim(),
-          }),
-        },
-      );
-
-      const data =
-        (await response.json()) as LoginResponse;
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Unable to complete registration.",
-        );
-      }
-
-      const token =
-        data.token ||
-        data.accessToken ||
-        data.data?.token ||
-        data.data?.accessToken;
-
-      const user =
-        data.user ||
-        data.data?.user;
-
-      if (!token || !user) {
-        throw new Error(
-          "Registration completed but login information was not returned.",
-        );
-      }
-
-      storeAuthenticatedUser(token, user);
-
-      setSuccess(
-        "Registration completed successfully. Redirecting...",
-      );
-
-      redirectAfterLogin(user);
-    } catch (registrationError) {
-      const message =
-        registrationError instanceof Error
-          ? registrationError.message
-          : "Unable to complete registration.";
-
-      setError(message);
-    } finally {
-      setIsOtpSubmitting(false);
-    }
-  };
-
-  const cancelSocialRegistration = () => {
-    setSocialRegistration({
-      active: false,
-      provider: null,
-      token: "",
-      name: "",
-      email: "",
-    });
-
-    setSocialForm({
-      phone: "",
-      otp: "",
-    });
-
-    clearMessages();
   };
 
   /*
@@ -1180,16 +877,10 @@ const LoginPage = () => {
               WELCOME BACK
             </span>
 
-            <h1>
-              {socialRegistration.active
-                ? "Complete your registration"
-                : "Sign in to your account"}
-            </h1>
+            <h1>Sign in to your account</h1>
 
             <p className={styles.intro}>
-              {socialRegistration.active
-                ? "One last step. Add and verify your mobile number to secure your Jini Cosmetics account."
-                : "Access your orders, wishlist, and personalized beauty experience."}
+              Access your orders, wishlist, and personalized beauty experience.
             </p>
           </div>
 
@@ -1215,7 +906,7 @@ const LoginPage = () => {
             </p>
           )}
 
-          {showRegisterPrompt && !socialRegistration.active && (
+          {showRegisterPrompt && (
             <div
               className={styles.registerPrompt}
               role="alert"
@@ -1233,145 +924,7 @@ const LoginPage = () => {
             </div>
           )}
 
-          {socialRegistration.active ? (
-            /*
-             * ------------------------------------------------
-             * SOCIAL REGISTRATION
-             * ------------------------------------------------
-             */
-            <form
-              className={styles.form}
-              onSubmit={
-                handleCompleteSocialRegistration
-              }
-            >
-              <div className={styles.socialAccount}>
-                <div className={styles.socialAccountIcon}>
-                  {socialRegistration.provider ===
-                  "facebook" ? (
-                    <FaFacebookF size={18} aria-hidden="true" />
-                  ) : (
-                    <FaGoogle className={styles.googleG} aria-hidden="true" />
-                  )}
-                </div>
 
-                <div>
-                  <strong>
-                    {socialRegistration.name ||
-                      "Social account"}
-                  </strong>
-
-                  <span>
-                    {socialRegistration.email}
-                  </span>
-                </div>
-              </div>
-
-              <div className={styles.field}>
-                <label htmlFor="social-phone">
-                  Mobile number
-                </label>
-
-                <div className={styles.inputWrapper}>
-                  <Smartphone
-                    size={18}
-                    strokeWidth={1.7}
-                  />
-
-                  <input
-                    id="social-phone"
-                    name="phone"
-                    type="tel"
-                    inputMode="numeric"
-                    maxLength={10}
-                    placeholder="Enter 10-digit mobile number"
-                    value={socialForm.phone}
-                    onChange={
-                      handleSocialFormChange
-                    }
-                    autoComplete="tel"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className={styles.field}>
-                <div
-                  className={
-                    styles.passwordLabel
-                  }
-                >
-                  <label htmlFor="social-otp">
-                    Verification OTP
-                  </label>
-
-                  <button
-                    type="button"
-                    className={styles.resendButton}
-                    onClick={handleSendOtp}
-                    disabled={
-                      isOtpSending ||
-                      !socialForm.phone
-                    }
-                  >
-                    {isOtpSending
-                      ? "Sending..."
-                      : "Send OTP"}
-                  </button>
-                </div>
-
-                <div className={styles.inputWrapper}>
-                  <ShieldCheck
-                    size={18}
-                    strokeWidth={1.7}
-                  />
-
-                  <input
-                    id="social-otp"
-                    name="otp"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    placeholder="Enter OTP"
-                    value={socialForm.otp}
-                    onChange={
-                      handleSocialFormChange
-                    }
-                    autoComplete="one-time-code"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className={styles.submitButton}
-                disabled={isOtpSubmitting}
-              >
-                <span>
-                  {isOtpSubmitting
-                    ? "Creating account..."
-                    : "Verify & create account"}
-                </span>
-
-                {!isOtpSubmitting && (
-                  <ArrowRight
-                    size={18}
-                    strokeWidth={1.8}
-                  />
-                )}
-              </button>
-
-              <button
-                type="button"
-                className={styles.backButton}
-                onClick={
-                  cancelSocialRegistration
-                }
-              >
-                ← Back to login
-              </button>
-            </form>
-          ) : (
             <>
               {/* ---------------------------------------------
                * SOCIAL LOGIN
@@ -1622,7 +1175,6 @@ const LoginPage = () => {
                 Create an account
               </Link>
             </>
-          )}
         </section>
 
         <footer className={styles.footer}>
