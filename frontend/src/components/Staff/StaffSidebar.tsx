@@ -125,8 +125,8 @@ const StaffSidebar = ({
         </div>
 
         <div className={styles.brandText}>
-          <h2>Jihaan</h2>
-          <span>Beauty</span>
+          <h2>Jini</h2>
+          <span>Cosmetics</span>
         </div>
       </div>
 

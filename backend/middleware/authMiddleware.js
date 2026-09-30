@@ -261,6 +261,7 @@ export const userOnly = (req, res, next) => {
 
   const role = normalizeRole(req.user.role);
 
+  // "customer" kept for compatibility with old accounts.
   if (role !== USER_ROLES.USER && role !== "customer") {
     return res.status(403).json({
       success: false,

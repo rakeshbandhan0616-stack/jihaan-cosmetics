@@ -931,3 +931,67 @@
     animation: none;
   }
 }
+
+/* =========================================
+   PDF / PRINT
+========================================= */
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+
+  .page {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 20px !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .headerActions {
+    display: none !important;
+  }
+
+  .filterCard {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .tabs {
+    display: none !important;
+  }
+
+  .panel,
+  .metricCard,
+  .twoColumnGrid,
+  .metricGrid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .panel {
+    box-shadow: none !important;
+  }
+
+  .metricCard {
+    box-shadow: none !important;
+  }
+
+  .tableWrapper {
+    overflow: visible !important;
+  }
+
+  .table {
+    width: 100% !important;
+  }
+
+  button {
+    display: none !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+}

@@ -53,6 +53,16 @@ interface FileResolution {
   height: number;
 }
 
+interface UploadResult {
+  title: string;
+  action: "created" | "updated";
+  type: BannerType;
+  desktopSrc: string;
+  mobileSrc: string;
+  desktopUploaded: boolean;
+  mobileUploaded: boolean;
+}
+
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://jihaan-cosmetics.onrender.com";
 
@@ -261,6 +271,8 @@ export default function HeroBannersManager() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+
   const [desktopPreview, setDesktopPreview] = useState("");
   const [mobilePreview, setMobilePreview] = useState("");
 
@@ -324,6 +336,7 @@ export default function HeroBannersManager() {
     setMobilePreview("");
     setError("");
     setSuccess("");
+    setUploadResult(null);
   }
 
   function openCreateForm() {
@@ -506,18 +519,51 @@ export default function HeroBannersManager() {
         throw new Error(data.message || "Failed to save hero banner.");
       }
 
+      const savedBanner =
+        data.heroBanner ||
+        data.banner ||
+        data.data ||
+        null;
+
+      const action = editingId ? "updated" : "created";
+
       setSuccess(
         editingId
           ? "Hero banner updated successfully."
           : "Hero banner created successfully."
       );
 
+      setUploadResult({
+        title:
+          savedBanner?.title ||
+          form.title.trim() ||
+          "Hero Banner",
+        action,
+        type:
+          savedBanner?.type ||
+          form.type,
+        desktopSrc:
+          savedBanner?.desktopSrc ||
+          "",
+        mobileSrc:
+          savedBanner?.mobileSrc ||
+          "",
+        desktopUploaded:
+          Boolean(savedBanner?.desktopSrc) ||
+          Boolean(form.desktopFile),
+        mobileUploaded:
+          Boolean(savedBanner?.mobileSrc) ||
+          Boolean(form.mobileFile),
+      });
+
       await fetchBanners();
 
-      setTimeout(() => {
-        setShowForm(false);
-        resetForm();
-      }, 700);
+      setShowForm(false);
+      setForm((previous) => ({
+        ...previous,
+        desktopFile: null,
+        mobileFile: null,
+      }));
     } catch (submitError) {
       setError(getErrorMessage(submitError));
     } finally {
@@ -616,7 +662,286 @@ export default function HeroBannersManager() {
     const mediaUrl = getFileUrl(source);
 
     if (!mediaUrl) {
-      return (
+      const uploadStatusStyles = `
+    .heroUploadLoadingOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(10, 12, 18, 0.72);
+      backdrop-filter: blur(8px);
+    }
+
+    .heroUploadLoadingCard {
+      width: min(440px, 100%);
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+    }
+
+    .heroUploadSpinner {
+      width: 46px;
+      height: 46px;
+      flex: 0 0 46px;
+      border: 4px solid #e8e8ec;
+      border-top-color: #111827;
+      border-radius: 50%;
+      animation: heroUploadSpin 0.8s linear infinite;
+    }
+
+    .heroUploadLoadingText {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .heroUploadLoadingText strong {
+      font-size: 17px;
+      color: #111827;
+    }
+
+    .heroUploadLoadingText span {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #4b5563;
+    }
+
+    .heroUploadLoadingText small {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .heroUploadSuccessOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(10, 12, 18, 0.58);
+      backdrop-filter: blur(7px);
+    }
+
+    .heroUploadSuccessModal {
+      position: relative;
+      width: min(470px, 100%);
+      padding: 32px;
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.28);
+      animation: heroUploadModalIn 0.24s ease-out;
+    }
+
+    .heroUploadSuccessClose {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #4b5563;
+      cursor: pointer;
+    }
+
+    .heroUploadSuccessIcon {
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 18px;
+      border-radius: 50%;
+      background: #111827;
+      color: #fff;
+      font-size: 27px;
+      font-weight: 700;
+    }
+
+    .heroUploadSuccessHeader {
+      padding-right: 35px;
+      margin-bottom: 22px;
+    }
+
+    .heroUploadSuccessEyebrow {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #6b7280;
+    }
+
+    .heroUploadSuccessHeader h3 {
+      margin: 0 0 7px;
+      font-size: 24px;
+      line-height: 1.2;
+      color: #111827;
+    }
+
+    .heroUploadSuccessHeader p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .heroUploadStatusList {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .heroUploadStatusItem {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      background: #fafafa;
+    }
+
+    .heroUploadStatusInfo {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .heroUploadStatusCheck {
+      width: 32px;
+      height: 32px;
+      flex: 0 0 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #111827;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .heroUploadStatusInfo > div:last-child {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .heroUploadStatusInfo strong {
+      font-size: 14px;
+      color: #111827;
+    }
+
+    .heroUploadStatusInfo span {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .heroUploadStatusBadge {
+      flex: 0 0 auto;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f0fdf4;
+      color: #15803d;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .heroUploadCloudinaryNote {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 18px 0;
+      padding: 11px 13px;
+      border-radius: 11px;
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    .heroUploadCloudinaryDot {
+      width: 7px;
+      height: 7px;
+      flex: 0 0 7px;
+      border-radius: 50%;
+      background: #22c55e;
+    }
+
+    .heroUploadDoneButton {
+      width: 100%;
+      min-height: 46px;
+      border: 0;
+      border-radius: 12px;
+      background: #111827;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @keyframes heroUploadSpin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes heroUploadModalIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .heroUploadLoadingOverlay,
+      .heroUploadSuccessOverlay {
+        padding: 16px;
+      }
+
+      .heroUploadLoadingCard {
+        padding: 22px;
+        border-radius: 17px;
+      }
+
+      .heroUploadSuccessModal {
+        padding: 24px 18px 18px;
+        border-radius: 20px;
+      }
+
+      .heroUploadSuccessHeader h3 {
+        font-size: 21px;
+      }
+
+      .heroUploadStatusItem {
+        padding: 12px;
+      }
+
+      .heroUploadStatusBadge {
+        padding: 5px 8px;
+      }
+    }
+  `;
+
+  return (
         <div className="heroBannerMediaPlaceholder">
           <ImageIcon size={28} />
           <span>No media</span>
@@ -676,6 +1001,135 @@ export default function HeroBannersManager() {
 
   return (
     <section className="heroBannersManager">
+      {saving && (
+        <div
+          className="heroUploadLoadingOverlay"
+          role="status"
+          aria-live="polite"
+          aria-label="Uploading hero banner"
+        >
+          <div className="heroUploadLoadingCard">
+            <div className="heroUploadSpinner" />
+            <div className="heroUploadLoadingText">
+              <strong>
+                {editingId
+                  ? "Updating Hero Banner"
+                  : "Uploading Hero Banner"}
+              </strong>
+
+              <span>
+                Your desktop and mobile media are being uploaded securely to
+                Cloudinary.
+              </span>
+
+              <div className="heroUploadLoadingSteps">
+                <span className="heroUploadLoadingStep heroUploadLoadingStepActive">
+                  <i />
+                  Preparing media
+                </span>
+                <span className="heroUploadLoadingStep heroUploadLoadingStepActive">
+                  <i />
+                  Uploading files
+                </span>
+                <span className="heroUploadLoadingStep">
+                  <i />
+                  Saving banner
+                </span>
+              </div>
+
+              <small>
+                Please do not close or refresh this page.
+              </small>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {uploadResult && (
+        <div
+          className="heroUploadSuccessOverlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="hero-upload-success-title"
+        >
+          <div className="heroUploadSuccessModal">
+            <button
+              type="button"
+              className="heroUploadSuccessClose"
+              onClick={() => setUploadResult(null)}
+              aria-label="Close upload status"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="heroUploadSuccessIcon">
+              ✓
+            </div>
+
+            <div className="heroUploadSuccessHeader">
+              <span className="heroUploadSuccessEyebrow">
+                Media Upload Complete
+              </span>
+
+              <h3 id="hero-upload-success-title">
+                Hero Banner {uploadResult.action === "created" ? "Created" : "Updated"}
+              </h3>
+
+              <p>
+                {uploadResult.title} has been saved successfully.
+              </p>
+            </div>
+
+            <div className="heroUploadStatusList">
+              <div className="heroUploadStatusItem">
+                <div className="heroUploadStatusInfo">
+                  <div className="heroUploadStatusCheck">✓</div>
+                  <div>
+                    <strong>Desktop Media</strong>
+                    <span>
+                      {uploadResult.type === "video" ? "Video" : "Image"}
+                    </span>
+                  </div>
+                </div>
+
+                <span className="heroUploadStatusBadge">
+                  {uploadResult.desktopUploaded ? "Uploaded" : "Saved"}
+                </span>
+              </div>
+
+              <div className="heroUploadStatusItem">
+                <div className="heroUploadStatusInfo">
+                  <div className="heroUploadStatusCheck">✓</div>
+                  <div>
+                    <strong>Mobile Media</strong>
+                    <span>
+                      {uploadResult.type === "video" ? "Video" : "Image"}
+                    </span>
+                  </div>
+                </div>
+
+                <span className="heroUploadStatusBadge">
+                  {uploadResult.mobileUploaded ? "Uploaded" : "Saved"}
+                </span>
+              </div>
+            </div>
+
+            <div className="heroUploadCloudinaryNote">
+              <span className="heroUploadCloudinaryDot" />
+              <span>Media stored securely on Cloudinary</span>
+            </div>
+
+            <button
+              type="button"
+              className="heroUploadDoneButton"
+              onClick={() => setUploadResult(null)}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="heroBannersHeader">
         <div>
           <p className="heroBannersEyebrow">Store content</p>
@@ -976,7 +1430,9 @@ export default function HeroBannersManager() {
               >
                 <Save size={18} />
                 {saving
-                  ? "Saving..."
+                  ? editingId
+                    ? "Updating..."
+                    : "Uploading..."
                   : editingId
                   ? "Update Banner"
                   : "Create Banner"}

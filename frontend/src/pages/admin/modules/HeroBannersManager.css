@@ -718,3 +718,637 @@
     padding: 15px;
   }
 }
+
+
+/* =========================================================
+   Upload / Save Loading Overlay
+========================================================= */
+
+.heroUploadLoadingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(35, 27, 22, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.heroUploadLoadingCard {
+  width: min(500px, 100%);
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 28px;
+  border: 1px solid #eadfd6;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 30px 90px rgba(45, 29, 19, 0.24);
+}
+
+.heroUploadSpinner {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border: 4px solid #eee3da;
+  border-top-color: #a86f48;
+  border-radius: 50%;
+  animation: heroUploadSpin 0.8s linear infinite;
+}
+
+.heroUploadLoadingText {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.heroUploadLoadingText strong {
+  color: #302822;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.heroUploadLoadingText > span {
+  color: #75685f;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.heroUploadLoadingText small {
+  color: #a09287;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.heroUploadLoadingSteps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 4px;
+}
+
+.heroUploadLoadingStep {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #f5f0ec;
+  color: #a09287;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.heroUploadLoadingStep i {
+  width: 6px;
+  height: 6px;
+  display: inline-block;
+  border-radius: 50%;
+  background: #cfc2b8;
+}
+
+.heroUploadLoadingStepActive {
+  background: #f8eee7;
+  color: #98613f;
+}
+
+.heroUploadLoadingStepActive i {
+  background: #a86f48;
+}
+
+/* =========================================================
+   Upload Success Popup
+========================================================= */
+
+.heroUploadSuccessOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(35, 27, 22, 0.56);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+.heroUploadSuccessModal {
+  position: relative;
+  width: min(480px, 100%);
+  padding: 32px;
+  border: 1px solid #eadfd6;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 30px 90px rgba(45, 29, 19, 0.24);
+  animation: heroUploadModalIn 0.24s ease-out;
+}
+
+.heroUploadSuccessClose {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: #f7f1ec;
+  color: #75675d;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.heroUploadSuccessClose:hover {
+  background: #eee3da;
+  color: #8f5938;
+}
+
+.heroUploadSuccessIcon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 17px;
+  border-radius: 50%;
+  background: #a86f48;
+  color: #ffffff;
+  font-size: 25px;
+  font-weight: 800;
+  box-shadow: 0 10px 25px rgba(168, 111, 72, 0.2);
+}
+
+.heroUploadSuccessHeader {
+  padding-right: 38px;
+  margin-bottom: 22px;
+}
+
+.heroUploadSuccessEyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: #b4774d;
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.heroUploadSuccessHeader h3 {
+  margin: 0 0 7px;
+  color: #302822;
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.heroUploadSuccessHeader p {
+  margin: 0;
+  color: #81766d;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.heroUploadStatusList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.heroUploadStatusItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid #eee5de;
+  border-radius: 13px;
+  background: #fdfaf7;
+}
+
+.heroUploadStatusInfo {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.heroUploadStatusCheck {
+  width: 31px;
+  height: 31px;
+  flex: 0 0 31px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #a86f48;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.heroUploadStatusInfo > div:last-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.heroUploadStatusInfo strong {
+  color: #493b31;
+  font-size: 0.81rem;
+  font-weight: 800;
+}
+
+.heroUploadStatusInfo span {
+  color: #97897e;
+  font-size: 0.7rem;
+}
+
+.heroUploadStatusBadge {
+  flex-shrink: 0;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #effaf3;
+  color: #287447;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.heroUploadCloudinaryNote {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 17px 0;
+  padding: 10px 12px;
+  border: 1px solid #eee5de;
+  border-radius: 10px;
+  background: #faf7f4;
+  color: #81766d;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.heroUploadCloudinaryDot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: #4aa56a;
+}
+
+.heroUploadDoneButton {
+  width: 100%;
+  min-height: 45px;
+  border: 0;
+  border-radius: 11px;
+  background: #a86f48;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(168, 111, 72, 0.17);
+  transition: 0.2s ease;
+}
+
+.heroUploadDoneButton:hover {
+  background: #8f5938;
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   Better Tablet / Mobile Layout
+========================================================= */
+
+@media (max-width: 850px) {
+  .heroBannersManager {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .heroBannersHeader {
+    align-items: stretch;
+  }
+
+  .heroBannersHeader > div {
+    min-width: 0;
+  }
+
+  .heroBannersHeader .heroPrimaryButton {
+    width: 100%;
+  }
+
+  .heroBannerFormCard {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .heroBannerCard {
+    width: 100%;
+  }
+
+  .heroBannerCardMedia {
+    width: 100%;
+  }
+
+  .heroBannerMedia {
+    width: 100%;
+    max-height: 330px;
+    object-fit: cover;
+  }
+}
+
+@media (max-width: 600px) {
+  .heroBannersHeader {
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .heroBannersEyebrow {
+    font-size: 0.67rem;
+  }
+
+  .heroBannersHeader h2 {
+    font-size: 1.55rem;
+  }
+
+  .heroBannersDescription {
+    font-size: 0.82rem;
+    line-height: 1.55;
+  }
+
+  .heroBannerFormCard {
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 15px;
+  }
+
+  .heroBannerFormHeader {
+    padding-bottom: 16px;
+    margin-bottom: 18px;
+  }
+
+  .heroBannerFormHeader h3 {
+    font-size: 1rem;
+  }
+
+  .heroBannerFormHeader p {
+    font-size: 0.72rem;
+  }
+
+  .heroCloseButton {
+    width: 33px;
+    height: 33px;
+  }
+
+  .heroFormGrid {
+    gap: 14px;
+  }
+
+  .heroFormField input,
+  .heroFormField select {
+    height: 45px;
+    font-size: 16px;
+  }
+
+  .heroFormField textarea {
+    font-size: 16px;
+  }
+
+  .heroUploadGrid {
+    gap: 14px;
+  }
+
+  .heroUploadBox {
+    padding: 12px;
+  }
+
+  .heroUploadBoxHeader {
+    margin-bottom: 12px;
+  }
+
+  .heroUploadLabel {
+    min-height: 115px;
+    padding: 15px;
+  }
+
+  .heroBannerUploadPreview {
+    max-height: 210px;
+  }
+
+  .heroFormActions {
+    gap: 9px;
+  }
+
+  .heroBannerCard {
+    border-radius: 15px;
+  }
+
+  .heroBannerCardMedia,
+  .heroBannerMedia,
+  .heroBannerMediaPlaceholder {
+    min-height: 190px;
+    max-height: 230px;
+  }
+
+  .heroBannerCardContent {
+    padding: 16px;
+  }
+
+  .heroBannerCardTop h3 {
+    font-size: 0.98rem;
+    word-break: break-word;
+  }
+
+  .heroBannerCardContent > p {
+    font-size: 0.8rem;
+  }
+
+  .heroBannerMeta {
+    gap: 6px;
+    margin-top: 14px;
+  }
+
+  .heroBannerMeta span {
+    min-height: 26px;
+    padding: 0 7px;
+    font-size: 0.66rem;
+  }
+
+  .heroBannerActions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding-top: 16px;
+  }
+
+  .heroActionButton {
+    min-height: 38px;
+    padding: 0 5px;
+    gap: 4px;
+    font-size: 0.68rem;
+  }
+
+  .heroActionButton svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .heroUploadLoadingOverlay,
+  .heroUploadSuccessOverlay {
+    padding: 14px;
+  }
+
+  .heroUploadLoadingCard {
+    align-items: center;
+    gap: 13px;
+    padding: 21px 17px;
+    border-radius: 17px;
+  }
+
+  .heroUploadSpinner {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+    border-width: 3px;
+  }
+
+  .heroUploadLoadingText strong {
+    font-size: 0.9rem;
+  }
+
+  .heroUploadLoadingText > span {
+    font-size: 0.74rem;
+  }
+
+  .heroUploadLoadingText small {
+    font-size: 0.66rem;
+  }
+
+  .heroUploadLoadingSteps {
+    gap: 5px;
+  }
+
+  .heroUploadLoadingStep {
+    padding: 4px 6px;
+    font-size: 0.59rem;
+  }
+
+  .heroUploadSuccessModal {
+    max-height: calc(100vh - 28px);
+    overflow-y: auto;
+    padding: 24px 16px 16px;
+    border-radius: 18px;
+  }
+
+  .heroUploadSuccessIcon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 13px;
+    font-size: 21px;
+  }
+
+  .heroUploadSuccessHeader {
+    padding-right: 34px;
+    margin-bottom: 17px;
+  }
+
+  .heroUploadSuccessHeader h3 {
+    font-size: 1.18rem;
+  }
+
+  .heroUploadSuccessHeader p {
+    font-size: 0.76rem;
+  }
+
+  .heroUploadStatusItem {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .heroUploadStatusCheck {
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
+    font-size: 12px;
+  }
+
+  .heroUploadStatusInfo strong {
+    font-size: 0.75rem;
+  }
+
+  .heroUploadStatusInfo span {
+    font-size: 0.65rem;
+  }
+
+  .heroUploadStatusBadge {
+    padding: 4px 7px;
+    font-size: 0.58rem;
+  }
+
+  .heroUploadCloudinaryNote {
+    font-size: 0.64rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .heroBannerFormCard {
+    padding: 12px;
+  }
+
+  .heroBannerCardContent {
+    padding: 13px;
+  }
+
+  .heroBannerActions {
+    grid-template-columns: 1fr;
+  }
+
+  .heroActionButton {
+    width: 100%;
+  }
+
+  .heroUploadLoadingCard {
+    align-items: flex-start;
+  }
+
+  .heroUploadLoadingSteps {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .heroUploadLoadingStep {
+    width: fit-content;
+  }
+
+  .heroUploadStatusItem {
+    align-items: flex-start;
+  }
+
+  .heroUploadStatusBadge {
+    margin-top: 2px;
+  }
+}
+
+@keyframes heroUploadSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes heroUploadModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

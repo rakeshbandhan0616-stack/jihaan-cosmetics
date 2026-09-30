@@ -1,0 +1,478 @@
+/* =========================================================
+   Jini BEAUTY — LOGISTICS SIDEBAR
+   Separate responsive navigation component.
+========================================================= */
+
+:global(*) {
+  box-sizing: border-box;
+}
+
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 120;
+  width: 280px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  background: #ffffff;
+  border-right: 1px solid #e8ebf1;
+  box-shadow: 4px 0 20px rgba(15, 23, 42, 0.025);
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition:
+    width 0.22s ease,
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.collapsed {
+  width: 80px;
+  padding: 20px 10px;
+}
+
+.brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 0 10px;
+  margin-bottom: 26px;
+}
+
+.collapsed .brand {
+  justify-content: center;
+  padding: 0;
+}
+
+.brandMark {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  overflow: hidden;
+}
+
+.brandMark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.brandText {
+  min-width: 0;
+}
+
+.brandText strong {
+  display: block;
+  color: #111827;
+  font-size: 18px;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.brandText span {
+  display: block;
+  margin-top: 4px;
+  color: #7b8494;
+  font-size: 12px;
+}
+
+.collapsed .brandText {
+  display: none;
+}
+
+.roleCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 68px;
+  padding: 12px;
+  margin-bottom: 28px;
+  border: 1px solid #e9ebf1;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fafaff 0%, #f7f7fb 100%);
+}
+
+.collapsed .roleCard {
+  justify-content: center;
+  padding: 8px;
+  margin-bottom: 20px;
+}
+
+.roleIcon {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #4f46e5;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);
+}
+
+.roleText {
+  min-width: 0;
+}
+
+.roleText small {
+  display: block;
+  margin-bottom: 4px;
+  color: #8a93a3;
+  font-size: 11px;
+}
+
+.roleText strong {
+  display: block;
+  color: #172033;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.collapsed .roleText {
+  display: none;
+}
+
+.sectionTitle {
+  padding: 0 13px;
+  margin: 0 0 9px;
+  color: #8992a3;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.collapsed .sectionTitle {
+  display: none;
+}
+
+.navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  min-height: 47px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #5e6879;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.navItem:hover {
+  background: #f5f6fa;
+  color: #252e3d;
+}
+
+.navItem:active {
+  transform: translateY(1px);
+}
+
+.navItem.active {
+  background: #111827;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(17, 24, 39, 0.12);
+}
+
+.collapsed .navItem {
+  justify-content: center;
+  padding: 0;
+}
+
+.navIcon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collapsed .navLabel {
+  display: none;
+}
+
+.activeDot {
+  width: 5px;
+  height: 5px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.collapsed .activeDot {
+  display: none;
+}
+
+.bottom {
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid #edf0f4;
+}
+
+.logout {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  min-height: 46px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: #667085;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.collapsed .logout {
+  justify-content: center;
+  padding: 0;
+}
+
+.logout:hover:not(:disabled) {
+  background: #fff5f5;
+  color: #dc2626;
+}
+
+.logout:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.logoutLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collapsed .logoutLabel {
+  display: none;
+}
+
+.collapseButton {
+  position: absolute;
+  top: 72px;
+  right: -13px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border: 1px solid #dfe3e9;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #475467;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.10);
+  cursor: pointer;
+}
+
+.mobileMenuButton,
+.mobileClose,
+.mobileOverlay {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 80px;
+    padding: 20px 10px;
+  }
+
+  .brand {
+    justify-content: center;
+    padding: 0;
+    margin-bottom: 22px;
+  }
+
+  .brandText,
+  .roleText,
+  .sectionTitle,
+  .navLabel,
+  .activeDot,
+  .logoutLabel {
+    display: none;
+  }
+
+  .roleCard {
+    justify-content: center;
+    padding: 8px;
+    margin-bottom: 20px;
+  }
+
+  .navItem,
+  .logout {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .collapseButton {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .mobileMenuButton {
+    position: fixed;
+    top: 11px;
+    left: 12px;
+    z-index: 140;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid #e1e5eb;
+    border-radius: 11px;
+    background: #ffffff;
+    color: #273142;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
+    cursor: pointer;
+  }
+
+  .mobileOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    display: block;
+    border: 0;
+    padding: 0;
+    background: rgba(15, 23, 42, 0.42);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    cursor: pointer;
+  }
+
+  .sidebar,
+  .sidebar.collapsed {
+    width: min(304px, calc(100vw - 52px));
+    padding: 20px 16px 16px;
+    transform: translateX(-105%);
+    box-shadow: none;
+  }
+
+  .sidebar.mobileOpen,
+  .sidebar.collapsed.mobileOpen {
+    transform: translateX(0);
+    box-shadow: 12px 0 40px rgba(15, 23, 42, 0.18);
+  }
+
+  .sidebar .brand,
+  .sidebar.collapsed .brand {
+    justify-content: flex-start;
+    padding: 0 4px;
+    margin-bottom: 24px;
+  }
+
+  .sidebar .brandText,
+  .sidebar.collapsed .brandText,
+  .sidebar .roleText,
+  .sidebar.collapsed .roleText,
+  .sidebar .sectionTitle,
+  .sidebar.collapsed .sectionTitle,
+  .sidebar .navLabel,
+  .sidebar.collapsed .navLabel,
+  .sidebar .activeDot,
+  .sidebar.collapsed .activeDot,
+  .sidebar .logoutLabel,
+  .sidebar.collapsed .logoutLabel {
+    display: block;
+  }
+
+  .sidebar .roleCard,
+  .sidebar.collapsed .roleCard {
+    justify-content: flex-start;
+    padding: 12px;
+    margin-bottom: 24px;
+  }
+
+  .sidebar .navItem,
+  .sidebar.collapsed .navItem,
+  .sidebar .logout,
+  .sidebar.collapsed .logout {
+    justify-content: flex-start;
+    padding: 0 13px;
+  }
+
+  .sidebar .activeDot,
+  .sidebar.collapsed .activeDot {
+    display: block;
+  }
+
+  .collapseButton {
+    display: none;
+  }
+
+  .mobileClose {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid #e1e5eb;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #475467;
+    cursor: pointer;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .navItem {
+    transition: none;
+  }
+}
+
+.navItem:focus-visible,
+.logout:focus-visible,
+.collapseButton:focus-visible,
+.mobileMenuButton:focus-visible,
+.mobileClose:focus-visible {
+  outline: 3px solid rgba(79, 70, 229, 0.22);
+  outline-offset: 2px;
+}

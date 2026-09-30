@@ -1361,6 +1361,18 @@ function Offers() {
   }
 
   /* =======================================================
+     PREPARE SWIPER SLIDES
+     Keeping the map outside JSX avoids parser ambiguity
+     and makes the carousel markup easier to maintain.
+  ======================================================= */
+
+  const offerSlides = products.map((product) => (
+    <SwiperSlide key={product.id}>
+      {renderProductCard(product)}
+    </SwiperSlide>
+  ));
+
+  /* =======================================================
      MAIN
   ======================================================= */
 
@@ -1458,51 +1470,70 @@ function Offers() {
             Autoplay,
           ]}
           spaceBetween={
-            18
+            10
           }
           slidesPerView={
-            1.15
+            2.05
+          }
+          grabCursor
+          loop={
+            products.length > 2
+          }
+          speed={
+            650
           }
           autoplay={{
-            delay: 3500,
+            delay: 3000,
             disableOnInteraction:
               false,
+            pauseOnMouseEnter:
+              true,
           }}
           breakpoints={{
+            360: {
+              slidesPerView:
+                2.05,
+              spaceBetween:
+                9,
+            },
+
             480: {
               slidesPerView:
-                1.5,
+                2.35,
+              spaceBetween:
+                10,
             },
 
             640: {
               slidesPerView:
-                2,
+                2.8,
+              spaceBetween:
+                11,
             },
 
             900: {
               slidesPerView:
-                3,
+                3.6,
+              spaceBetween:
+                13,
             },
 
             1200: {
               slidesPerView:
-                4,
+                4.4,
+              spaceBetween:
+                15,
+            },
+
+            1440: {
+              slidesPerView:
+                5,
+              spaceBetween:
+                16,
             },
           }}
         >
-          {products.map(
-            (product) => (
-              <SwiperSlide
-                key={
-                  product.id
-                }
-              >
-                {renderProductCard(
-                  product,
-                )}
-              </SwiperSlide>
-            ),
-          )}
+          {offerSlides}
         </Swiper>
       )}
     </section>

@@ -13,9 +13,7 @@ import {
   ChevronRight,
   ClipboardList,
   LoaderCircle,
-  LayoutDashboard,
   LockKeyhole,
-  LogOut,
   MapPin,
   Package,
   PackageCheck,
@@ -24,6 +22,7 @@ import {
   Truck,
   User,
   X,
+  Menu,
 } from "lucide-react";
 
 import staffApi, {
@@ -40,6 +39,7 @@ import staffApi, {
 } from "../../api/staffApi";
 
 import styles from "./LogisticsDashboard.module.css";
+import LogisticsSidebar from "./LogisticsSidebar";
 
 interface LogisticsDashboardProps {
   onLogout: () => void;
@@ -165,6 +165,13 @@ const LogisticsDashboard = ({
 }: LogisticsDashboardProps) => {
   const [activePage, setActivePage] =
     useState("overview");
+
+
+  const [sidebarCollapsed, setSidebarCollapsed] =
+    useState(false);
+
+  const [mobileSidebarOpen, setMobileSidebarOpen] =
+    useState(false);
 
   const [overview, setOverview] =
     useState<LogisticsOverview | null>(null);
@@ -2159,16 +2166,53 @@ const LogisticsDashboard = ({
 
   return (
     <div
-      className={
-        styles.dashboard
-      }
+      className={`${styles.dashboard} ${
+        sidebarCollapsed
+          ? styles.sidebarCollapsed
+          : ""
+      }`}
     >
       <LogisticsSidebar
         active={activePage}
         onNavigate={setActivePage}
         onLogout={handleLogout}
         logoutLoading={logoutLoading}
+        collapsed={sidebarCollapsed}
+        onCollapsedChange={setSidebarCollapsed}
+        mobileOpen={mobileSidebarOpen}
+        onMobileOpenChange={setMobileSidebarOpen}
       />
+
+      <div className={styles.mobileTopbar}>
+        <button
+          type="button"
+          className={styles.mobileTopbarMenu}
+          onClick={() => setMobileSidebarOpen(true)}
+          aria-label="Open logistics menu"
+        >
+          <Menu size={21} />
+        </button>
+
+        <div className={styles.mobileTopbarTitle}>
+          <strong>Jini</strong>
+          <span>Logistics</span>
+        </div>
+
+        <button
+          type="button"
+          className={styles.mobileTopbarRefresh}
+          onClick={() => {
+            if (activePage === "overview") void loadOverview();
+            else if (activePage === "orders") void loadOrders();
+            else if (activePage === "shipments") void loadShipments();
+            else if (activePage === "deliveries") void loadDeliveries();
+            else if (activePage === "account") void loadAccount();
+          }}
+          aria-label="Refresh current page"
+        >
+          <RefreshCw size={18} />
+        </button>
+      </div>
 
       <main
         className={
@@ -2230,404 +2274,6 @@ const LogisticsDashboard = ({
    Kept inside this file so no separate StaffSidebar file is needed.
 ========================================================= */
 
-const LogisticsSidebar = ({
-  active,
-  onNavigate,
-  onLogout,
-  logoutLoading,
-}: {
-  active: string;
-  onNavigate: (page: string) => void;
-  onLogout: () => void;
-  logoutLoading: boolean;
-}) => {
-  const menu = [
-    {
-      id: "overview",
-      label: "Overview",
-      icon: LayoutDashboard,
-    },
-    {
-      id: "orders",
-      label: "Orders",
-      icon: ClipboardList,
-    },
-    {
-      id: "shipments",
-      label: "Shipments",
-      icon: Truck,
-    },
-    {
-      id: "deliveries",
-      label: "Expected Deliveries",
-      icon: PackageCheck,
-    },
-  ];
-
-  return (
-    <aside className="logisticsInlineSidebar">
-      <style>{`
-        .logisticsInlineSidebar {
-          position: fixed;
-          top: 0;
-          left: 0;
-          bottom: 0;
-          z-index: 100;
-          width: 280px;
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          padding: 24px 16px;
-          background: #ffffff;
-          border-right: 1px solid #e8ebf1;
-          box-shadow: 4px 0 20px rgba(15, 23, 42, 0.025);
-          overflow-y: auto;
-          overflow-x: hidden;
-        }
-
-        .logisticsInlineBrand {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          min-height: 54px;
-          padding: 0 10px;
-          margin-bottom: 26px;
-        }
-
-        .logisticsInlineBrandMark {
-          width: 46px;
-          height: 46px;
-          flex: 0 0 46px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 13px;
-          background: #111827;
-          color: #ffffff;
-          font-size: 20px;
-          font-weight: 800;
-          letter-spacing: -0.03em;
-          overflow: hidden;
-        }
-
-        .logisticsInlineBrandMark img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          display: block;
-        }
-
-        .logisticsInlineBrandText {
-          min-width: 0;
-        }
-
-        .logisticsInlineBrandText strong {
-          display: block;
-          margin: 0;
-          color: #111827;
-          font-size: 18px;
-          line-height: 1.1;
-          font-weight: 800;
-        }
-
-        .logisticsInlineBrandText span {
-          display: block;
-          margin-top: 4px;
-          color: #7b8494;
-          font-size: 12px;
-          line-height: 1.2;
-          font-weight: 500;
-        }
-
-        .logisticsInlineRole {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          width: 100%;
-          min-height: 68px;
-          padding: 12px;
-          margin-bottom: 28px;
-          border: 1px solid #e9ebf1;
-          border-radius: 16px;
-          background: linear-gradient(180deg, #fafaff 0%, #f7f7fb 100%);
-        }
-
-        .logisticsInlineRoleIcon {
-          width: 40px;
-          height: 40px;
-          flex: 0 0 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 11px;
-          background: #ffffff;
-          color: #4f46e5;
-          box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);
-        }
-
-        .logisticsInlineRoleText {
-          min-width: 0;
-        }
-
-        .logisticsInlineRoleText small {
-          display: block;
-          margin-bottom: 4px;
-          color: #8a93a3;
-          font-size: 11px;
-          line-height: 1.2;
-        }
-
-        .logisticsInlineRoleText strong {
-          display: block;
-          color: #172033;
-          font-size: 13px;
-          line-height: 1.2;
-          font-weight: 800;
-        }
-
-        .logisticsInlineSectionTitle {
-          padding: 0 13px;
-          margin: 0 0 9px;
-          color: #8992a3;
-          font-size: 10px;
-          line-height: 1.2;
-          font-weight: 800;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-        }
-
-        .logisticsInlineNavigation {
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-        }
-
-        .logisticsInlineNavItem {
-          position: relative;
-          display: flex;
-          align-items: center;
-          gap: 13px;
-          width: 100%;
-          min-height: 47px;
-          padding: 0 13px;
-          border: 0;
-          border-radius: 12px;
-          background: transparent;
-          color: #5e6879;
-          font-size: 13px;
-          font-weight: 600;
-          text-align: left;
-          transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
-        }
-
-        .logisticsInlineNavItem:hover {
-          background: #f5f6fa;
-          color: #252e3d;
-        }
-
-        .logisticsInlineNavItem:active {
-          transform: translateY(1px);
-        }
-
-        .logisticsInlineNavItem.isActive {
-          background: #111827;
-          color: #ffffff;
-          box-shadow: 0 8px 18px rgba(17, 24, 39, 0.12);
-        }
-
-        .logisticsInlineNavIcon {
-          width: 20px;
-          height: 20px;
-          flex: 0 0 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .logisticsInlineNavLabel {
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .logisticsInlineActiveDot {
-          width: 5px;
-          height: 5px;
-          margin-left: auto;
-          border-radius: 50%;
-          background: #ffffff;
-          box-shadow: 0 0 0 4px rgba(255,255,255,0.08);
-        }
-
-        .logisticsInlineBottom {
-          margin-top: auto;
-          padding-top: 18px;
-          border-top: 1px solid #edf0f4;
-        }
-
-        .logisticsInlineLogout {
-          display: flex;
-          align-items: center;
-          gap: 13px;
-          width: 100%;
-          min-height: 46px;
-          padding: 0 13px;
-          border: 0;
-          border-radius: 11px;
-          background: transparent;
-          color: #667085;
-          font-size: 13px;
-          font-weight: 600;
-          text-align: left;
-          transition: background 0.18s ease, color 0.18s ease;
-        }
-
-        .logisticsInlineLogout:hover:not(:disabled) {
-          background: #fff5f5;
-          color: #dc2626;
-        }
-
-        .logisticsInlineLogout:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .logisticsInlineLogoutLabel {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        @media (max-width: 900px) {
-          .logisticsInlineSidebar {
-            width: 80px;
-            padding: 20px 10px;
-          }
-
-          .logisticsInlineBrand {
-            justify-content: center;
-            padding: 0;
-            margin-bottom: 22px;
-          }
-
-          .logisticsInlineBrandMark {
-            width: 46px;
-            height: 46px;
-          }
-
-          .logisticsInlineBrandText,
-          .logisticsInlineRoleText,
-          .logisticsInlineSectionTitle,
-          .logisticsInlineNavLabel,
-          .logisticsInlineActiveDot,
-          .logisticsInlineLogoutLabel {
-            display: none;
-          }
-
-          .logisticsInlineRole {
-            justify-content: center;
-            padding: 8px;
-            margin-bottom: 20px;
-          }
-
-          .logisticsInlineRoleIcon {
-            width: 40px;
-            height: 40px;
-          }
-
-          .logisticsInlineNavItem {
-            justify-content: center;
-            padding: 0;
-          }
-
-          .logisticsInlineLogout {
-            justify-content: center;
-            padding: 0;
-          }
-        }
-      `}</style>
-
-      <div className="logisticsInlineBrand">
-        <div className="logisticsInlineBrandMark">
-          <img
-            src="/jihaan-logo.jpeg"
-            alt="Jihaan Beauty"
-            onError={(event) => {
-              event.currentTarget.style.display = "none";
-              const parent = event.currentTarget.parentElement;
-              if (parent) {
-                parent.textContent = "J";
-              }
-            }}
-          />
-        </div>
-
-        <div className="logisticsInlineBrandText">
-          <strong>Jihaan</strong>
-          <span>Beauty</span>
-        </div>
-      </div>
-
-      <div className="logisticsInlineRole">
-        <div className="logisticsInlineRoleIcon">
-          <Truck size={19} />
-        </div>
-        <div className="logisticsInlineRoleText">
-          <small>Logged in as</small>
-          <strong>Logistics</strong>
-        </div>
-      </div>
-
-      <div className="logisticsInlineSectionTitle">
-        Dashboard
-      </div>
-
-      <nav className="logisticsInlineNavigation">
-        {menu.map((item) => {
-          const Icon = item.icon;
-          const isActive = active === item.id;
-
-          return (
-            <button
-              key={item.id}
-              type="button"
-              className={`logisticsInlineNavItem${
-                isActive ? " isActive" : ""
-              }`}
-              onClick={() => onNavigate(item.id)}
-            >
-              <span className="logisticsInlineNavIcon">
-                <Icon size={19} />
-              </span>
-              <span className="logisticsInlineNavLabel">
-                {item.label}
-              </span>
-              {isActive && (
-                <span className="logisticsInlineActiveDot" />
-              )}
-            </button>
-          );
-        })}
-      </nav>
-
-      <div className="logisticsInlineBottom">
-        <button
-          type="button"
-          className="logisticsInlineLogout"
-          onClick={onLogout}
-          disabled={logoutLoading}
-          title="Logout"
-        >
-          <LogOut size={19} />
-          <span className="logisticsInlineLogoutLabel">
-            {logoutLoading ? "Logging out..." : "Logout"}
-          </span>
-        </button>
-      </div>
-    </aside>
-  );
-};
 
 /* =========================================================
    PAGE HEADER

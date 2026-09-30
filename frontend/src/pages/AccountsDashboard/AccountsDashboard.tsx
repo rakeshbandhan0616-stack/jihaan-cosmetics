@@ -16,10 +16,9 @@ import {
   FileSpreadsheet,
   FileText,
   IndianRupee,
-  LayoutDashboard,
   LoaderCircle,
   LockKeyhole,
-  LogOut,
+  Menu,
   RefreshCw,
   Save,
   Search,
@@ -42,6 +41,7 @@ import staffApi, {
   type StaffUser,
 } from "../../api/staffApi";
 
+import AccountsSidebar from "./AccountsSidebar";
 import styles from "./AccountsDashboard.module.css";
 
 interface AccountsDashboardProps {
@@ -107,6 +107,27 @@ const AccountsDashboard = ({
 }: AccountsDashboardProps) => {
   const [activePage, setActivePage] =
     useState("overview");
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Mobile drawer: close with Escape and lock background scrolling.
+  useEffect(() => {
+    if (!sidebarOpen) return;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSidebarOpen(false);
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [sidebarOpen]);
 
   const [overview, setOverview] =
     useState<AccountsOverview | null>(
@@ -2293,15 +2314,49 @@ const AccountsDashboard = ({
 
   return (
     <div
-      className={
-        styles.dashboard
-      }
+      className={`${styles.dashboard} ${sidebarCollapsed ? styles.sidebarCollapsed : ""}`}
     >
       <AccountsSidebar
         active={activePage}
-        onNavigate={setActivePage}
+        onNavigate={(page) => {
+          setActivePage(page);
+          setSidebarOpen(false);
+        }}
         onLogout={handleLogout}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((value) => !value)}
       />
+
+      <div className={styles.accountsMobileTopbar}>
+        <button
+          type="button"
+          className={styles.accountsMobileMenuButton}
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open navigation"
+          aria-expanded={sidebarOpen}
+        >
+          <Menu size={21} />
+        </button>
+        <div className={styles.accountsMobileTitle}>
+          <strong>Jini</strong>
+          <span>Accounts</span>
+        </div>
+        <button
+          type="button"
+          className={styles.accountsMobileRefresh}
+          onClick={() => {
+            if (activePage === "overview") void loadOverview();
+            else if (activePage === "sales") void applySalesFilter();
+            else if (activePage === "orders") void loadOrders();
+            else if (activePage === "inventory") void loadInventory();
+          }}
+          aria-label="Refresh"
+        >
+          <RefreshCw size={18} />
+        </button>
+      </div>
 
       <main
         className={
@@ -2337,424 +2392,6 @@ const AccountsDashboard = ({
    Kept inside this file so the Accounts dashboard does not
    depend on a separate StaffSidebar component.
 ========================================================= */
-
-const AccountsSidebar = ({
-  active,
-  onNavigate,
-  onLogout,
-}: {
-  active: string;
-  onNavigate: (page: string) => void;
-  onLogout: () => void;
-}) => {
-  const menu = [
-    {
-      id: "overview",
-      label: "Overview",
-      icon: LayoutDashboard,
-    },
-    {
-      id: "sales",
-      label: "Sales",
-      icon: BarChart3,
-    },
-    {
-      id: "orders",
-      label: "Orders",
-      icon: ShoppingBag,
-    },
-    {
-      id: "inventory",
-      label: "Inventory",
-      icon: Boxes,
-    },
-    {
-      id: "account",
-      label: "Account",
-      icon: User,
-    },
-  ];
-
-  return (
-    <aside className="accountsInlineSidebar">
-      <style>{`
-        .accountsInlineSidebar {
-          position: fixed;
-          top: 0;
-          left: 0;
-          bottom: 0;
-          z-index: 100;
-          width: 280px;
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          padding: 24px 16px;
-          background: #ffffff;
-          border-right: 1px solid #e8ebf1;
-          box-shadow: 4px 0 20px rgba(15, 23, 42, 0.025);
-          overflow-y: auto;
-          overflow-x: hidden;
-          box-sizing: border-box;
-        }
-
-        .accountsInlineBrand {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          min-height: 54px;
-          padding: 0 10px;
-          margin-bottom: 26px;
-        }
-
-        .accountsInlineBrandMark {
-          width: 46px;
-          height: 46px;
-          flex: 0 0 46px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 13px;
-          background: #111827;
-          color: #ffffff;
-          font-size: 20px;
-          font-weight: 800;
-          letter-spacing: -0.03em;
-          overflow: hidden;
-          box-sizing: border-box;
-        }
-
-        .accountsInlineBrandMark img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          display: block;
-        }
-
-        .accountsInlineBrandText {
-          min-width: 0;
-        }
-
-        .accountsInlineBrandText strong {
-          display: block;
-          margin: 0;
-          color: #111827;
-          font-size: 18px;
-          line-height: 1.1;
-          font-weight: 800;
-        }
-
-        .accountsInlineBrandText span {
-          display: block;
-          margin-top: 4px;
-          color: #7b8494;
-          font-size: 12px;
-          line-height: 1.2;
-          font-weight: 500;
-        }
-
-        .accountsInlineRole {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          width: 100%;
-          min-height: 68px;
-          padding: 12px;
-          margin-bottom: 28px;
-          border: 1px solid #e9ebf1;
-          border-radius: 16px;
-          background: linear-gradient(
-            180deg,
-            #fafaff 0%,
-            #f7f7fb 100%
-          );
-          box-sizing: border-box;
-        }
-
-        .accountsInlineRoleIcon {
-          width: 40px;
-          height: 40px;
-          flex: 0 0 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 11px;
-          background: #ffffff;
-          color: #4f46e5;
-          box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);
-        }
-
-        .accountsInlineRoleText {
-          min-width: 0;
-        }
-
-        .accountsInlineRoleText small {
-          display: block;
-          margin-bottom: 4px;
-          color: #8a93a3;
-          font-size: 11px;
-          line-height: 1.2;
-        }
-
-        .accountsInlineRoleText strong {
-          display: block;
-          color: #172033;
-          font-size: 13px;
-          line-height: 1.2;
-          font-weight: 800;
-        }
-
-        .accountsInlineSectionTitle {
-          padding: 0 13px;
-          margin: 0 0 9px;
-          color: #8992a3;
-          font-size: 10px;
-          line-height: 1.2;
-          font-weight: 800;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-        }
-
-        .accountsInlineNavigation {
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-        }
-
-        .accountsInlineNavItem {
-          position: relative;
-          display: flex;
-          align-items: center;
-          gap: 13px;
-          width: 100%;
-          min-height: 47px;
-          padding: 0 13px;
-          border: 0;
-          border-radius: 12px;
-          background: transparent;
-          color: #5e6879;
-          font-size: 13px;
-          font-weight: 600;
-          text-align: left;
-          cursor: pointer;
-          transition:
-            background 0.18s ease,
-            color 0.18s ease,
-            transform 0.18s ease;
-          box-sizing: border-box;
-        }
-
-        .accountsInlineNavItem:hover {
-          background: #f5f6fa;
-          color: #252e3d;
-        }
-
-        .accountsInlineNavItem:active {
-          transform: translateY(1px);
-        }
-
-        .accountsInlineNavItem.isActive {
-          background: #111827;
-          color: #ffffff;
-          box-shadow: 0 8px 18px rgba(17, 24, 39, 0.12);
-        }
-
-        .accountsInlineNavIcon {
-          width: 20px;
-          height: 20px;
-          flex: 0 0 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .accountsInlineNavLabel {
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .accountsInlineActiveDot {
-          width: 5px;
-          height: 5px;
-          margin-left: auto;
-          border-radius: 50%;
-          background: #ffffff;
-          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
-        }
-
-        .accountsInlineBottom {
-          margin-top: auto;
-          padding-top: 18px;
-          border-top: 1px solid #edf0f4;
-        }
-
-        .accountsInlineLogout {
-          display: flex;
-          align-items: center;
-          gap: 13px;
-          width: 100%;
-          min-height: 46px;
-          padding: 0 13px;
-          border: 0;
-          border-radius: 11px;
-          background: transparent;
-          color: #667085;
-          font-size: 13px;
-          font-weight: 600;
-          text-align: left;
-          cursor: pointer;
-          transition:
-            background 0.18s ease,
-            color 0.18s ease;
-          box-sizing: border-box;
-        }
-
-        .accountsInlineLogout:hover {
-          background: #fff5f5;
-          color: #dc2626;
-        }
-
-        .accountsInlineLogout:focus-visible,
-        .accountsInlineNavItem:focus-visible {
-          outline: 2px solid #111827;
-          outline-offset: 2px;
-        }
-
-        .accountsInlineLogoutLabel {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        @media (max-width: 900px) {
-          .accountsInlineSidebar {
-            width: 80px;
-            padding: 20px 10px;
-          }
-
-          .accountsInlineBrand {
-            justify-content: center;
-            padding: 0;
-            margin-bottom: 22px;
-          }
-
-          .accountsInlineBrandText,
-          .accountsInlineRoleText,
-          .accountsInlineSectionTitle,
-          .accountsInlineNavLabel,
-          .accountsInlineActiveDot,
-          .accountsInlineLogoutLabel {
-            display: none;
-          }
-
-          .accountsInlineRole {
-            justify-content: center;
-            padding: 8px;
-            margin-bottom: 20px;
-          }
-
-          .accountsInlineNavItem {
-            justify-content: center;
-            padding: 0;
-          }
-
-          .accountsInlineLogout {
-            justify-content: center;
-            padding: 0;
-          }
-        }
-      `}</style>
-
-      <div className="accountsInlineBrand">
-        <div className="accountsInlineBrandMark">
-          <img
-            src="/jihaan-logo.jpeg"
-            alt="Jihaan Beauty"
-            onError={(event) => {
-              event.currentTarget.style.display = "none";
-
-              const parent =
-                event.currentTarget.parentElement;
-
-              if (parent) {
-                parent.textContent = "J";
-              }
-            }}
-          />
-        </div>
-
-        <div className="accountsInlineBrandText">
-          <strong>Jihaan</strong>
-          <span>Beauty</span>
-        </div>
-      </div>
-
-      <div className="accountsInlineRole">
-        <div className="accountsInlineRoleIcon">
-          <IndianRupee size={19} />
-        </div>
-
-        <div className="accountsInlineRoleText">
-          <small>Logged in as</small>
-          <strong>Accounts</strong>
-        </div>
-      </div>
-
-      <div className="accountsInlineSectionTitle">
-        Dashboard
-      </div>
-
-      <nav className="accountsInlineNavigation">
-        {menu.map((item) => {
-          const Icon = item.icon;
-          const isActive = active === item.id;
-
-          return (
-            <button
-              key={item.id}
-              type="button"
-              className={`accountsInlineNavItem${
-                isActive ? " isActive" : ""
-              }`}
-              onClick={() => onNavigate(item.id)}
-              aria-current={
-                isActive ? "page" : undefined
-              }
-            >
-              <span className="accountsInlineNavIcon">
-                <Icon size={19} />
-              </span>
-
-              <span className="accountsInlineNavLabel">
-                {item.label}
-              </span>
-
-              {isActive && (
-                <span className="accountsInlineActiveDot" />
-              )}
-            </button>
-          );
-        })}
-      </nav>
-
-      <div className="accountsInlineBottom">
-        <button
-          type="button"
-          className="accountsInlineLogout"
-          onClick={() => void onLogout()}
-          title="Logout"
-        >
-          <LogOut size={19} />
-
-          <span className="accountsInlineLogoutLabel">
-            Logout
-          </span>
-        </button>
-      </div>
-    </aside>
-  );
-};
 
 // ==================================================
 // COMPONENTS

@@ -18,10 +18,11 @@ import {
 
   /* =========================================================
      SOCIAL AUTHENTICATION
-     
+
      Google/Facebook users are created and logged in
      immediately.
 
+     NO email OTP.
      NO WhatsApp OTP.
   ========================================================= */
 
@@ -30,9 +31,9 @@ import {
 
   /* =========================================================
      PASSWORD RESET
-     
+
      Email OTP is used.
-     
+
      NO WhatsApp OTP.
   ========================================================= */
 
@@ -60,8 +61,7 @@ import {
 
 import userUpload from "../middleware/userUpload.js";
 
-const router =
-  express.Router();
+const router = express.Router();
 
 /* =========================================================
    STAFF / ADMIN LOGIN
@@ -104,6 +104,10 @@ router.post(
      "password": "password"
    }
 
+   Optional multipart field:
+
+   profileImage
+
    Flow:
 
    Registration details
@@ -111,6 +115,8 @@ router.post(
    Validate details
           ↓
    Check duplicate account
+          ↓
+   Generate email OTP
           ↓
    Send OTP to email
           ↓
@@ -132,9 +138,7 @@ router.post(
 
 router.post(
   "/register",
-  userUpload.single(
-    "profileImage",
-  ),
+  userUpload.single("profileImage"),
   registerUser,
 );
 
@@ -156,7 +160,6 @@ router.post(
    - Creates the customer account
    - Marks email as verified
    - Generates JWT
-   - Sets HTTP-only authentication cookie
    - Logs the user in
 ========================================================= */
 
@@ -177,8 +180,8 @@ router.post(
      "email": "customer@example.com"
    }
 
-   The backend applies the configured resend
-   cooldown before allowing another OTP.
+   The backend applies the configured OTP
+   resend cooldown.
 ========================================================= */
 
 router.post(
@@ -197,9 +200,9 @@ router.post(
    - Email + password
    - Mobile + password
 
-   Authentication is restricted to:
+   Authentication is handled by userLogin().
 
-   role = user
+   Normal customer accounts use the "user" role.
 ========================================================= */
 
 router.post(
@@ -239,15 +242,15 @@ router.post(
 
    IMPORTANT:
 
+   Google authentication is sufficient for
+   account creation/login.
+
    There is NO:
 
-   - socialToken
-   - phone collection
+   - email OTP
+   - phone OTP
    - WhatsApp OTP
    - social registration completion step
-
-   Google authentication is sufficient for
-   immediate account creation/login.
 ========================================================= */
 
 router.post(
@@ -289,8 +292,8 @@ router.post(
 
    There is NO:
 
-   - socialToken
-   - phone collection
+   - email OTP
+   - phone OTP
    - WhatsApp OTP
    - social registration completion step
 ========================================================= */
@@ -324,7 +327,7 @@ router.post(
       ↓
    Verify OTP
       ↓
-   Receive reset token
+   Receive password reset token
       ↓
    Set new password
 
@@ -350,7 +353,8 @@ router.post(
      "email": "customer@example.com"
    }
 
-   The backend applies the OTP resend cooldown.
+   The backend applies the configured OTP
+   resend cooldown.
 ========================================================= */
 
 router.post(
@@ -371,20 +375,24 @@ router.post(
      "otp": "123456"
    }
 
-   Successful verification returns:
+   Successful verification returns a short-lived
+   password reset token.
+
+   Example:
 
    {
      "success": true,
+     "message": "...",
      "resetToken": "...",
-     "user": {
-       "id": "...",
-       "name": "...",
-       "email": "...",
-       "phone": "******1234"
-     }
+     "expiresIn": 600
    }
 
-   The resetToken is NOT the normal login JWT.
+   IMPORTANT:
+
+   resetToken is NOT the normal login JWT.
+
+   It can only be used with:
+   POST /reset-password
 ========================================================= */
 
 router.post(
@@ -402,9 +410,11 @@ router.post(
 
    {
      "resetToken": "...",
-     "newPassword": "newpassword",
-     "confirmPassword": "newpassword"
+     "newPassword": "newpassword"
    }
+
+   The controller also supports "password" / "token"
+   aliases where configured.
 
    Flow:
 
@@ -419,6 +429,9 @@ router.post(
    Save password
           ↓
    Password reset successful
+
+   This route is PUBLIC because the resetToken
+   itself authorizes the password reset.
 ========================================================= */
 
 router.post(
@@ -432,10 +445,11 @@ router.post(
 
    POST /api/auth/logout
 
-   Public route.
+   The controller handles the logout operation.
 
-   The authentication cookie is cleared even if
-   the existing session has already expired.
+   This route is intentionally public so that the
+   frontend can safely call logout even if the JWT
+   has already expired.
 ========================================================= */
 
 router.post(
@@ -449,8 +463,6 @@ router.post(
 
    GET /api/auth/me
 
-   Only customers can access this endpoint.
-
    Middleware:
 
    protect
@@ -458,6 +470,11 @@ router.post(
    userOnly
       ↓
    getCurrentUser
+
+   Only normal customers can access this endpoint.
+
+   Legacy "customer" role is also supported by
+   userOnly() for existing accounts.
 ========================================================= */
 
 router.get(
@@ -503,15 +520,16 @@ router.get(
    - profile image
 
    Email is intentionally not changed here.
+
+   Phone verification is NOT automatically completed
+   merely by changing the phone number.
 ========================================================= */
 
 router.put(
   "/profile",
   protect,
   userOnly,
-  userUpload.single(
-    "profileImage",
-  ),
+  userUpload.single("profileImage"),
   updateProfile,
 );
 
@@ -528,6 +546,8 @@ router.put(
    - name
    - phone
    - profile image
+   - department
+   - designation
 
    Role, permissions, active status, blocked status,
    and password are not changed here.
@@ -537,9 +557,7 @@ router.put(
   "/staff/profile",
   protect,
   staffOnly,
-  userUpload.single(
-    "profileImage",
-  ),
+  userUpload.single("profileImage"),
   updateStaffProfile,
 );
 
@@ -557,8 +575,7 @@ router.put(
 
    {
      "currentPassword": "...",
-     "newPassword": "...",
-     "confirmPassword": "..."
+     "newPassword": "..."
    }
 
    Social-only users without a password should use
@@ -586,6 +603,14 @@ router.put(
    - admin
    - accounts
    - logistics
+
+   Requires:
+
+   protect
+      ↓
+   staffOnly
+      ↓
+   changePassword
 ========================================================= */
 
 router.put(

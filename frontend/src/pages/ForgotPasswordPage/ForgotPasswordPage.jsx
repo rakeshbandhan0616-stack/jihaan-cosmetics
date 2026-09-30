@@ -647,7 +647,7 @@ const ForgotPasswordPage =
 
               <div>
                 <h1>
-                  Jihaan Cosmetics
+                  Jini Cosmetics
                 </h1>
 
                 <p>
@@ -1064,7 +1064,7 @@ const ForgotPasswordPage =
 
                   <p>
                     Choose a new password
-                    for your Jihaan Cosmetics
+                    for your Jini Cosmetics
                     account.
                   </p>
                 </div>
@@ -1300,7 +1300,7 @@ const ForgotPasswordPage =
                 </h2>
 
                 <p>
-                  Your Jihaan Cosmetics
+                  Your Jini Cosmetics
                   password has been updated.
                   You can now login with your
                   new password.

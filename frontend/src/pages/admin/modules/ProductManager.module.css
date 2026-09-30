@@ -948,3 +948,457 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* =========================================================
+   Product Media Upload Overlay
+========================================================= */
+
+.mediaUploadOverlay,
+.mediaSuccessOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  background: rgba(38, 27, 36, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.mediaUploadModal {
+  width: min(520px, 100%);
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 30px;
+  border: 1px solid #eadde7;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 30px 90px rgba(58, 31, 51, 0.24);
+  animation: productMediaModalIn 0.22s ease-out;
+}
+
+.mediaUploadSpinner {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #faf0f7;
+  color: #b86b9d;
+}
+
+.mediaUploadContent {
+  min-width: 0;
+  flex: 1;
+}
+
+.mediaUploadEyebrow,
+.mediaSuccessEyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: #b36b98;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.mediaUploadContent h2,
+.mediaSuccessModal h2 {
+  margin: 0;
+  color: #332a35;
+  font-size: 20px;
+  font-weight: 850;
+  line-height: 1.3;
+}
+
+.mediaUploadContent p {
+  margin: 8px 0 20px;
+  color: #817580;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.mediaUploadProgressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: #806b7c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mediaUploadProgressHeader strong {
+  color: #b86b9d;
+  font-size: 13px;
+}
+
+.mediaUploadProgressTrack {
+  width: 100%;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eee4ed;
+}
+
+.mediaUploadProgressBar {
+  height: 100%;
+  min-width: 2px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #b86b9d, #e2a6c7);
+  transition: width 0.18s ease;
+}
+
+.mediaUploadSteps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 16px;
+}
+
+.mediaUploadStep,
+.mediaUploadStepActive {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 27px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #f4eef3;
+  color: #a1929f;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.mediaUploadStep span,
+.mediaUploadStepActive span {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 9px;
+}
+
+.mediaUploadStepActive {
+  background: #f8edf5;
+  color: #a35f8e;
+}
+
+.mediaUploadStepActive span {
+  background: #b86b9d;
+  color: #ffffff;
+}
+
+/* =========================================================
+   Product Media Success Popup
+========================================================= */
+
+.mediaSuccessOverlay {
+  z-index: 99998;
+}
+
+.mediaSuccessModal {
+  position: relative;
+  width: min(500px, 100%);
+  max-height: calc(100vh - 44px);
+  overflow-y: auto;
+  padding: 32px;
+  border: 1px solid #eadde7;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 30px 90px rgba(58, 31, 51, 0.24);
+  animation: productMediaModalIn 0.24s ease-out;
+}
+
+.mediaSuccessClose {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #eadde7;
+  border-radius: 10px;
+  background: #fffafd;
+  color: #806b7c;
+  cursor: pointer;
+}
+
+.mediaSuccessClose:hover {
+  background: #f8edf5;
+  color: #a85d8c;
+}
+
+.mediaSuccessIcon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 16px;
+  border-radius: 50%;
+  background: #b86b9d;
+  color: #ffffff;
+  box-shadow: 0 10px 25px rgba(184, 107, 157, 0.2);
+}
+
+.mediaSuccessEyebrow {
+  margin-bottom: 5px;
+}
+
+.mediaSuccessModal h2 {
+  padding-right: 34px;
+  font-size: 22px;
+}
+
+.mediaSuccessProductName {
+  margin: 8px 0 20px;
+  color: #8c7e89;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.mediaSuccessList {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.mediaSuccessItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #eee4ed;
+  border-radius: 13px;
+  background: #fffafd;
+}
+
+.mediaSuccessItem > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mediaSuccessItem strong {
+  color: #493b49;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mediaSuccessItem span {
+  color: #9b8998;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.mediaSuccessItem b {
+  flex-shrink: 0;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #eaf8ef;
+  color: #31804f;
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.mediaSuccessStorage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 10px 12px;
+  border: 1px solid #e8dce6;
+  border-radius: 10px;
+  background: #faf5f9;
+  color: #806b7c;
+  font-size: 10px;
+}
+
+.mediaSuccessDot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: #43a465;
+}
+
+.mediaSuccessDone {
+  width: 100%;
+  min-height: 45px;
+  border: 0;
+  border-radius: 12px;
+  background: #b86b9d;
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(184, 107, 157, 0.16);
+  transition: 0.2s ease;
+}
+
+.mediaSuccessDone:hover {
+  background: #a85d8c;
+  transform: translateY(-1px);
+}
+
+@keyframes productMediaModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================================================
+   Mobile Upload / Success UI
+========================================================= */
+
+@media (max-width: 700px) {
+  .mediaUploadOverlay,
+  .mediaSuccessOverlay {
+    align-items: center;
+    padding: 14px;
+  }
+
+  .mediaUploadModal {
+    gap: 13px;
+    padding: 21px 17px;
+    border-radius: 18px;
+  }
+
+  .mediaUploadSpinner {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  .mediaUploadContent h2 {
+    font-size: 17px;
+  }
+
+  .mediaUploadContent p {
+    margin-bottom: 16px;
+    font-size: 11px;
+  }
+
+  .mediaUploadSteps {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .mediaUploadStep,
+  .mediaUploadStepActive {
+    width: fit-content;
+    font-size: 9px;
+  }
+
+  .mediaSuccessModal {
+    width: 100%;
+    max-height: calc(100vh - 28px);
+    padding: 25px 16px 16px;
+    border-radius: 19px;
+  }
+
+  .mediaSuccessIcon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 13px;
+  }
+
+  .mediaSuccessModal h2 {
+    font-size: 19px;
+  }
+
+  .mediaSuccessProductName {
+    margin-bottom: 15px;
+    font-size: 11px;
+  }
+
+  .mediaSuccessItem {
+    align-items: flex-start;
+    padding: 10px;
+  }
+
+  .mediaSuccessItem strong {
+    font-size: 11px;
+  }
+
+  .mediaSuccessItem span {
+    font-size: 9px;
+  }
+
+  .mediaSuccessItem b {
+    font-size: 8px;
+  }
+
+  .mediaSuccessStorage {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 420px) {
+  .mediaUploadOverlay,
+  .mediaSuccessOverlay {
+    padding: 10px;
+  }
+
+  .mediaUploadModal {
+    display: block;
+    padding: 20px 15px;
+  }
+
+  .mediaUploadSpinner {
+    margin-bottom: 12px;
+  }
+
+  .mediaUploadContent h2 {
+    font-size: 16px;
+  }
+
+  .mediaUploadProgressHeader {
+    font-size: 10px;
+  }
+
+  .mediaUploadProgressHeader strong {
+    font-size: 11px;
+  }
+
+  .mediaSuccessModal {
+    padding: 22px 13px 13px;
+  }
+
+  .mediaSuccessClose {
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mediaUploadModal,
+  .mediaSuccessModal {
+    animation: none;
+  }
+
+  .mediaUploadProgressBar {
+    transition: none;
+  }
+}

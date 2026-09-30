@@ -529,7 +529,7 @@ function App() {
                   padding: "20px",
                 }}
               >
-                Jihaan Cosmetics Frontend OK
+                Jini Cosmetics Frontend OK
               </div>
             }
           />

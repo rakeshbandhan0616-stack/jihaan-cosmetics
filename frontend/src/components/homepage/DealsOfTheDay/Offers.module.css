@@ -3992,3 +3992,506 @@
       auto !important;
   }
 }
+
+/* =========================================================
+   COMPACT DEAL CAROUSEL
+   Smaller cards + manual swipe/drag + continuous autoplay
+   Final overrides are intentionally placed after the original
+   responsive rules.
+========================================================= */
+
+.dealsSwiper {
+  width: 100%;
+  overflow: visible !important;
+  padding:
+    0
+    2px
+    10px !important;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.dealsSwiper:active {
+  cursor: grabbing;
+}
+
+.dealsSwiper :global(.swiper-wrapper) {
+  align-items: stretch;
+}
+
+.dealsSwiper :global(.swiper-slide) {
+  height: auto;
+  display: flex;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.productCard {
+  width: 100%;
+  min-width: 0;
+  border-radius: 12px;
+}
+
+.productImageWrapper {
+  height: 205px;
+}
+
+.productImage {
+  padding:
+    7px
+    9px
+    6px;
+}
+
+.productContent {
+  padding:
+    7px
+    8px
+    8px;
+}
+
+.productContent h3 {
+  min-height: 31px;
+  margin-bottom: 4px;
+  font-size: 11.5px;
+  line-height: 1.25;
+}
+
+.category {
+  min-height: 10px;
+  margin-bottom: 3px;
+  font-size: 6.5px;
+}
+
+.brand {
+  min-height: 11px;
+  margin-bottom: 4px;
+  font-size: 7.5px;
+}
+
+.rating {
+  min-height: 12px;
+  margin-bottom: 4px;
+  font-size: 6.5px;
+}
+
+.rating svg {
+  width: 9px;
+  height: 9px;
+}
+
+.priceRow {
+  min-height: 18px;
+  margin-bottom: 4px;
+  gap: 4px;
+}
+
+.oldPrice {
+  font-size: 6.5px;
+}
+
+.priceRow strong {
+  font-size: 13px;
+}
+
+.discount {
+  min-height: 12px;
+  padding: 2px 4px;
+  font-size: 5.5px;
+}
+
+.prepaidPrice {
+  min-height: 9px;
+  margin-bottom: 5px;
+  font-size: 6.2px;
+}
+
+.newBadge {
+  top: 7px;
+  left: 7px;
+  min-height: 18px;
+  padding: 4px 7px;
+  font-size: 6px;
+}
+
+.favoriteButton {
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+}
+
+.favoriteButton svg {
+  width: 14px;
+  height: 14px;
+}
+
+.shadeBadge {
+  left: 6px;
+  bottom: 6px;
+  min-height: 17px;
+  padding: 4px 6px;
+  font-size: 6px;
+}
+
+.addToCart,
+.cartStage {
+  min-height: 32px;
+  height: 32px;
+}
+
+.cartFace {
+  grid-template-columns:
+    34px
+    minmax(0, 1fr)
+    43px;
+}
+
+.cartPanelMain {
+  padding: 0 3px;
+  font-size: 6.5px;
+}
+
+.cartPanelRight {
+  font-size: 5px;
+}
+
+.cartMiniBag {
+  width: 12px;
+  height: 13px;
+}
+
+.cartMiniBagHandle {
+  width: 6px;
+  height: 5px;
+  top: -5px;
+}
+
+.cartFolded {
+  width: 43px;
+  height: 43px;
+}
+
+.cartBagScene {
+  width: 58px;
+  height: 64px;
+}
+
+.cartBagBody {
+  left: 9px;
+  width: 41px;
+  height: 48px;
+}
+
+.cartBagHandle {
+  width: 24px;
+  height: 18px;
+  border-width: 4px;
+}
+
+.cartBagMark {
+  font-size: 17px;
+}
+
+.cartTag {
+  width: 43px;
+  height: 22px;
+}
+
+.cartTagFront,
+.cartTagBack {
+  font-size: 5.8px;
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .section {
+    padding:
+      12px
+      2.5%
+      16px;
+  }
+
+  .productImageWrapper {
+    height: 190px;
+  }
+
+  .productContent {
+    padding: 7px;
+  }
+
+  .productContent h3 {
+    font-size: 10.5px;
+    min-height: 28px;
+  }
+}
+
+/* Mobile: keep 2+ compact cards visible */
+@media (max-width: 650px) {
+  .section {
+    padding:
+      8px
+      7px
+      10px;
+  }
+
+  .sectionHeader {
+    margin-bottom: 12px;
+  }
+
+  .ribbon {
+    min-height: 29px;
+    padding:
+      0
+      16px
+      0
+      10px;
+    font-size: 10px;
+  }
+
+  .viewAll {
+    font-size: 8.5px;
+  }
+
+  .timer {
+    margin-bottom: 9px;
+    font-size: 7px;
+  }
+
+  .dealsSwiper {
+    padding:
+      0
+      1px
+      7px !important;
+  }
+
+  .productCard {
+    border-radius: 9px;
+  }
+
+  .productImageWrapper {
+    height: 145px;
+  }
+
+  .productImage {
+    padding: 5px;
+  }
+
+  .productContent {
+    padding:
+      5px
+      5px
+      6px;
+  }
+
+  .category {
+    font-size: 5.7px;
+  }
+
+  .productContent h3 {
+    min-height: 25px;
+    font-size: 9px;
+  }
+
+  .brand {
+    font-size: 6.2px;
+  }
+
+  .rating {
+    font-size: 5.7px;
+  }
+
+  .priceRow strong {
+    font-size: 11px;
+  }
+
+  .oldPrice {
+    font-size: 5.7px;
+  }
+
+  .discount {
+    font-size: 5px;
+  }
+
+  .prepaidPrice {
+    font-size: 5.5px;
+  }
+
+  .newBadge {
+    top: 5px;
+    left: 5px;
+    min-height: 16px;
+    padding: 3px 5px;
+    font-size: 5.5px;
+  }
+
+  .favoriteButton {
+    top: 5px;
+    right: 5px;
+    width: 25px;
+    height: 25px;
+  }
+
+  .favoriteButton svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .shadeBadge {
+    left: 5px;
+    bottom: 5px;
+    min-height: 15px;
+    padding: 3px 5px;
+    font-size: 5.5px;
+  }
+
+  .addToCart,
+  .cartStage {
+    min-height: 28px;
+    height: 28px;
+  }
+
+  .cartFace {
+    grid-template-columns:
+      29px
+      minmax(0, 1fr)
+      37px;
+  }
+
+  .cartPanelMain {
+    font-size: 5.7px;
+  }
+
+  .cartPanelRight {
+    font-size: 4.5px;
+  }
+
+  .cartMiniBag {
+    width: 10px;
+    height: 11px;
+  }
+
+  .cartMiniBagHandle {
+    width: 5px;
+    height: 4px;
+    top: -4px;
+  }
+
+  .cartFolded {
+    width: 37px;
+    height: 37px;
+  }
+
+  .cartBagScene {
+    width: 52px;
+    height: 58px;
+    transform:
+      translate(-50%, -50%)
+      scale(0.68);
+  }
+
+  .cartTag {
+    width: 38px;
+    height: 20px;
+  }
+
+  .cartTagFront,
+  .cartTagBack {
+    font-size: 5px;
+  }
+
+  .allDealsGrid {
+    gap: 8px;
+  }
+
+  .allDealsGrid .productImageWrapper {
+    height: 145px;
+  }
+}
+
+/* Small phones */
+@media (max-width: 420px) {
+  .productImageWrapper,
+  .allDealsGrid .productImageWrapper {
+    height: 132px;
+  }
+
+  .productContent h3 {
+    min-height: 23px;
+    font-size: 8.5px;
+  }
+
+  .priceRow strong {
+    font-size: 10px;
+  }
+
+  .addToCart,
+  .cartStage {
+    min-height: 26px;
+    height: 26px;
+  }
+
+  .cartFace {
+    grid-template-columns:
+      27px
+      minmax(0, 1fr)
+      34px;
+  }
+
+  .cartPanelMain {
+    font-size: 5.2px;
+  }
+
+  .cartPanelRight {
+    font-size: 4px;
+  }
+}
+
+@media (max-width: 360px) {
+  .section {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+
+  .productImageWrapper,
+  .allDealsGrid .productImageWrapper {
+    height: 122px;
+  }
+
+  .productContent {
+    padding:
+      4px
+      4px
+      5px;
+  }
+
+  .productContent h3 {
+    min-height: 22px;
+    font-size: 8px;
+  }
+
+  .priceRow strong {
+    font-size: 9.5px;
+  }
+
+  .addToCart,
+  .cartStage {
+    min-height: 24px;
+    height: 24px;
+  }
+
+  .cartFace {
+    grid-template-columns:
+      24px
+      minmax(0, 1fr)
+      31px;
+  }
+
+  .cartPanelMain {
+    font-size: 4.7px;
+  }
+
+  .cartPanelRight {
+    font-size: 3.7px;
+  }
+}

@@ -247,7 +247,7 @@ export default function LogisticPartnerRegisterPage() {
           </div>
 
           <div>
-            <h1>Jihaan Logistics</h1>
+            <h1>Jini Logistics</h1>
             <p>Delivery Partner Network</p>
           </div>
         </div>

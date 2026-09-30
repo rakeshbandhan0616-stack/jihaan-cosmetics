@@ -875,8 +875,8 @@
 
 @media (max-width: 640px) {
   .main {
-    width: calc(100% - 80px);
-    margin-left: 80px;
+    width: 100%;
+    margin-left: 0;
     padding: 18px 12px 28px;
   }
 
@@ -1414,5 +1414,160 @@
     width: 38px;
     height: 38px;
     flex-basis: 38px;
+  }
+}
+
+/* =========================================================
+   ACCOUNTS MOBILE HEADER + LAYOUT OVERRIDES
+   Sidebar navigation lives in AccountsSidebar.module.css.
+========================================================= */
+
+.accountsMobileTopbar {
+  display: none;
+}
+
+@media (min-width: 901px) {
+  .main {
+    transition: width 0.24s ease, margin-left 0.24s ease, padding 0.24s ease;
+  }
+
+  .sidebarCollapsed .main {
+    width: calc(100% - 80px);
+    margin-left: 80px;
+  }
+}
+
+@media (max-width: 900px) {
+  .main {
+    width: calc(100% - 80px);
+    margin-left: 80px;
+  }
+}
+
+@media (max-width: 640px) {
+  .accountsMobileTopbar {
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 58px;
+    padding: 9px 12px;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid #e8ebf1;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+    backdrop-filter: blur(12px);
+  }
+
+  .accountsMobileMenuButton,
+  .accountsMobileRefresh {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e2e6ec;
+    border-radius: 11px;
+    background: #fff;
+    color: #172033;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .accountsMobileMenuButton:active,
+  .accountsMobileRefresh:active {
+    transform: scale(0.96);
+  }
+
+  .accountsMobileMenuButton:focus-visible,
+  .accountsMobileRefresh:focus-visible {
+    outline: 2px solid #111827;
+    outline-offset: 2px;
+  }
+
+  .accountsMobileTitle {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.15;
+  }
+
+  .accountsMobileTitle strong {
+    color: #172033;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .accountsMobileTitle span {
+    margin-top: 2px;
+    color: #8993a3;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .main,
+  .sidebarCollapsed .main {
+    width: 100%;
+    margin-left: 0;
+    padding: 14px 10px 28px;
+  }
+
+  .pageHeader .refreshButton {
+    display: none;
+  }
+
+  .statsGrid,
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .panelHeader {
+    padding: 15px;
+  }
+
+  .toolbar {
+    padding: 12px 14px;
+  }
+
+  .search {
+    width: 100%;
+  }
+
+  .tableWrapper {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 0;
+  }
+
+  .tableWrapper table {
+    min-width: 680px;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 380px) {
+  .accountsMobileTopbar {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .main,
+  .sidebarCollapsed .main {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .tableWrapper table {
+    min-width: 650px;
   }
 }

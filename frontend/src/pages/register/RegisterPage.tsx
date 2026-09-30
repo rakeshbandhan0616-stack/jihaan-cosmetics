@@ -5,22 +5,34 @@ import {
   useRef,
   useState,
 } from "react";
+
 import {
   ArrowRight,
   CheckCircle2,
   Eye,
   EyeOff,
-
   Lock,
   Mail,
   ShieldCheck,
   UserRound,
 } from "lucide-react";
-import { FaFacebookF, FaGoogle } from "react-icons/fa6";
-import { Link, useNavigate } from "react-router-dom";
+
+import {
+  FaFacebookF,
+  FaGoogle,
+} from "react-icons/fa6";
+
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
 
 import logo from "../../assets/images/jihaan-logo.jpeg";
 import styles from "./RegisterPage.module.css";
+
+/* =========================================================
+   TYPES
+========================================================= */
 
 type RegisterForm = {
   name: string;
@@ -30,21 +42,24 @@ type RegisterForm = {
   confirmPassword: string;
 };
 
-
 type RegisterResponse = {
   success?: boolean;
   message?: string;
+
   token?: string;
   accessToken?: string;
-  socialToken?: string;
-  requiresPhone?: boolean;
+
   requiresOtp?: boolean;
-  provider?: "google" | "facebook";
+
   email?: string;
   maskedEmail?: string;
+
   challengeId?: string;
   expiresIn?: number;
   resendAfter?: number;
+
+  provider?: "google" | "facebook";
+
   user?: {
     id: string;
     name: string;
@@ -54,13 +69,15 @@ type RegisterResponse = {
     authProvider?: "local" | "google" | "facebook";
     isPhoneVerified?: boolean;
   };
+
   data?: {
     token?: string;
     accessToken?: string;
-    socialToken?: string;
-    requiresPhone?: boolean;
+
     requiresOtp?: boolean;
+
     provider?: "google" | "facebook";
+
     user?: {
       id: string;
       name: string;
@@ -80,7 +97,9 @@ type GoogleCredentialResponse = {
 type GoogleAccountsId = {
   initialize: (options: {
     client_id: string;
-    callback: (response: GoogleCredentialResponse) => void;
+    callback: (
+      response: GoogleCredentialResponse,
+    ) => void;
     auto_select?: boolean;
     cancel_on_tap_outside?: boolean;
   }) => void;
@@ -109,6 +128,7 @@ type FacebookLoginResponse = {
     accessToken?: string;
     userID?: string;
   };
+
   status?: string;
 };
 
@@ -121,7 +141,9 @@ type FacebookGlobal = {
   }) => void;
 
   login: (
-    callback: (response: FacebookLoginResponse) => void,
+    callback: (
+      response: FacebookLoginResponse,
+    ) => void,
     options?: {
       scope?: string;
       return_scopes?: boolean;
@@ -129,13 +151,23 @@ type FacebookGlobal = {
   ) => void;
 };
 
+/* =========================================================
+   GLOBAL WINDOW TYPES
+========================================================= */
+
 declare global {
   interface Window {
     google?: GoogleGlobal;
+
     FB?: FacebookGlobal;
+
     fbAsyncInit?: () => void;
   }
 }
+
+/* =========================================================
+   ENVIRONMENT
+========================================================= */
 
 const API_BASE_URL = String(
   import.meta.env.VITE_API_BASE_URL ||
@@ -143,11 +175,13 @@ const API_BASE_URL = String(
 ).replace(/\/+$/, "");
 
 const GOOGLE_CLIENT_ID = String(
-  import.meta.env.VITE_GOOGLE_CLIENT_ID || "",
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+    "",
 ).trim();
 
 const FACEBOOK_APP_ID = String(
-  import.meta.env.VITE_FACEBOOK_APP_ID || "",
+  import.meta.env.VITE_FACEBOOK_APP_ID ||
+    "",
 ).trim();
 
 const FACEBOOK_GRAPH_VERSION = String(
@@ -155,8 +189,19 @@ const FACEBOOK_GRAPH_VERSION = String(
     "v24.0",
 ).trim();
 
-const AUTH_TOKEN_STORAGE_KEY = "jihaan_auth_token";
-const CURRENT_USER_STORAGE_KEY = "jihaan_current_user";
+/* =========================================================
+   LOCAL STORAGE KEYS
+========================================================= */
+
+const AUTH_TOKEN_STORAGE_KEY =
+  "jihaan_auth_token";
+
+const CURRENT_USER_STORAGE_KEY =
+  "jihaan_current_user";
+
+/* =========================================================
+   COMPONENT
+========================================================= */
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -164,57 +209,108 @@ const RegisterPage = () => {
   const googleButtonRef =
     useRef<HTMLDivElement | null>(null);
 
-  const [form, setForm] = useState<RegisterForm>({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-  });
+  /* =======================================================
+     FORM STATE
+  ======================================================= */
 
+  const [form, setForm] =
+    useState<RegisterForm>({
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+    });
 
-  const [showPassword, setShowPassword] =
-    useState(false);
+  /* =======================================================
+     PASSWORD VISIBILITY
+  ======================================================= */
 
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState(false);
+  const [
+    showPassword,
+    setShowPassword,
+  ] = useState(false);
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [
+    showConfirmPassword,
+    setShowConfirmPassword,
+  ] = useState(false);
 
-  const [emailOtpStep, setEmailOtpStep] = useState(false);
-  const [registrationOtp, setRegistrationOtp] = useState("");
-  const [registrationOtpEmail, setRegistrationOtpEmail] =
+  /* =======================================================
+     MESSAGES
+  ======================================================= */
+
+  const [error, setError] =
     useState("");
-  const [isOtpSubmitting, setIsOtpSubmitting] =
-    useState(false);
-  const [isOtpResending, setIsOtpResending] =
-    useState(false);
 
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [success, setSuccess] =
+    useState("");
 
-  const [isGoogleLoading, setIsGoogleLoading] =
-    useState(false);
+  /* =======================================================
+     EMAIL OTP
+  ======================================================= */
 
-  const [isFacebookLoading, setIsFacebookLoading] =
-    useState(false);
+  const [
+    emailOtpStep,
+    setEmailOtpStep,
+  ] = useState(false);
 
+  const [
+    registrationOtp,
+    setRegistrationOtp,
+  ] = useState("");
 
+  const [
+    registrationOtpEmail,
+    setRegistrationOtpEmail,
+  ] = useState("");
 
-  /*
-   * ---------------------------------------------------------
-   * Helpers
-   * ---------------------------------------------------------
-   */
+  const [
+    isOtpSubmitting,
+    setIsOtpSubmitting,
+  ] = useState(false);
+
+  const [
+    isOtpResending,
+    setIsOtpResending,
+  ] = useState(false);
+
+  /* =======================================================
+     LOADING STATES
+  ======================================================= */
+
+  const [
+    isSubmitting,
+    setIsSubmitting,
+  ] = useState(false);
+
+  const [
+    isGoogleLoading,
+    setIsGoogleLoading,
+  ] = useState(false);
+
+  const [
+    isFacebookLoading,
+    setIsFacebookLoading,
+  ] = useState(false);
+
+  /* =======================================================
+     HELPERS
+  ======================================================= */
 
   const clearMessages = () => {
     setError("");
     setSuccess("");
   };
 
-  const normalizePhone = (value: string) => {
-    const digits = value.replace(/\D/g, "");
+  const normalizePhone = (
+    value: string,
+  ) => {
+    const digits =
+      value.replace(
+        /\D/g,
+        "",
+      );
 
     if (
       digits.startsWith("91") &&
@@ -226,18 +322,40 @@ const RegisterPage = () => {
     return digits;
   };
 
+  /* =======================================================
+     STORE AUTHENTICATED USER
+  ======================================================= */
+
   const storeAuthenticatedUser = (
     token: string,
-    user: NonNullable<RegisterResponse["user"]>,
+    user: NonNullable<
+      RegisterResponse["user"]
+    >,
   ) => {
     localStorage.setItem(
       AUTH_TOKEN_STORAGE_KEY,
       token,
     );
 
-    localStorage.setItem("authToken", token);
-    localStorage.setItem("accessToken", token);
-    localStorage.setItem("token", token);
+    /*
+     * Keep compatibility with existing
+     * application code using these keys.
+     */
+
+    localStorage.setItem(
+      "authToken",
+      token,
+    );
+
+    localStorage.setItem(
+      "accessToken",
+      token,
+    );
+
+    localStorage.setItem(
+      "token",
+      token,
+    );
 
     localStorage.setItem(
       CURRENT_USER_STORAGE_KEY,
@@ -250,53 +368,92 @@ const RegisterPage = () => {
     );
   };
 
+  /* =======================================================
+     REDIRECT AFTER LOGIN
+  ======================================================= */
+
   const redirectAfterLogin = (
-    user: NonNullable<RegisterResponse["user"]>,
+    user: NonNullable<
+      RegisterResponse["user"]
+    >,
   ) => {
-    const normalizedRole = String(user.role || "")
-      .trim()
-      .toLowerCase()
-      .replace(/[\s_-]+/g, "");
+    const normalizedRole =
+      String(user.role || "")
+        .trim()
+        .toLowerCase()
+        .replace(
+          /[\s_-]+/g,
+          "",
+        );
 
     const isAdmin =
-      normalizedRole === "admin" ||
-      normalizedRole === "superadmin" ||
-      normalizedRole === "administrator" ||
-      normalizedRole === "superadministrator";
+      normalizedRole ===
+        "admin" ||
+      normalizedRole ===
+        "superadmin" ||
+      normalizedRole ===
+        "administrator" ||
+      normalizedRole ===
+        "superadministrator";
 
-    navigate(isAdmin ? "/admin/dashboard" : "/", {
-      replace: true,
-      state: {
-        message:
-          "Welcome to Jini Cosmetics!",
+    navigate(
+      isAdmin
+        ? "/admin/dashboard"
+        : "/",
+      {
+        replace: true,
+
+        state: {
+          message:
+            "Welcome to Jini Cosmetics!",
+        },
       },
-    });
+    );
   };
 
-  /*
-   * ---------------------------------------------------------
-   * Local Registration
-   * ---------------------------------------------------------
-   */
+  /* =========================================================
+     LOCAL REGISTRATION
+  ========================================================= */
 
   const handleChange = (
     event: ChangeEvent<HTMLInputElement>,
   ) => {
-    const { name, value } = event.target;
+    const {
+      name,
+      value,
+    } = event.target;
 
-    setForm((previousForm) => ({
-      ...previousForm,
-      [name]: value,
-    }));
+    setForm(
+      (previousForm) => ({
+        ...previousForm,
+        [name]: value,
+      }),
+    );
 
     clearMessages();
   };
 
+  /* =========================================================
+     VALIDATE REGISTRATION FORM
+  ========================================================= */
+
   const validateForm = () => {
-    const name = form.name.trim();
-    const email = form.email.trim().toLowerCase();
-    const phone = normalizePhone(form.phone);
-    const password = form.password;
+    const name =
+      form.name.trim();
+
+    const email =
+      form.email
+        .trim()
+        .toLowerCase();
+
+    const phone =
+      normalizePhone(
+        form.phone,
+      );
+
+    const password =
+      form.password;
+
     const confirmPassword =
       form.confirmPassword;
 
@@ -307,48 +464,91 @@ const RegisterPage = () => {
       !password ||
       !confirmPassword
     ) {
-      setError("Please fill in all fields.");
+      setError(
+        "Please fill in all fields.",
+      );
+
       return false;
     }
 
-    if (name.length < 2) {
+    if (
+      name.length < 2
+    ) {
       setError(
         "Please enter a valid full name.",
       );
+
       return false;
     }
 
     const emailPattern =
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!emailPattern.test(email)) {
+    if (
+      !emailPattern.test(
+        email,
+      )
+    ) {
       setError(
         "Please enter a valid email address.",
       );
+
       return false;
     }
 
-    if (!/^[6-9][0-9]{9}$/.test(phone)) {
+    if (
+      !/^[6-9][0-9]{9}$/.test(
+        phone,
+      )
+    ) {
       setError(
         "Please enter a valid 10-digit Indian mobile number.",
       );
+
       return false;
     }
 
-    if (password.length < 4) {
+    if (
+      password.length < 4
+    ) {
       setError(
         "Password must contain at least 4 characters.",
       );
+
       return false;
     }
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+    if (
+      password !==
+      confirmPassword
+    ) {
+      setError(
+        "Passwords do not match.",
+      );
+
       return false;
     }
 
     return true;
   };
+
+  /* =========================================================
+     SUBMIT LOCAL REGISTRATION
+     
+     Manual registration:
+     
+     Email + password
+          ↓
+     Backend sends email OTP
+          ↓
+     OTP verification
+          ↓
+     Account creation
+          ↓
+     Login
+     
+     NO WhatsApp OTP.
+  ========================================================= */
 
   const handleSubmit = async (
     event: FormEvent<HTMLFormElement>,
@@ -364,23 +564,42 @@ const RegisterPage = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/auth/register`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
+      const response =
+        await fetch(
+          `${API_BASE_URL}/auth/register`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Accept:
+                "application/json",
+            },
+
+            credentials:
+              "include",
+
+            body: JSON.stringify({
+              name:
+                form.name.trim(),
+
+              email:
+                form.email
+                  .trim()
+                  .toLowerCase(),
+
+              phone:
+                normalizePhone(
+                  form.phone,
+                ),
+
+              password:
+                form.password,
+            }),
           },
-          credentials: "include",
-          body: JSON.stringify({
-            name: form.name.trim(),
-            email: form.email.trim().toLowerCase(),
-            phone: normalizePhone(form.phone),
-            password: form.password,
-          }),
-        },
-      );
+        );
 
       const data =
         (await response.json()) as RegisterResponse;
@@ -392,7 +611,13 @@ const RegisterPage = () => {
         );
       }
 
-      if (data.requiresOtp) {
+      /* =====================================================
+         EMAIL OTP REQUIRED
+      ===================================================== */
+
+      if (
+        data.requiresOtp
+      ) {
         const email =
           String(
             data.email ||
@@ -401,9 +626,17 @@ const RegisterPage = () => {
             .trim()
             .toLowerCase();
 
-        setRegistrationOtpEmail(email);
-        setRegistrationOtp("");
-        setEmailOtpStep(true);
+        setRegistrationOtpEmail(
+          email,
+        );
+
+        setRegistrationOtp(
+          "",
+        );
+
+        setEmailOtpStep(
+          true,
+        );
 
         setSuccess(
           data.message ||
@@ -413,10 +646,12 @@ const RegisterPage = () => {
         return;
       }
 
-      /*
-       * Backward-compatible handling in case the backend
-       * returns a login response directly.
-       */
+      /* =====================================================
+         BACKWARD COMPATIBILITY
+
+         If backend directly returns token + user,
+         support that response as well.
+      ===================================================== */
 
       const token =
         data.token ||
@@ -428,15 +663,23 @@ const RegisterPage = () => {
         data.user ||
         data.data?.user;
 
-      if (token && user) {
-        storeAuthenticatedUser(token, user);
+      if (
+        token &&
+        user
+      ) {
+        storeAuthenticatedUser(
+          token,
+          user,
+        );
 
         setSuccess(
           "Registration successful. Redirecting...",
         );
 
         setTimeout(() => {
-          redirectAfterLogin(user);
+          redirectAfterLogin(
+            user,
+          );
         }, 500);
 
         return;
@@ -446,332 +689,525 @@ const RegisterPage = () => {
         data.message ||
           "Registration started but no verification step was returned.",
       );
-    } catch (registerError) {
+    } catch (
+      registerError
+    ) {
       const message =
         registerError instanceof Error
           ? registerError.message
           : "Unable to start registration. Please try again.";
 
-      setError(message);
+      setError(
+        message,
+      );
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(
+        false,
+      );
     }
   };
+
+  /* =========================================================
+     OTP INPUT
+  ========================================================= */
 
   const handleRegistrationOtpChange = (
     event: ChangeEvent<HTMLInputElement>,
   ) => {
     const value =
       event.target.value
-        .replace(/\D/g, "")
+        .replace(
+          /\D/g,
+          "",
+        )
         .slice(0, 6);
 
-    setRegistrationOtp(value);
+    setRegistrationOtp(
+      value,
+    );
+
     setError("");
   };
 
-  const handleVerifyRegistrationOtp = async (
-    event: FormEvent<HTMLFormElement>,
-  ) => {
-    event.preventDefault();
+  /* =========================================================
+     VERIFY REGISTRATION OTP
+  ========================================================= */
 
-    clearMessages();
+  const handleVerifyRegistrationOtp =
+    async (
+      event: FormEvent<HTMLFormElement>,
+    ) => {
+      event.preventDefault();
 
-    if (!registrationOtpEmail) {
-      setError(
-        "Registration session has expired. Please register again.",
-      );
-      return;
-    }
-
-    if (!/^\d{6}$/.test(registrationOtp)) {
-      setError(
-        "Please enter the 6-digit OTP sent to your email.",
-      );
-      return;
-    }
-
-    setIsOtpSubmitting(true);
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/auth/register/verify-otp`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            email: registrationOtpEmail,
-            otp: registrationOtp,
-          }),
-        },
-      );
-
-      const data =
-        (await response.json()) as RegisterResponse;
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Unable to verify OTP.",
-        );
-      }
-
-      const token =
-        data.token ||
-        data.accessToken ||
-        data.data?.token ||
-        data.data?.accessToken;
-
-      const user =
-        data.user ||
-        data.data?.user;
-
-      if (!token || !user) {
-        throw new Error(
-          "Email verified, but login information was not returned.",
-        );
-      }
-
-      storeAuthenticatedUser(token, user);
-
-      setEmailOtpStep(false);
-      setRegistrationOtp("");
-      setRegistrationOtpEmail("");
-
-      setSuccess(
-        "Email verified successfully. Redirecting...",
-      );
-
-      setTimeout(() => {
-        redirectAfterLogin(user);
-      }, 500);
-    } catch (otpError) {
-      const message =
-        otpError instanceof Error
-          ? otpError.message
-          : "Unable to verify OTP. Please try again.";
-
-      setError(message);
-    } finally {
-      setIsOtpSubmitting(false);
-    }
-  };
-
-  const handleResendRegistrationOtp = async () => {
-    clearMessages();
-
-    if (!registrationOtpEmail) {
-      setError(
-        "Registration session has expired. Please register again.",
-      );
-      return;
-    }
-
-    setIsOtpResending(true);
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/auth/register/resend-otp`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            email: registrationOtpEmail,
-          }),
-        },
-      );
-
-      const data =
-        (await response.json()) as RegisterResponse;
-
-      if (!response.ok) {
-        const retryAfter =
-          (data as RegisterResponse & {
-            retryAfter?: number;
-          }).retryAfter;
-
-        if (retryAfter) {
-          throw new Error(
-            `${data.message || "Please wait before requesting another OTP."} Try again in ${retryAfter} seconds.`,
-          );
-        }
-
-        throw new Error(
-          data.message ||
-            "Unable to resend OTP.",
-        );
-      }
-
-      setRegistrationOtp("");
-
-      setSuccess(
-        data.message ||
-          "A new OTP has been sent to your email.",
-      );
-    } catch (resendError) {
-      const message =
-        resendError instanceof Error
-          ? resendError.message
-          : "Unable to resend OTP.";
-
-      setError(message);
-    } finally {
-      setIsOtpResending(false);
-    }
-  };
-
-  const cancelEmailOtpVerification = () => {
-    setEmailOtpStep(false);
-    setRegistrationOtp("");
-    setRegistrationOtpEmail("");
-
-    setForm((previous) => ({
-      ...previous,
-      password: "",
-      confirmPassword: "",
-    }));
-
-    clearMessages();
-  };
-
-  /*
-   * ---------------------------------------------------------
-   * Google Registration
-   * ---------------------------------------------------------
-   */
-
-  const handleGoogleCredential = async (
-    response: GoogleCredentialResponse,
-  ) => {
-    if (!response.credential) {
-      setError(
-        "Google authentication did not return a valid credential.",
-      );
-      setIsGoogleLoading(false);
-      return;
-    }
-
-    try {
       clearMessages();
 
-      const serverResponse = await fetch(
-        `${API_BASE_URL}/auth/google`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            credential: response.credential,
-          }),
-        },
-      );
-
-      const data =
-        (await serverResponse.json()) as RegisterResponse;
-
-      if (!serverResponse.ok) {
-        throw new Error(
-          data.message ||
-            "Unable to continue with Google.",
+      if (
+        !registrationOtpEmail
+      ) {
+        setError(
+          "Registration session has expired. Please register again.",
         );
-      }
-
-      const token =
-        data.token ||
-        data.accessToken ||
-        data.data?.token ||
-        data.data?.accessToken;
-
-      const user =
-        data.user ||
-        data.data?.user;
-
-      /*
-       * Existing Google account.
-       */
-      if (token && user) {
-        storeAuthenticatedUser(token, user);
-
-        setSuccess(
-          "Google login successful. Redirecting...",
-        );
-
-        setTimeout(() => {
-          redirectAfterLogin(user);
-        }, 500);
 
         return;
       }
 
-      /*
-       * Google authentication creates/logs in the account
-       * immediately. There is no phone number or WhatsApp OTP.
-       */
-      throw new Error(
-        data.message ||
-          "Google authentication completed but login information was not returned.",
+      if (
+        !/^\d{6}$/.test(
+          registrationOtp,
+        )
+      ) {
+        setError(
+          "Please enter the 6-digit OTP sent to your email.",
+        );
+
+        return;
+      }
+
+      setIsOtpSubmitting(
+        true,
       );
-    } catch (googleError) {
-      const message =
-        googleError instanceof Error
-          ? googleError.message
-          : "Unable to continue with Google.";
 
-      setError(message);
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
+      try {
+        const response =
+          await fetch(
+            `${API_BASE_URL}/auth/register/verify-otp`,
+            {
+              method: "POST",
 
-  const initializeGoogle = () => {
+              credentials:
+                "include",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Accept:
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                email:
+                  registrationOtpEmail,
+
+                otp:
+                  registrationOtp,
+              }),
+            },
+          );
+
+        const data =
+          (await response.json()) as RegisterResponse;
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              "Unable to verify OTP.",
+          );
+        }
+
+        const token =
+          data.token ||
+          data.accessToken ||
+          data.data?.token ||
+          data.data?.accessToken;
+
+        const user =
+          data.user ||
+          data.data?.user;
+
+        if (
+          !token ||
+          !user
+        ) {
+          throw new Error(
+            "Email verified, but login information was not returned.",
+          );
+        }
+
+        storeAuthenticatedUser(
+          token,
+          user,
+        );
+
+        setEmailOtpStep(
+          false,
+        );
+
+        setRegistrationOtp(
+          "",
+        );
+
+        setRegistrationOtpEmail(
+          "",
+        );
+
+        setSuccess(
+          "Email verified successfully. Redirecting...",
+        );
+
+        setTimeout(() => {
+          redirectAfterLogin(
+            user,
+          );
+        }, 500);
+      } catch (
+        otpError
+      ) {
+        const message =
+          otpError instanceof Error
+            ? otpError.message
+            : "Unable to verify OTP. Please try again.";
+
+        setError(
+          message,
+        );
+      } finally {
+        setIsOtpSubmitting(
+          false,
+        );
+      }
+    };
+
+  /* =========================================================
+     RESEND REGISTRATION OTP
+  ========================================================= */
+
+  const handleResendRegistrationOtp =
+    async () => {
+      clearMessages();
+
+      if (
+        !registrationOtpEmail
+      ) {
+        setError(
+          "Registration session has expired. Please register again.",
+        );
+
+        return;
+      }
+
+      setIsOtpResending(
+        true,
+      );
+
+      try {
+        const response =
+          await fetch(
+            `${API_BASE_URL}/auth/register/resend-otp`,
+            {
+              method: "POST",
+
+              credentials:
+                "include",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Accept:
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                email:
+                  registrationOtpEmail,
+              }),
+            },
+          );
+
+        const data =
+          (await response.json()) as RegisterResponse & {
+            retryAfter?: number;
+          };
+
+        if (!response.ok) {
+          if (
+            data.retryAfter
+          ) {
+            throw new Error(
+              `${
+                data.message ||
+                "Please wait before requesting another OTP."
+              } Try again in ${
+                data.retryAfter
+              } seconds.`,
+            );
+          }
+
+          throw new Error(
+            data.message ||
+              "Unable to resend OTP.",
+          );
+        }
+
+        setRegistrationOtp(
+          "",
+        );
+
+        setSuccess(
+          data.message ||
+            "A new OTP has been sent to your email.",
+        );
+      } catch (
+        resendError
+      ) {
+        const message =
+          resendError instanceof Error
+            ? resendError.message
+            : "Unable to resend OTP.";
+
+        setError(
+          message,
+        );
+      } finally {
+        setIsOtpResending(
+          false,
+        );
+      }
+    };
+
+  /* =========================================================
+     CANCEL EMAIL OTP VERIFICATION
+  ========================================================= */
+
+  const cancelEmailOtpVerification =
+    () => {
+      setEmailOtpStep(
+        false,
+      );
+
+      setRegistrationOtp(
+        "",
+      );
+
+      setRegistrationOtpEmail(
+        "",
+      );
+
+      setForm(
+        (previous) => ({
+          ...previous,
+
+          password: "",
+
+          confirmPassword: "",
+        }),
+      );
+
+      clearMessages();
+    };
+
+  /* =========================================================
+     GOOGLE LOGIN / REGISTRATION
+     
+     IMPORTANT:
+     
+     Google verified email is sufficient.
+     
+     NO email OTP.
+     NO WhatsApp OTP.
+     NO phone verification step.
+  ========================================================= */
+
+  const handleGoogleCredential =
+    async (
+      response: GoogleCredentialResponse,
+    ) => {
+      /*
+       * FIX:
+       * The previous file never set Google loading
+       * to true when authentication started.
+       */
+
+      setIsGoogleLoading(
+        true,
+      );
+
+      if (
+        !response.credential
+      ) {
+        setError(
+          "Google authentication did not return a valid credential.",
+        );
+
+        setIsGoogleLoading(
+          false,
+        );
+
+        return;
+      }
+
+      try {
+        clearMessages();
+
+        const serverResponse =
+          await fetch(
+            `${API_BASE_URL}/auth/google`,
+            {
+              method: "POST",
+
+              credentials:
+                "include",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Accept:
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                credential:
+                  response.credential,
+              }),
+            },
+          );
+
+        const data =
+          (await serverResponse.json()) as RegisterResponse;
+
+        if (
+          !serverResponse.ok
+        ) {
+          throw new Error(
+            data.message ||
+              "Unable to continue with Google.",
+          );
+        }
+
+        const token =
+          data.token ||
+          data.accessToken ||
+          data.data?.token ||
+          data.data?.accessToken;
+
+        const user =
+          data.user ||
+          data.data?.user;
+
+        /*
+         * Google backend should immediately return
+         * authenticated user + JWT.
+         */
+
+        if (
+          token &&
+          user
+        ) {
+          storeAuthenticatedUser(
+            token,
+            user,
+          );
+
+          setSuccess(
+            "Google login successful. Redirecting...",
+          );
+
+          setTimeout(() => {
+            redirectAfterLogin(
+              user,
+            );
+          }, 500);
+
+          return;
+        }
+
+        throw new Error(
+          data.message ||
+            "Google authentication completed but login information was not returned.",
+        );
+      } catch (
+        googleError
+      ) {
+        const message =
+          googleError instanceof Error
+            ? googleError.message
+            : "Unable to continue with Google.";
+
+        setError(
+          message,
+        );
+      } finally {
+        setIsGoogleLoading(
+          false,
+        );
+      }
+    };
+
+  /* =========================================================
+     INITIALIZE GOOGLE
+  ========================================================= */
+
+  const initializeGoogle =
+    () => {
+      if (
+        !GOOGLE_CLIENT_ID ||
+        !window.google ||
+        !googleButtonRef.current
+      ) {
+        return;
+      }
+
+      googleButtonRef.current.innerHTML =
+        "";
+
+      window.google.accounts.id.initialize(
+        {
+          client_id:
+            GOOGLE_CLIENT_ID,
+
+          callback:
+            handleGoogleCredential,
+
+          auto_select:
+            false,
+
+          cancel_on_tap_outside:
+            true,
+        },
+      );
+
+      window.google.accounts.id.renderButton(
+        googleButtonRef.current,
+        {
+          theme:
+            "outline",
+
+          size:
+            "large",
+
+          width:
+            380,
+
+          text:
+            "continue_with",
+
+          shape:
+            "rectangular",
+
+          logo_alignment:
+            "left",
+        },
+      );
+    };
+
+  /* =========================================================
+     LOAD GOOGLE SDK
+  ========================================================= */
+
+  useEffect(() => {
     if (
-      !GOOGLE_CLIENT_ID ||
-      !window.google ||
-      !googleButtonRef.current
+      !GOOGLE_CLIENT_ID
     ) {
       return;
     }
 
-    googleButtonRef.current.innerHTML = "";
-
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleGoogleCredential,
-      auto_select: false,
-      cancel_on_tap_outside: true,
-    });
-
-    window.google.accounts.id.renderButton(
-      googleButtonRef.current,
-      {
-        theme: "outline",
-        size: "large",
-        width: 380,
-        text: "continue_with",
-        shape: "rectangular",
-        logo_alignment: "left",
-      },
-    );
-  };
-
-  useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) {
-      return;
-    }
-
-    if (window.google) {
+    if (
+      window.google
+    ) {
       initializeGoogle();
+
       return;
     }
 
@@ -780,7 +1216,9 @@ const RegisterPage = () => {
         'script[src="https://accounts.google.com/gsi/client"]',
       );
 
-    if (existingScript) {
+    if (
+      existingScript
+    ) {
       existingScript.addEventListener(
         "load",
         initializeGoogle,
@@ -795,268 +1233,413 @@ const RegisterPage = () => {
     }
 
     const script =
-      document.createElement("script");
+      document.createElement(
+        "script",
+      );
 
     script.src =
       "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
-    script.onload = initializeGoogle;
 
-    document.head.appendChild(script);
+    script.async =
+      true;
+
+    script.defer =
+      true;
+
+    script.onload =
+      initializeGoogle;
+
+    document.head.appendChild(
+      script,
+    );
 
     return () => {
-      script.onload = null;
+      script.onload =
+        null;
     };
   }, []);
 
-  /*
-   * ---------------------------------------------------------
-   * Facebook Registration
-   * ---------------------------------------------------------
-   */
+  /* =========================================================
+     FACEBOOK SDK
+  ========================================================= */
 
-  const loadFacebookSdk = () => {
-    if (window.FB) {
-      return Promise.resolve();
-    }
-
-    return new Promise<void>(
-      (resolve, reject) => {
-        window.fbAsyncInit = () => {
-          if (!window.FB) {
-            reject(
-              new Error(
-                "Facebook SDK failed to initialize.",
-              ),
-            );
-            return;
-          }
-
-          window.FB.init({
-            appId: FACEBOOK_APP_ID,
-            cookie: true,
-            xfbml: true,
-            version:
-              FACEBOOK_GRAPH_VERSION,
-          });
-
-          resolve();
-        };
-
-        const existingScript =
-          document.querySelector<HTMLScriptElement>(
-            "#facebook-jssdk",
-          );
-
-        if (existingScript) {
-          return;
-        }
-
-        const script =
-          document.createElement("script");
-
-        script.id = "facebook-jssdk";
-        script.src =
-          "https://connect.facebook.net/en_US/sdk.js";
-        script.async = true;
-        script.defer = true;
-
-        script.onerror = () => {
-          reject(
-            new Error(
-              "Unable to load Facebook login.",
-            ),
-          );
-        };
-
-        document.body.appendChild(script);
-      },
-    );
-  };
-
-  const handleFacebookLogin = async () => {
-    clearMessages();
-
-    if (!FACEBOOK_APP_ID) {
-      setError(
-        "Facebook login is not configured on this website.",
-      );
-      return;
-    }
-
-    setIsFacebookLoading(true);
-
-    try {
-      await loadFacebookSdk();
-
-      if (!window.FB) {
-        throw new Error(
-          "Facebook login is unavailable right now.",
-        );
+  const loadFacebookSdk =
+    () => {
+      if (
+        window.FB
+      ) {
+        return Promise.resolve();
       }
 
-      window.FB.login(
-        async (loginResponse) => {
-          try {
-            const accessToken =
-              loginResponse.authResponse
-                ?.accessToken;
+      return new Promise<void>(
+        (
+          resolve,
+          reject,
+        ) => {
+          window.fbAsyncInit =
+            () => {
+              if (
+                !window.FB
+              ) {
+                reject(
+                  new Error(
+                    "Facebook SDK failed to initialize.",
+                  ),
+                );
 
-            if (!accessToken) {
-              throw new Error(
-                "Facebook login was cancelled or did not return an access token.",
-              );
-            }
+                return;
+              }
 
-            const serverResponse =
-              await fetch(
-                `${API_BASE_URL}/auth/facebook`,
+              window.FB.init(
                 {
-                  method: "POST",
-                  credentials: "include",
-                  headers: {
-                    "Content-Type":
-                      "application/json",
-                    Accept:
-                      "application/json",
-                  },
-                  body: JSON.stringify({
-                    accessToken,
-                  }),
+                  appId:
+                    FACEBOOK_APP_ID,
+
+                  cookie:
+                    true,
+
+                  xfbml:
+                    true,
+
+                  version:
+                    FACEBOOK_GRAPH_VERSION,
                 },
               );
 
-            const data =
-              (await serverResponse.json()) as RegisterResponse;
+              resolve();
+            };
 
-            if (!serverResponse.ok) {
-              throw new Error(
-                data.message ||
-                  "Unable to continue with Facebook.",
-              );
-            }
-
-            const token =
-              data.token ||
-              data.accessToken ||
-              data.data?.token ||
-              data.data?.accessToken;
-
-            const user =
-              data.user ||
-              data.data?.user;
-
-            /*
-             * Existing Facebook account.
-             */
-            if (token && user) {
-              storeAuthenticatedUser(
-                token,
-                user,
-              );
-
-              setSuccess(
-                "Facebook login successful. Redirecting...",
-              );
-
-              setTimeout(() => {
-                redirectAfterLogin(user);
-              }, 500);
-
-              return;
-            }
-
-            /*
-             * Facebook authentication creates/logs in the account
-             * immediately. There is no phone number or WhatsApp OTP.
-             */
-            throw new Error(
-              data.message ||
-                "Facebook authentication completed but login information was not returned.",
+          const existingScript =
+            document.querySelector<HTMLScriptElement>(
+              "#facebook-jssdk",
             );
-          } catch (facebookError) {
-            const message =
-              facebookError instanceof Error
-                ? facebookError.message
-                : "Unable to continue with Facebook.";
 
-            setError(message);
-          } finally {
-            setIsFacebookLoading(false);
+          if (
+            existingScript
+          ) {
+            return;
           }
-        },
-        {
-          scope: "email,public_profile",
-          return_scopes: true,
+
+          const script =
+            document.createElement(
+              "script",
+            );
+
+          script.id =
+            "facebook-jssdk";
+
+          script.src =
+            "https://connect.facebook.net/en_US/sdk.js";
+
+          script.async =
+            true;
+
+          script.defer =
+            true;
+
+          script.onerror =
+            () => {
+              reject(
+                new Error(
+                  "Unable to load Facebook login.",
+                ),
+              );
+            };
+
+          document.body.appendChild(
+            script,
+          );
         },
       );
-    } catch (facebookError) {
-      const message =
-        facebookError instanceof Error
-          ? facebookError.message
-          : "Unable to continue with Facebook.";
+    };
 
-      setError(message);
-      setIsFacebookLoading(false);
-    }
-  };
+  /* =========================================================
+     FACEBOOK LOGIN / REGISTRATION
+     
+     IMPORTANT:
+     
+     Facebook authentication is sufficient for
+     account creation/login.
+     
+     NO email OTP.
+     NO WhatsApp OTP.
+  ========================================================= */
 
-  /*
-   * ---------------------------------------------------------
-   * Render
-   * ---------------------------------------------------------
-   */
+  const handleFacebookLogin =
+    async () => {
+      clearMessages();
+
+      if (
+        !FACEBOOK_APP_ID
+      ) {
+        setError(
+          "Facebook login is not configured on this website.",
+        );
+
+        return;
+      }
+
+      setIsFacebookLoading(
+        true,
+      );
+
+      try {
+        await loadFacebookSdk();
+
+        if (
+          !window.FB
+        ) {
+          throw new Error(
+            "Facebook login is unavailable right now.",
+          );
+        }
+
+        window.FB.login(
+          async (
+            loginResponse,
+          ) => {
+            try {
+              const accessToken =
+                loginResponse
+                  .authResponse
+                  ?.accessToken;
+
+              if (
+                !accessToken
+              ) {
+                throw new Error(
+                  "Facebook login was cancelled or did not return an access token.",
+                );
+              }
+
+              const serverResponse =
+                await fetch(
+                  `${API_BASE_URL}/auth/facebook`,
+                  {
+                    method:
+                      "POST",
+
+                    credentials:
+                      "include",
+
+                    headers: {
+                      "Content-Type":
+                        "application/json",
+
+                      Accept:
+                        "application/json",
+                    },
+
+                    body: JSON.stringify({
+                      accessToken,
+                    }),
+                  },
+                );
+
+              const data =
+                (await serverResponse.json()) as RegisterResponse;
+
+              if (
+                !serverResponse.ok
+              ) {
+                throw new Error(
+                  data.message ||
+                    "Unable to continue with Facebook.",
+                );
+              }
+
+              const token =
+                data.token ||
+                data.accessToken ||
+                data.data?.token ||
+                data.data?.accessToken;
+
+              const user =
+                data.user ||
+                data.data?.user;
+
+              /*
+               * Facebook backend should immediately
+               * return authenticated user + JWT.
+               */
+
+              if (
+                token &&
+                user
+              ) {
+                storeAuthenticatedUser(
+                  token,
+                  user,
+                );
+
+                setSuccess(
+                  "Facebook login successful. Redirecting...",
+                );
+
+                setTimeout(
+                  () => {
+                    redirectAfterLogin(
+                      user,
+                    );
+                  },
+                  500,
+                );
+
+                return;
+              }
+
+              throw new Error(
+                data.message ||
+                  "Facebook authentication completed but login information was not returned.",
+              );
+            } catch (
+              facebookError
+            ) {
+              const message =
+                facebookError instanceof Error
+                  ? facebookError.message
+                  : "Unable to continue with Facebook.";
+
+              setError(
+                message,
+              );
+            } finally {
+              setIsFacebookLoading(
+                false,
+              );
+            }
+          },
+          {
+            scope:
+              "email,public_profile",
+
+            return_scopes:
+              true,
+          },
+        );
+      } catch (
+        facebookError
+      ) {
+        const message =
+          facebookError instanceof Error
+            ? facebookError.message
+            : "Unable to continue with Facebook.";
+
+        setError(
+          message,
+        );
+
+        setIsFacebookLoading(
+          false,
+        );
+      }
+    };
+
+  /* =========================================================
+     RENDER
+  ========================================================= */
 
   return (
-    <main className={styles.page}>
+    <main
+      className={
+        styles.page
+      }
+    >
       <div
-        className={styles.backgroundShapeOne}
+        className={
+          styles.backgroundShapeOne
+        }
         aria-hidden="true"
       />
 
       <div
-        className={styles.backgroundShapeTwo}
+        className={
+          styles.backgroundShapeTwo
+        }
         aria-hidden="true"
       />
 
       <div
-        className={styles.backgroundOrbOne}
+        className={
+          styles.backgroundOrbOne
+        }
         aria-hidden="true"
       />
 
       <div
-        className={styles.backgroundOrbTwo}
+        className={
+          styles.backgroundOrbTwo
+        }
         aria-hidden="true"
       />
 
-      <header className={styles.brand}>
+      {/* =====================================================
+          BRAND
+      ===================================================== */}
+
+      <header
+        className={
+          styles.brand
+        }
+      >
         <Link
           to="/"
-          className={styles.logo}
+          className={
+            styles.logo
+          }
           aria-label="Jini Cosmetics home"
         >
           <img
             src={logo}
             alt="Jini Cosmetics logo"
-            className={styles.logoImage}
+            className={
+              styles.logoImage
+            }
           />
 
-          <span className={styles.logoText}>
-            <span className={styles.logoMain}>
+          <span
+            className={
+              styles.logoText
+            }
+          >
+            <span
+              className={
+                styles.logoMain
+              }
+            >
               JINI COSMETICS
             </span>
 
-            <span className={styles.logoSub}>
+            <span
+              className={
+                styles.logoSub
+              }
+            >
               BEAUTY. CONFIDENCE. YOU.
             </span>
           </span>
         </Link>
       </header>
 
-      <section className={styles.registerCard}>
-        <div className={styles.cardHeader}>
-          <span className={styles.eyebrow}>
+      {/* =====================================================
+          REGISTER CARD
+      ===================================================== */}
+
+      <section
+        className={
+          styles.registerCard
+        }
+      >
+        <div
+          className={
+            styles.cardHeader
+          }
+        >
+          <span
+            className={
+              styles.eyebrow
+            }
+          >
             {emailOtpStep
               ? "VERIFY YOUR EMAIL"
               : "WELCOME TO JINI"}
@@ -1068,42 +1651,77 @@ const RegisterPage = () => {
               : "Create your account"}
           </h1>
 
-          <p className={styles.intro}>
+          <p
+            className={
+              styles.intro
+            }
+          >
             {emailOtpStep
               ? "Enter the verification code sent to your email to complete your Jini Cosmetics account."
               : "Join Jini Cosmetics and discover beauty essentials made for you."}
           </p>
         </div>
 
+        {/* ===================================================
+            SUCCESS MESSAGE
+        =================================================== */}
+
         {success && (
           <p
-            className={styles.success}
+            className={
+              styles.success
+            }
             role="status"
           >
             <CheckCircle2
               size={17}
               strokeWidth={1.8}
             />
-            <span>{success}</span>
+
+            <span>
+              {success}
+            </span>
           </p>
         )}
 
+        {/* ===================================================
+            ERROR MESSAGE
+        =================================================== */}
+
         {error && (
           <p
-            className={styles.error}
+            className={
+              styles.error
+            }
             role="alert"
           >
             {error}
           </p>
         )}
 
+        {/* ===================================================
+            EMAIL OTP STEP
+        =================================================== */}
+
         {emailOtpStep ? (
           <form
-            className={styles.form}
-            onSubmit={handleVerifyRegistrationOtp}
+            className={
+              styles.form
+            }
+            onSubmit={
+              handleVerifyRegistrationOtp
+            }
           >
-            <div className={styles.socialAccount}>
-              <div className={styles.socialAccountIcon}>
+            <div
+              className={
+                styles.socialAccount
+              }
+            >
+              <div
+                className={
+                  styles.socialAccountIcon
+                }
+              >
                 <Mail
                   size={18}
                   aria-hidden="true"
@@ -1111,27 +1729,56 @@ const RegisterPage = () => {
               </div>
 
               <div>
-                <strong>Verify your email</strong>
-                <span>{registrationOtpEmail}</span>
+                <strong>
+                  Verify your email
+                </strong>
+
+                <span>
+                  {
+                    registrationOtpEmail
+                  }
+                </span>
               </div>
             </div>
 
-            <p className={styles.helperText}>
-              We sent a 6-digit verification code to your email address.
-              Enter the code below to complete your registration.
+            <p
+              className={
+                styles.helperText
+              }
+            >
+              We sent a 6-digit verification
+              code to your email address.
+              Enter the code below to
+              complete your registration.
             </p>
 
-            <div className={styles.field}>
-              <div className={styles.passwordLabel}>
-                <label htmlFor="registration-otp">
+            <div
+              className={
+                styles.field
+              }
+            >
+              <div
+                className={
+                  styles.passwordLabel
+                }
+              >
+                <label
+                  htmlFor="registration-otp"
+                >
                   Email verification OTP
                 </label>
 
                 <button
                   type="button"
-                  className={styles.resendButton}
-                  onClick={handleResendRegistrationOtp}
-                  disabled={isOtpResending}
+                  className={
+                    styles.resendButton
+                  }
+                  onClick={
+                    handleResendRegistrationOtp
+                  }
+                  disabled={
+                    isOtpResending
+                  }
                 >
                   {isOtpResending
                     ? "Sending..."
@@ -1139,10 +1786,16 @@ const RegisterPage = () => {
                 </button>
               </div>
 
-              <div className={styles.inputWrapper}>
+              <div
+                className={
+                  styles.inputWrapper
+                }
+              >
                 <ShieldCheck
                   size={18}
-                  className={styles.inputIcon}
+                  className={
+                    styles.inputIcon
+                  }
                   aria-hidden="true"
                 />
 
@@ -1154,8 +1807,12 @@ const RegisterPage = () => {
                   autoComplete="one-time-code"
                   maxLength={6}
                   placeholder="Enter 6-digit OTP"
-                  value={registrationOtp}
-                  onChange={handleRegistrationOtpChange}
+                  value={
+                    registrationOtp
+                  }
+                  onChange={
+                    handleRegistrationOtpChange
+                  }
                   required
                 />
               </div>
@@ -1163,10 +1820,13 @@ const RegisterPage = () => {
 
             <button
               type="submit"
-              className={styles.submitButton}
+              className={
+                styles.submitButton
+              }
               disabled={
                 isOtpSubmitting ||
-                registrationOtp.length !== 6
+                registrationOtp.length !==
+                  6
               }
             >
               <span>
@@ -1185,8 +1845,12 @@ const RegisterPage = () => {
 
             <button
               type="button"
-              className={styles.backButton}
-              onClick={cancelEmailOtpVerification}
+              className={
+                styles.backButton
+              }
+              onClick={
+                cancelEmailOtpVerification
+              }
             >
               ← Back to registration
             </button>
@@ -1202,6 +1866,10 @@ const RegisterPage = () => {
                 styles.socialButtons
               }
             >
+              {/* ===============================================
+                  GOOGLE
+              =============================================== */}
+
               {GOOGLE_CLIENT_ID ? (
                 <div
                   className={
@@ -1209,7 +1877,9 @@ const RegisterPage = () => {
                   }
                 >
                   <div
-                    ref={googleButtonRef}
+                    ref={
+                      googleButtonRef
+                    }
                     className={
                       styles.googleButton
                     }
@@ -1233,11 +1903,20 @@ const RegisterPage = () => {
                   }
                   disabled
                 >
-                  <FaGoogle className={styles.googleG} aria-hidden="true" />
+                  <FaGoogle
+                    className={
+                      styles.googleG
+                    }
+                    aria-hidden="true"
+                  />
 
                   Continue with Google
                 </button>
               )}
+
+              {/* ===============================================
+                  FACEBOOK
+              =============================================== */}
 
               <button
                 type="button"
@@ -1248,10 +1927,14 @@ const RegisterPage = () => {
                   handleFacebookLogin
                 }
                 disabled={
-                  isFacebookLoading
+                  isFacebookLoading ||
+                  !FACEBOOK_APP_ID
                 }
               >
-                <FaFacebookF size={17} aria-hidden="true" />
+                <FaFacebookF
+                  size={17}
+                  aria-hidden="true"
+                />
 
                 <span>
                   {isFacebookLoading
@@ -1276,10 +1959,22 @@ const RegisterPage = () => {
             ================================================= */}
 
             <form
-              className={styles.form}
-              onSubmit={handleSubmit}
+              className={
+                styles.form
+              }
+              onSubmit={
+                handleSubmit
+              }
             >
-              <div className={styles.field}>
+              {/* ===============================================
+                  NAME
+              =============================================== */}
+
+              <div
+                className={
+                  styles.field
+                }
+              >
                 <label htmlFor="name">
                   Full name
                 </label>
@@ -1302,8 +1997,12 @@ const RegisterPage = () => {
                     name="name"
                     type="text"
                     placeholder="Enter your full name"
-                    value={form.name}
-                    onChange={handleChange}
+                    value={
+                      form.name
+                    }
+                    onChange={
+                      handleChange
+                    }
                     autoComplete="name"
                     minLength={2}
                     required
@@ -1311,7 +2010,15 @@ const RegisterPage = () => {
                 </div>
               </div>
 
-              <div className={styles.field}>
+              {/* ===============================================
+                  EMAIL
+              =============================================== */}
+
+              <div
+                className={
+                  styles.field
+                }
+              >
                 <label htmlFor="email">
                   Email address
                 </label>
@@ -1334,15 +2041,27 @@ const RegisterPage = () => {
                     name="email"
                     type="email"
                     placeholder="Enter your email address"
-                    value={form.email}
-                    onChange={handleChange}
+                    value={
+                      form.email
+                    }
+                    onChange={
+                      handleChange
+                    }
                     autoComplete="email"
                     required
                   />
                 </div>
               </div>
 
-              <div className={styles.field}>
+              {/* ===============================================
+                  PHONE
+              =============================================== */}
+
+              <div
+                className={
+                  styles.field
+                }
+              >
                 <label htmlFor="phone">
                   Mobile number
                 </label>
@@ -1365,8 +2084,12 @@ const RegisterPage = () => {
                     name="phone"
                     type="tel"
                     placeholder="Enter 10-digit mobile number"
-                    value={form.phone}
-                    onChange={handleChange}
+                    value={
+                      form.phone
+                    }
+                    onChange={
+                      handleChange
+                    }
                     autoComplete="tel"
                     inputMode="numeric"
                     maxLength={10}
@@ -1375,7 +2098,15 @@ const RegisterPage = () => {
                 </div>
               </div>
 
-              <div className={styles.field}>
+              {/* ===============================================
+                  PASSWORD
+              =============================================== */}
+
+              <div
+                className={
+                  styles.field
+                }
+              >
                 <label htmlFor="password">
                   Password
                 </label>
@@ -1402,8 +2133,12 @@ const RegisterPage = () => {
                         : "password"
                     }
                     placeholder="Create a password"
-                    value={form.password}
-                    onChange={handleChange}
+                    value={
+                      form.password
+                    }
+                    onChange={
+                      handleChange
+                    }
                     autoComplete="new-password"
                     minLength={4}
                     required
@@ -1416,7 +2151,9 @@ const RegisterPage = () => {
                     }
                     onClick={() =>
                       setShowPassword(
-                        (previous) =>
+                        (
+                          previous,
+                        ) =>
                           !previous,
                       )
                     }
@@ -1427,9 +2164,13 @@ const RegisterPage = () => {
                     }
                   >
                     {showPassword ? (
-                      <EyeOff size={18} />
+                      <EyeOff
+                        size={18}
+                      />
                     ) : (
-                      <Eye size={18} />
+                      <Eye
+                        size={18}
+                      />
                     )}
                   </button>
                 </div>
@@ -1443,7 +2184,15 @@ const RegisterPage = () => {
                 </span>
               </div>
 
-              <div className={styles.field}>
+              {/* ===============================================
+                  CONFIRM PASSWORD
+              =============================================== */}
+
+              <div
+                className={
+                  styles.field
+                }
+              >
                 <label htmlFor="confirmPassword">
                   Confirm password
                 </label>
@@ -1473,7 +2222,9 @@ const RegisterPage = () => {
                     value={
                       form.confirmPassword
                     }
-                    onChange={handleChange}
+                    onChange={
+                      handleChange
+                    }
                     autoComplete="new-password"
                     minLength={4}
                     required
@@ -1486,7 +2237,9 @@ const RegisterPage = () => {
                     }
                     onClick={() =>
                       setShowConfirmPassword(
-                        (previous) =>
+                        (
+                          previous,
+                        ) =>
                           !previous,
                       )
                     }
@@ -1497,20 +2250,30 @@ const RegisterPage = () => {
                     }
                   >
                     {showConfirmPassword ? (
-                      <EyeOff size={18} />
+                      <EyeOff
+                        size={18}
+                      />
                     ) : (
-                      <Eye size={18} />
+                      <Eye
+                        size={18}
+                      />
                     )}
                   </button>
                 </div>
               </div>
+
+              {/* ===============================================
+                  CREATE ACCOUNT
+              =============================================== */}
 
               <button
                 type="submit"
                 className={
                   styles.submitButton
                 }
-                disabled={isSubmitting}
+                disabled={
+                  isSubmitting
+                }
               >
                 <span>
                   {isSubmitting
@@ -1527,9 +2290,17 @@ const RegisterPage = () => {
               </button>
             </form>
 
-            <p className={styles.terms}>
-              By creating an account, you agree
-              to our{" "}
+            {/* =================================================
+                TERMS
+            ================================================= */}
+
+            <p
+              className={
+                styles.terms
+              }
+            >
+              By creating an account, you
+              agree to our{" "}
               <Link to="/terms">
                 Terms of Service
               </Link>{" "}
@@ -1540,7 +2311,15 @@ const RegisterPage = () => {
               .
             </p>
 
-            <div className={styles.divider}>
+            {/* =================================================
+                LOGIN
+            ================================================= */}
+
+            <div
+              className={
+                styles.divider
+              }
+            >
               <span>
                 Already have an account?
               </span>
@@ -1548,7 +2327,9 @@ const RegisterPage = () => {
 
             <Link
               to="/login"
-              className={styles.loginButton}
+              className={
+                styles.loginButton
+              }
             >
               Log in
             </Link>
@@ -1556,20 +2337,42 @@ const RegisterPage = () => {
         )}
       </section>
 
-      <footer className={styles.footer}>
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
+
+      <footer
+        className={
+          styles.footer
+        }
+      >
         <nav
-          className={styles.footerLinks}
+          className={
+            styles.footerLinks
+          }
           aria-label="Footer navigation"
         >
-          <Link to="/about">About us</Link>
-          <Link to="/contact">Contact</Link>
-          <Link to="/privacy">Privacy</Link>
-          <Link to="/terms">Terms</Link>
+          <Link to="/about">
+            About us
+          </Link>
+
+          <Link to="/contact">
+            Contact
+          </Link>
+
+          <Link to="/privacy">
+            Privacy
+          </Link>
+
+          <Link to="/terms">
+            Terms
+          </Link>
         </nav>
 
         <p>
-          © {new Date().getFullYear()} Jini
-          Cosmetics. All rights reserved.
+          ©{" "}
+          {new Date().getFullYear()}{" "}
+          Jini Cosmetics. All rights reserved.
         </p>
       </footer>
     </main>

@@ -1565,3 +1565,96 @@
     animation: none !important;
   }
 }
+
+
+/* =========================================================
+   SEPARATE LOGISTICS SIDEBAR INTEGRATION
+   The sidebar is now its own component. Main content responds
+   to the desktop collapsed state and mobile drawer.
+========================================================= */
+
+.dashboard.sidebarCollapsed .main {
+  width: calc(100% - 80px);
+  margin-left: 80px;
+}
+
+.mobileTopbar {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .dashboard .main,
+  .dashboard.sidebarCollapsed .main {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard .main,
+  .dashboard.sidebarCollapsed .main {
+    width: 100%;
+    margin-left: 0;
+    padding-top: 76px;
+  }
+
+  .mobileTopbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 80;
+    height: 62px;
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    padding: 0 10px;
+    border-bottom: 1px solid #e8ebf1;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .mobileTopbarMenu,
+  .mobileTopbarRefresh {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid #e1e5eb;
+    border-radius: 11px;
+    background: #ffffff;
+    color: #273142;
+    cursor: pointer;
+  }
+
+  .mobileTopbarTitle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .mobileTopbarTitle strong {
+    color: #111827;
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .mobileTopbarTitle span {
+    color: #7b8494;
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobileTopbarMenu,
+  .mobileTopbarRefresh {
+    transition: none !important;
+  }
+}

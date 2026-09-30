@@ -6,6 +6,13 @@ import {
 } from "react";
 
 import {
+  CheckCircle2,
+  ImageUp,
+  LoaderCircle,
+  X,
+} from "lucide-react";
+
+import {
   apiRequest,
   getArray,
   getEntityId,
@@ -93,6 +100,11 @@ export default function CategoriesManager() {
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState<{
+    categoryName: string;
+    action: "created" | "updated";
+    hasImage: boolean;
+  } | null>(null);
 
   const loadCategories = async () => {
     try {
@@ -240,6 +252,12 @@ export default function CategoriesManager() {
         formData.append("image", imageFile);
       }
 
+      const savedCategoryName = trimmedName;
+      const savedAction: "created" | "updated" = editingId
+        ? "updated"
+        : "created";
+      const savedHasImage = Boolean(imageFile);
+
       if (editingId) {
         await apiRequest(`/categories/${editingId}`, {
           method: "PUT",
@@ -258,6 +276,12 @@ export default function CategoriesManager() {
 
       resetForm();
       await loadCategories();
+
+      setSaveSuccess({
+        categoryName: savedCategoryName,
+        action: savedAction,
+        hasImage: savedHasImage,
+      });
     } catch (err) {
       setError(
         getErrorMessage(
@@ -361,7 +385,144 @@ export default function CategoriesManager() {
   };
 
   return (
-    <section className="adminSection">
+    <>
+      {saving && (
+        <div className="mediaUploadOverlay" role="dialog" aria-modal="true">
+          <div className="mediaUploadModal">
+            <div className="mediaUploadIcon">
+              <ImageUp size={28} strokeWidth={2.2} />
+            </div>
+
+            <div className="mediaUploadSpinner" aria-hidden="true">
+              <LoaderCircle size={34} />
+            </div>
+
+            <p className="mediaUploadEyebrow">
+              {editingId ? "CATEGORY UPDATE" : "CATEGORY MEDIA"}
+            </p>
+
+            <h3>
+              {editingId
+                ? "Updating your category"
+                : "Uploading category"}
+            </h3>
+
+            <p className="mediaUploadText">
+              Your category information and image are being saved
+              securely. Please do not close or refresh this page.
+            </p>
+
+            <div className="mediaUploadProgress">
+              <div className="mediaUploadProgressHeader">
+                <span>Saving changes</span>
+                <strong>In progress</strong>
+              </div>
+              <div className="mediaUploadProgressTrack">
+                <span className="mediaUploadProgressBar" />
+              </div>
+            </div>
+
+            <div className="mediaUploadSteps">
+              <div className="mediaUploadStep isActive">
+                <span>1</span>
+                <div>
+                  <strong>Preparing</strong>
+                  <small>Validating category details</small>
+                </div>
+              </div>
+              <div className="mediaUploadStep isActive">
+                <span>2</span>
+                <div>
+                  <strong>Uploading</strong>
+                  <small>Saving your category image</small>
+                </div>
+              </div>
+              <div className="mediaUploadStep isActive">
+                <span>3</span>
+                <div>
+                  <strong>Finalizing</strong>
+                  <small>Updating category list</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {saveSuccess && (
+        <div
+          className="mediaSuccessOverlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="category-save-success-title"
+        >
+          <div className="mediaSuccessModal">
+            <button
+              type="button"
+              className="mediaSuccessClose"
+              aria-label="Close success popup"
+              onClick={() => setSaveSuccess(null)}
+            >
+              <X size={19} />
+            </button>
+
+            <div className="mediaSuccessIcon">
+              <CheckCircle2 size={42} strokeWidth={2.2} />
+            </div>
+
+            <p className="mediaSuccessEyebrow">SAVE COMPLETE</p>
+
+            <h3 id="category-save-success-title">
+              Category{" "}
+              {saveSuccess.action === "updated"
+                ? "updated"
+                : "created"}{" "}
+              successfully
+            </h3>
+
+            <p className="mediaSuccessText">
+              <strong>{saveSuccess.categoryName}</strong> has been
+              saved successfully.
+            </p>
+
+            <div className="mediaSuccessList">
+              <div className="mediaSuccessItem">
+                <CheckCircle2 size={18} />
+                <div>
+                  <strong>Category details</strong>
+                  <span>Saved successfully</span>
+                </div>
+              </div>
+
+              <div className="mediaSuccessItem">
+                <CheckCircle2 size={18} />
+                <div>
+                  <strong>Category image</strong>
+                  <span>
+                    {saveSuccess.hasImage
+                      ? "Uploaded successfully"
+                      : "Existing image retained"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mediaSuccessNote">
+              Your changes are now visible in the category manager.
+            </div>
+
+            <button
+              type="button"
+              className="mediaSuccessDone"
+              onClick={() => setSaveSuccess(null)}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
+      <section className="adminSection">
       <div className="pageHeading">
         <div>
           <h2>Categories</h2>
@@ -606,5 +767,6 @@ export default function CategoriesManager() {
         </table>
       </div>
     </section>
+    </>
   );
 }

@@ -1,0 +1,455 @@
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 1000;
+  width: 280px;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #ffffff;
+  border-right: 1px solid #e8ebf1;
+  box-shadow: 4px 0 20px rgba(15, 23, 42, 0.025);
+  transition: width 0.24s ease, padding 0.24s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 0 10px;
+  margin-bottom: 26px;
+  min-width: 0;
+}
+
+.brandMark {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  background: #111827;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  overflow: hidden;
+}
+
+.brandMark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.brandText,
+.roleText {
+  min-width: 0;
+}
+
+.brandText strong {
+  display: block;
+  color: #111827;
+  font-size: 18px;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.brandText span {
+  display: block;
+  margin-top: 4px;
+  color: #7b8494;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+.roleCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 68px;
+  padding: 12px;
+  margin-bottom: 28px;
+  box-sizing: border-box;
+  border: 1px solid #e9ebf1;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fafaff 0%, #f7f7fb 100%);
+}
+
+.roleIcon {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: #fff;
+  color: #4f46e5;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);
+}
+
+.roleText small {
+  display: block;
+  margin-bottom: 4px;
+  color: #8a93a3;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.roleText strong {
+  display: block;
+  color: #172033;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.sectionTitle {
+  padding: 0 13px;
+  margin: 0 0 9px;
+  color: #8992a3;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.navItem,
+.logout {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  min-height: 47px;
+  padding: 0 13px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #5e6879;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.navItem:hover {
+  background: #f5f6fa;
+  color: #252e3d;
+}
+
+.navItem:active,
+.logout:active {
+  transform: translateY(1px);
+}
+
+.navItem.active {
+  background: #111827;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(17, 24, 39, 0.12);
+}
+
+.navIcon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navLabel,
+.logoutLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activeDot {
+  width: 5px;
+  height: 5px;
+  margin-left: auto;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+}
+
+.bottom {
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid #edf0f4;
+}
+
+.logout {
+  color: #667085;
+}
+
+.logout:hover {
+  background: #fff5f5;
+  color: #dc2626;
+}
+
+.collapseButton,
+.mobileClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.collapseButton {
+  position: absolute;
+  top: 30px;
+  right: 10px;
+  z-index: 3;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e2e6ec;
+  border-radius: 50%;
+  background: #fff;
+  color: #4b5563;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+}
+
+.collapseButton:hover {
+  color: #111827;
+  transform: scale(1.06);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.14);
+}
+
+.mobileClose {
+  display: none;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1002;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #e4e7ec;
+  border-radius: 11px;
+  background: #fff;
+  color: #4b5563;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+.navItem:focus-visible,
+.logout:focus-visible,
+.collapseButton:focus-visible,
+.mobileClose:focus-visible {
+  outline: 2px solid #111827;
+  outline-offset: 2px;
+}
+
+.mobileOverlay {
+  display: none;
+}
+
+.collapsed {
+  width: 80px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.collapsed .brand {
+  justify-content: center;
+  padding: 0;
+}
+
+.collapsed .brandText,
+.collapsed .roleText,
+.collapsed .sectionTitle,
+.collapsed .navLabel,
+.collapsed .activeDot,
+.collapsed .logoutLabel {
+  display: none;
+}
+
+.collapsed .roleCard {
+  justify-content: center;
+  padding: 8px;
+}
+
+.collapsed .navItem,
+.collapsed .logout {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  .sidebar {
+    width: 80px;
+    padding: 20px 10px;
+  }
+
+  .brand {
+    justify-content: center;
+    padding: 0;
+    margin-bottom: 22px;
+  }
+
+  .brandText,
+  .roleText,
+  .sectionTitle,
+  .navLabel,
+  .activeDot,
+  .logoutLabel {
+    display: none;
+  }
+
+  .roleCard {
+    justify-content: center;
+    padding: 8px;
+    margin-bottom: 20px;
+  }
+
+  .navItem,
+  .logout {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .collapseButton {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .sidebar {
+    width: min(304px, 88vw);
+    max-width: 304px;
+    height: 100dvh;
+    min-height: 100dvh;
+    padding: 20px 14px 18px;
+    transform: translate3d(-110%, 0, 0);
+    box-shadow: 18px 0 45px rgba(15, 23, 42, 0.18);
+    overscroll-behavior: contain;
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .sidebar.open {
+    transform: translate3d(0, 0, 0);
+  }
+
+  /* Always show the full menu on phones, even if desktop was collapsed. */
+  .sidebar.collapsed {
+    width: min(304px, 88vw);
+    max-width: 304px;
+    padding: 20px 14px 18px;
+  }
+
+  .brand,
+  .sidebar.collapsed .brand {
+    justify-content: flex-start;
+    padding: 0 8px;
+    padding-right: 48px;
+    margin-bottom: 24px;
+  }
+
+  .brandText,
+  .roleText,
+  .sectionTitle,
+  .navLabel,
+  .activeDot,
+  .logoutLabel,
+  .sidebar.collapsed .brandText,
+  .sidebar.collapsed .roleText,
+  .sidebar.collapsed .sectionTitle,
+  .sidebar.collapsed .navLabel,
+  .sidebar.collapsed .activeDot,
+  .sidebar.collapsed .logoutLabel {
+    display: block;
+  }
+
+  .roleCard,
+  .sidebar.collapsed .roleCard {
+    justify-content: flex-start;
+    padding: 12px;
+    margin-bottom: 24px;
+  }
+
+  .navItem,
+  .logout,
+  .sidebar.collapsed .navItem,
+  .sidebar.collapsed .logout {
+    justify-content: flex-start;
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+
+  .navItem {
+    min-height: 50px;
+    border-radius: 13px;
+  }
+
+  .navigation {
+    gap: 6px;
+  }
+
+  .bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .collapseButton {
+    display: none;
+  }
+
+  .mobileClose {
+    display: inline-flex;
+  }
+
+  .mobileOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: rgba(15, 23, 42, 0.42);
+    backdrop-filter: blur(2px);
+    cursor: default;
+  }
+}
+
+@media (max-width: 380px) {
+  .sidebar,
+  .sidebar.collapsed {
+    width: min(292px, 91vw);
+  }
+
+  .brandMark {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  .brandText strong {
+    font-size: 17px;
+  }
+}

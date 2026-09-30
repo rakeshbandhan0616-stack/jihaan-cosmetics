@@ -425,7 +425,7 @@ export default function NotificationsPage() {
 
               <p>
                 Stay updated with the latest
-                updates from Jihaan Cosmetics.
+                updates from Jini Cosmetics.
               </p>
             </div>
 

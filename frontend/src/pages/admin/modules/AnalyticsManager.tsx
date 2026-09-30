@@ -6,6 +6,8 @@ import {
   type ReactNode,
 } from "react";
 import axios, { type AxiosRequestConfig } from "axios";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   AlertTriangle,
   BarChart3,
@@ -14,6 +16,7 @@ import {
   DollarSign,
   FileJson,
   FileSpreadsheet,
+  FileText,
   Filter,
   Package,
   RefreshCw,
@@ -1110,13 +1113,15 @@ export default function AnalyticsManager() {
   ]);
 
   const handleExport = useCallback(
-
-    (format: "csv" | "json") => {
+    (format: "csv" | "json" | "pdf") => {
       try {
         setExporting(true);
 
+        const generatedAt = new Date();
+        const generatedAtLabel = generatedAt.toLocaleString("en-IN");
+
         const exportData = {
-          generatedAt: new Date().toISOString(),
+          generatedAt: generatedAt.toISOString(),
           filters: {
             startDate,
             endDate,
@@ -1127,6 +1132,468 @@ export default function AnalyticsManager() {
           customers,
           inventory,
         };
+
+        if (format === "pdf") {
+          /*
+           * Full Analytics PDF
+           * ------------------
+           * This is a real generated PDF. It does NOT use window.print().
+           * Every analytics section and every field available in the
+           * AnalyticsManager data types is included.
+           */
+          const doc = new jsPDF({
+            orientation: "landscape",
+            unit: "mm",
+            format: "a4",
+          });
+
+          const pageWidth = doc.internal.pageSize.getWidth();
+          const pageHeight = doc.internal.pageSize.getHeight();
+
+          const safeText = (value: unknown): string => {
+            if (value === null || value === undefined || value === "") {
+              return "—";
+            }
+
+            if (typeof value === "boolean") {
+              return value ? "Yes" : "No";
+            }
+
+            if (typeof value === "object") {
+              try {
+                return JSON.stringify(value);
+              } catch {
+                return String(value);
+              }
+            }
+
+            return String(value);
+          };
+
+          const money = (value: unknown): string => {
+            if (value === null || value === undefined || value === "") {
+              return "—";
+            }
+            return formatCurrency(value);
+          };
+
+          const numberValue = (value: unknown): string => {
+            if (value === null || value === undefined || value === "") {
+              return "—";
+            }
+            return formatNumber(value);
+          };
+
+          const addHeader = (title: string, subtitle?: string) => {
+            if (doc.getNumberOfPages() > 0) {
+              doc.addPage();
+            }
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(20);
+            doc.text("JIHAAN COSMETICS", 14, 16);
+
+            doc.setFontSize(14);
+            doc.text(title, 14, 24);
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8.5);
+            doc.text(`Generated: ${generatedAtLabel}`, 14, 30);
+
+            if (startDate || endDate || groupBy) {
+              const filterText = [
+                startDate ? `Start: ${startDate}` : "",
+                endDate ? `End: ${endDate}` : "",
+                groupBy ? `Grouping: ${groupBy}` : "",
+              ]
+                .filter(Boolean)
+                .join("  |  ");
+
+              doc.text(filterText, 14, 35);
+            }
+
+            if (subtitle) {
+              doc.setFontSize(8.5);
+              doc.text(subtitle, 14, 40);
+            }
+          };
+
+          const addFooter = () => {
+            const totalPages = doc.getNumberOfPages();
+
+            for (let page = 1; page <= totalPages; page += 1) {
+              doc.setPage(page);
+              doc.setFont("helvetica", "normal");
+              doc.setFontSize(8);
+              doc.setTextColor(100, 116, 139);
+              doc.text(
+                `Jihaan Cosmetics • Analytics Report • Page ${page} of ${totalPages}`,
+                14,
+                pageHeight - 8
+              );
+              doc.setTextColor(15, 23, 42);
+            }
+          };
+
+          const sectionTitle = (title: string, y: number) => {
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(11);
+            doc.setTextColor(15, 23, 42);
+            doc.text(title, 14, y);
+            return y + 5;
+          };
+
+          /*
+           * PAGE 1 — EXECUTIVE OVERVIEW
+           */
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(20);
+          doc.text("JIHAAN COSMETICS", 14, 18);
+
+          doc.setFontSize(16);
+          doc.text("Complete Analytics Report", 14, 27);
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9);
+          doc.text(`Generated: ${generatedAtLabel}`, 14, 34);
+
+          const filterSummary = [
+            startDate ? `Start Date: ${startDate}` : "Start Date: All",
+            endDate ? `End Date: ${endDate}` : "End Date: All",
+            `Sales Grouping: ${groupBy}`,
+          ].join("  |  ");
+
+          doc.text(filterSummary, 14, 40);
+
+          let overviewY = 50;
+          overviewY = sectionTitle("Overview Metrics", overviewY);
+
+          const overviewRows = [
+            ["Total Revenue", money(totalRevenue)],
+            ["Revenue", money(overview?.revenue)],
+            ["Total Sales", money(overview?.totalSales)],
+            ["Total Orders", numberValue(totalOrders)],
+            ["Orders", numberValue(overview?.orders)],
+            ["Order Count", numberValue(overview?.orderCount)],
+            ["Total Customers", numberValue(totalCustomers)],
+            ["Customers", numberValue(overview?.customers)],
+            ["Customer Count", numberValue(overview?.customerCount)],
+            ["Total Products", numberValue(totalProducts)],
+            ["Products", numberValue(overview?.products)],
+            ["Product Count", numberValue(overview?.productCount)],
+            ["Average Order Value", money(averageOrderValue)],
+            ["Avg Order Value", money(overview?.avgOrderValue)],
+            ["Pending Orders", numberValue(overview?.pendingOrders)],
+            ["Completed Orders", numberValue(overview?.completedOrders)],
+            ["Cancelled Orders", numberValue(overview?.cancelledOrders)],
+            ["Low Stock Products", numberValue(lowStockProducts)],
+            ["Low Stock", numberValue(overview?.lowStock)],
+            ["Low Stock Count", numberValue(overview?.lowStockCount)],
+            ["Out Of Stock Products", numberValue(outOfStockProducts)],
+            ["Out Of Stock", numberValue(overview?.outOfStock)],
+            ["Out Of Stock Count", numberValue(overview?.outOfStockCount)],
+            ["Total Inventory Value", money(inventory?.totalInventoryValue)],
+            ["Inventory Value", money(inventory?.inventoryValue)],
+            ["Total Value", money(inventory?.totalValue)],
+          ];
+
+          autoTable(doc, {
+            startY: overviewY + 2,
+            head: [["Overview Field", "Data"]],
+            body: overviewRows,
+            theme: "grid",
+            styles: {
+              fontSize: 8,
+              cellPadding: 2.5,
+            },
+            headStyles: {
+              fillColor: [15, 23, 42],
+              textColor: 255,
+              fontStyle: "bold",
+            },
+            alternateRowStyles: {
+              fillColor: [248, 250, 252],
+            },
+            columnStyles: {
+              0: { cellWidth: 90 },
+              1: { cellWidth: 70 },
+            },
+            margin: { left: 14, right: 14 },
+          });
+
+          /*
+           * PAGE 2 — SALES SUMMARY + ALL SALES ROW FIELDS
+           */
+          addHeader(
+            "Sales Analytics",
+            `All ${salesItems.length} sales records and every available SalesItem field.`
+          );
+
+          let salesY = 46;
+          salesY = sectionTitle("Sales Summary", salesY);
+
+          const salesSummaryRows = [
+            ["Total Revenue", money(sales?.totalRevenue)],
+            ["Revenue", money(sales?.revenue)],
+            ["Total Sales", money(sales?.totalSales)],
+            ["Total Orders", numberValue(sales?.totalOrders)],
+            ["Orders", numberValue(sales?.orders)],
+          ];
+
+          autoTable(doc, {
+            startY: salesY + 2,
+            head: [["Sales Summary Field", "Data"]],
+            body: salesSummaryRows,
+            theme: "grid",
+            styles: { fontSize: 8, cellPadding: 2.5 },
+            headStyles: { fillColor: [30, 64, 175], textColor: 255 },
+            margin: { left: 14, right: 14 },
+            tableWidth: 160,
+          });
+
+          const salesTableStart =
+            (doc as any).lastAutoTable.finalY + 10;
+
+          autoTable(doc, {
+            startY: salesTableStart,
+            head: [[
+              "Sr.",
+              "Date",
+              "Period",
+              "Label",
+              "Revenue",
+              "Total Revenue",
+              "Sales",
+              "Orders",
+              "Order Count",
+              "Avg Order Value",
+            ]],
+            body: salesItems.map((item, index) => [
+              index + 1,
+              safeText(item.date),
+              safeText(item.period),
+              safeText(item.label),
+              money(item.revenue),
+              money(item.totalRevenue),
+              money(item.sales),
+              numberValue(item.orders),
+              numberValue(item.orderCount),
+              money(item.averageOrderValue),
+            ]),
+            theme: "grid",
+            styles: {
+              fontSize: 7,
+              cellPadding: 2,
+              overflow: "linebreak",
+            },
+            headStyles: {
+              fillColor: [30, 64, 175],
+              textColor: 255,
+              fontStyle: "bold",
+            },
+            alternateRowStyles: {
+              fillColor: [248, 250, 252],
+            },
+            margin: { left: 8, right: 8 },
+          });
+
+          /*
+           * PAGE 3 — CUSTOMER SUMMARY + ALL CUSTOMER FIELDS
+           */
+          addHeader(
+            "Customer Analytics",
+            `All ${customerItems.length} customer records and every available CustomerItem field.`
+          );
+
+          let customerY = 46;
+          customerY = sectionTitle("Customer Summary", customerY);
+
+          autoTable(doc, {
+            startY: customerY + 2,
+            head: [["Customer Summary Field", "Data"]],
+            body: [
+              ["Total Customers", numberValue(customers?.totalCustomers)],
+              ["Customer Count", numberValue(customers?.customerCount)],
+              ["New Customers", numberValue(customers?.newCustomers)],
+              ["Returning Customers", numberValue(customers?.returningCustomers)],
+            ],
+            theme: "grid",
+            styles: { fontSize: 8, cellPadding: 2.5 },
+            headStyles: { fillColor: [126, 34, 206], textColor: 255 },
+            margin: { left: 14, right: 14 },
+            tableWidth: 170,
+          });
+
+          autoTable(doc, {
+            startY: (doc as any).lastAutoTable.finalY + 10,
+            head: [[
+              "Sr.",
+              "ID",
+              "Customer Name",
+              "Full Name",
+              "Email",
+              "Orders",
+              "Order Count",
+              "Total Spent",
+              "Revenue",
+              "Total Revenue",
+              "Last Order Date",
+            ]],
+            body: customerItems.map((customer, index) => [
+              index + 1,
+              safeText(customer._id || customer.id),
+              safeText(customer.name),
+              safeText(customer.fullName),
+              safeText(customer.email),
+              numberValue(customer.orders),
+              numberValue(customer.orderCount),
+              money(customer.totalSpent),
+              money(customer.revenue),
+              money(customer.totalRevenue),
+              formatDate(customer.lastOrderDate),
+            ]),
+            theme: "grid",
+            styles: {
+              fontSize: 6.8,
+              cellPadding: 1.8,
+              overflow: "linebreak",
+            },
+            headStyles: {
+              fillColor: [126, 34, 206],
+              textColor: 255,
+              fontStyle: "bold",
+            },
+            alternateRowStyles: {
+              fillColor: [250, 245, 255],
+            },
+            margin: { left: 6, right: 6 },
+          });
+
+          /*
+           * PAGE 4+ — COMPLETE INVENTORY / STOCK
+           */
+          addHeader(
+            "Inventory & Stock Report",
+            `All ${inventoryItems.length} inventory records and every available InventoryItem field.`
+          );
+
+          let inventoryY = 46;
+          inventoryY = sectionTitle("Inventory Summary", inventoryY);
+
+          autoTable(doc, {
+            startY: inventoryY + 2,
+            head: [["Inventory Summary Field", "Data"]],
+            body: [
+              ["Total Products", numberValue(inventory?.totalProducts)],
+              ["Product Count", numberValue(inventory?.productCount)],
+              ["Total", numberValue(inventory?.total)],
+              ["Low Stock Products", numberValue(inventory?.lowStockProducts)],
+              ["Low Stock", numberValue(inventory?.lowStock)],
+              ["Low Stock Count", numberValue(inventory?.lowStockCount)],
+              ["Out Of Stock Products", numberValue(inventory?.outOfStockProducts)],
+              ["Out Of Stock", numberValue(inventory?.outOfStock)],
+              ["Out Of Stock Count", numberValue(inventory?.outOfStockCount)],
+              ["Total Inventory Value", money(inventory?.totalInventoryValue)],
+              ["Inventory Value", money(inventory?.inventoryValue)],
+              ["Total Value", money(inventory?.totalValue)],
+            ],
+            theme: "grid",
+            styles: { fontSize: 8, cellPadding: 2.5 },
+            headStyles: { fillColor: [234, 88, 12], textColor: 255 },
+            margin: { left: 14, right: 14 },
+            tableWidth: 180,
+          });
+
+          autoTable(doc, {
+            startY: (doc as any).lastAutoTable.finalY + 10,
+            head: [[
+              "Sr.",
+              "ID",
+              "Name",
+              "Title",
+              "Product Name",
+              "SKU",
+              "Stock",
+              "Quantity",
+              "Available Stock",
+              "Price",
+              "Selling Price",
+              "Category",
+              "Brand",
+              "Active",
+              "Is Active",
+              "Image",
+              "Images",
+              "Status",
+            ]],
+            body: inventoryItems.map((product, index) => {
+              const stock =
+                product.stock ??
+                product.quantity ??
+                product.availableStock ??
+                0;
+
+              const status =
+                product.active === false || product.isActive === false
+                  ? "Inactive"
+                  : Number(stock) <= 0
+                    ? "Out of stock"
+                    : Number(stock) <= 5
+                      ? "Low stock"
+                      : "In stock";
+
+              const imageList = Array.isArray(product.images)
+                ? product.images.join("\n")
+                : "";
+
+              return [
+                index + 1,
+                safeText(product._id || product.id),
+                safeText(product.name),
+                safeText(product.title),
+                safeText(product.productName),
+                safeText(product.sku),
+                numberValue(product.stock),
+                numberValue(product.quantity),
+                numberValue(product.availableStock),
+                money(product.price),
+                money(product.sellingPrice),
+                safeText(product.category),
+                safeText(product.brand),
+                safeText(product.active),
+                safeText(product.isActive),
+                safeText(product.image),
+                imageList || "—",
+                status,
+              ];
+            }),
+            theme: "grid",
+            styles: {
+              fontSize: 5.8,
+              cellPadding: 1.5,
+              overflow: "linebreak",
+            },
+            headStyles: {
+              fillColor: [234, 88, 12],
+              textColor: 255,
+              fontStyle: "bold",
+            },
+            alternateRowStyles: {
+              fillColor: [255, 247, 237],
+            },
+            margin: { left: 4, right: 4 },
+          });
+
+          addFooter();
+
+          doc.save(
+            `jihaan-complete-analytics-${generatedAt
+              .toISOString()
+              .slice(0, 10)}.pdf`
+          );
+
+          return;
+        }
 
         let fileContent = "";
         let mimeType = "application/json";
@@ -1167,7 +1634,7 @@ export default function AnalyticsManager() {
         const anchor = document.createElement("a");
 
         anchor.href = url;
-        anchor.download = `analytics-report-${new Date()
+        anchor.download = `analytics-report-${generatedAt
           .toISOString()
           .slice(0, 10)}.${extension}`;
 
@@ -1183,14 +1650,17 @@ export default function AnalyticsManager() {
     [
       averageOrderValue,
       customers,
+      customerItems,
       endDate,
       groupBy,
       inventory,
+      inventoryItems,
       inventoryValue,
       lowStockProducts,
       overview,
       outOfStockProducts,
       sales,
+      salesItems,
       startDate,
       totalCustomers,
       totalOrders,
@@ -1198,6 +1668,7 @@ export default function AnalyticsManager() {
       totalRevenue,
     ]
   );
+
 
   return (
     <div className={styles.page}>
@@ -1227,6 +1698,14 @@ export default function AnalyticsManager() {
           >
             <FileJson size={16} />
             Export JSON
+          </button>
+\n          <button
+            className={styles.secondaryButton}
+            onClick={() => handleExport("pdf")}
+            disabled={exporting || loading}
+          >
+            <FileText size={16} />
+            {exporting ? "Generating PDF..." : "Export Full PDF"}
           </button>
 
           <button
