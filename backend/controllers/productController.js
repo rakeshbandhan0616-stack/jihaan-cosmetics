@@ -2,19 +2,13 @@ import mongoose from "mongoose";
 import Product from "../models/Product.js";
 import cloudinary from "../config/cloudinary.js";
 
-// --------------------------------------------------
-// Utility helpers
-// --------------------------------------------------
-
 const parseBoolean = (value, defaultValue = false) => {
   if (value === undefined || value === null || value === "") {
     return defaultValue;
   }
-
   if (typeof value === "boolean") {
     return value;
   }
-
   return String(value).toLowerCase() === "true";
 };
 
@@ -22,9 +16,7 @@ const parseNumber = (value, defaultValue = 0) => {
   if (value === undefined || value === null || value === "") {
     return defaultValue;
   }
-
   const number = Number(value);
-
   return Number.isFinite(number) ? number : defaultValue;
 };
 
@@ -41,14 +33,12 @@ const parseArray = (value) => {
 
   try {
     const parsed = JSON.parse(value);
-
     if (Array.isArray(parsed)) {
       return parsed
         .map((item) => String(item).trim())
         .filter(Boolean);
     }
   } catch {
-    // Continue with comma-separated text
   }
 
   return String(value)
@@ -68,7 +58,6 @@ const parseObject = (value, defaultValue = {}) => {
 
   try {
     const parsed = JSON.parse(value);
-
     if (parsed && typeof parsed === "object") {
       return parsed;
     }
@@ -142,67 +131,72 @@ const getUploadedFile = (files, fieldName) => {
   return files[fieldName][0] || null;
 };
 
-// --------------------------------------------------
-// Cloudinary upload helpers
-// --------------------------------------------------
-
 const uploadBufferToCloudinary = (
   buffer,
   { folder, resourceType = "image" } = {}
 ) => {
   return new Promise((resolve, reject) => {
     if (!buffer) {
-      return reject(new Error("Upload buffer is missing."));
+      return reject(
+        new Error("Upload buffer is missing.")
+      );
     }
 
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder,
-        resource_type: resourceType,
-        type: "upload",
+    const uploadStream =
+      cloudinary.uploader.upload_stream(
+        {
+          folder,
+          resource_type: resourceType,
+          type: "upload",
+          ...(resourceType === "image"
+            ? {
+                quality: "auto",
+                fetch_format: "auto",
+              }
+            : {}),
+        },
+        (error, result) => {
+          if (error) {
+            return reject(error);
+          }
 
-        ...(resourceType === "image"
-          ? {
-              quality: "auto",
-              fetch_format: "auto",
-            }
-          : {}),
-      },
-      (error, result) => {
-        if (error) {
-          return reject(error);
+          if (!result?.secure_url) {
+            return reject(
+              new Error(
+                "Cloudinary did not return a secure URL."
+              )
+            );
+          }
+
+          resolve({
+            url: result.secure_url,
+            publicId: result.public_id,
+            resourceType: result.resource_type,
+          });
         }
-
-        if (!result?.secure_url) {
-          return reject(
-            new Error("Cloudinary did not return a secure URL.")
-          );
-        }
-
-        resolve({
-          url: result.secure_url,
-          publicId: result.public_id,
-          resourceType: result.resource_type,
-        });
-      }
-    );
+      );
 
     uploadStream.end(buffer);
   });
 };
 
-const uploadProductImage = async (file, fieldName) => {
+const uploadProductImage = async (
+  file,
+  fieldName
+) => {
   if (!file?.buffer) {
     return "";
   }
 
-  const uploaded = await uploadBufferToCloudinary(
-    file.buffer,
-    {
-      folder: `jihaan-cosmetics/products/${fieldName}`,
-      resourceType: "image",
-    }
-  );
+  const uploaded =
+    await uploadBufferToCloudinary(
+      file.buffer,
+      {
+        folder:
+          `jihaan-cosmetics/products/${fieldName}`,
+        resourceType: "image",
+      }
+    );
 
   return uploaded.url;
 };
@@ -212,13 +206,15 @@ const uploadProductVideo = async (file) => {
     return "";
   }
 
-  const uploaded = await uploadBufferToCloudinary(
-    file.buffer,
-    {
-      folder: "jihaan-cosmetics/products/videos",
-      resourceType: "video",
-    }
-  );
+  const uploaded =
+    await uploadBufferToCloudinary(
+      file.buffer,
+      {
+        folder:
+          "jihaan-cosmetics/products/videos",
+        resourceType: "video",
+      }
+    );
 
   return uploaded.url;
 };
@@ -228,27 +224,40 @@ const getUploadedImages = async (files) => {
     return [];
   }
 
-  const uploadedImages = await Promise.all(
-    files.images.map((file) =>
-      uploadProductImage(file, "images")
-    )
-  );
+  const uploadedImages =
+    await Promise.all(
+      files.images.map((file) =>
+        uploadProductImage(file, "images")
+      )
+    );
 
   return uploadedImages.filter(Boolean);
 };
 
-const getUploadedImage = async (files, fieldName) => {
-  const file = getUploadedFile(files, fieldName);
+const getUploadedImage = async (
+  files,
+  fieldName
+) => {
+  const file = getUploadedFile(
+    files,
+    fieldName
+  );
 
   if (!file) {
     return "";
   }
 
-  return uploadProductImage(file, fieldName);
+  return uploadProductImage(
+    file,
+    fieldName
+  );
 };
 
 const getUploadedVideo = async (files) => {
-  const file = getUploadedFile(files, "video");
+  const file = getUploadedFile(
+    files,
+    "video"
+  );
 
   if (!file) {
     return "";
@@ -257,72 +266,251 @@ const getUploadedVideo = async (files) => {
   return uploadProductVideo(file);
 };
 
-const normalizeDiscountType = (value) => {
+const getCloudinaryResourceInfoFromUrl = (
+  url
+) => {
+  if (!url || typeof url !== "string") {
+    return null;
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+
+    if (
+      !parsedUrl.hostname.includes(
+        "res.cloudinary.com"
+      )
+    ) {
+      return null;
+    }
+
+    const parts = parsedUrl.pathname
+      .split("/")
+      .filter(Boolean);
+
+    const uploadIndex =
+      parts.indexOf("upload");
+
+    if (uploadIndex < 1) {
+      return null;
+    }
+
+    const resourceType =
+      parts[uploadIndex - 1];
+
+    if (
+      resourceType !== "image" &&
+      resourceType !== "video" &&
+      resourceType !== "raw"
+    ) {
+      return null;
+    }
+
+    const afterUpload =
+      parts.slice(uploadIndex + 1);
+
+    if (afterUpload.length === 0) {
+      return null;
+    }
+
+    const versionIndex =
+      afterUpload.findIndex(
+        (part) => /^v\d+$/.test(part)
+      );
+
+    if (versionIndex === -1) {
+      return null;
+    }
+
+    const publicIdParts =
+      afterUpload.slice(
+        versionIndex + 1
+      );
+
+    if (publicIdParts.length === 0) {
+      return null;
+    }
+
+    const lastIndex =
+      publicIdParts.length - 1;
+
+    publicIdParts[lastIndex] =
+      publicIdParts[lastIndex].replace(
+        /\.[^.]+$/,
+        ""
+      );
+
+    return {
+      publicId:
+        publicIdParts.join("/"),
+      resourceType,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const deleteCloudinaryAsset = async (
+  url
+) => {
+  const info =
+    getCloudinaryResourceInfoFromUrl(
+      url
+    );
+
+  if (!info) {
+    return;
+  }
+
+  try {
+    const result =
+      await cloudinary.uploader.destroy(
+        info.publicId,
+        {
+          resource_type:
+            info.resourceType,
+          type: "upload",
+          invalidate: true,
+        }
+      );
+
+    if (
+      result?.result &&
+      !["ok", "not found"].includes(
+        result.result
+      )
+    ) {
+      console.warn(
+        `Cloudinary deletion returned "${result.result}" for ${info.publicId}`
+      );
+    }
+  } catch (error) {
+    console.error(
+      "Cloudinary asset deletion failed:",
+      info.publicId,
+      error?.message || error
+    );
+  }
+};
+
+const deleteCloudinaryAssets = async (
+  urls = []
+) => {
+  const uniqueUrls = [
+    ...new Set(
+      (Array.isArray(urls)
+        ? urls
+        : [urls]
+      ).filter(Boolean)
+    ),
+  ];
+
+  await Promise.all(
+    uniqueUrls.map((url) =>
+      deleteCloudinaryAsset(url)
+    )
+  );
+};
+
+const normalizeDiscountType = (
+  value
+) => {
   const allowedTypes = [
     "none",
     "flat",
     "percentage",
   ];
 
-  return allowedTypes.includes(value) ? value : "none";
+  return allowedTypes.includes(value)
+    ? value
+    : "none";
 };
 
-const normalizeOffer = (value = {}) => {
-  const offer = parseObject(value, {});
-
-  const discountType = normalizeDiscountType(
-    offer.discountType
+const normalizeOffer = (
+  value = {}
+) => {
+  const offer = parseObject(
+    value,
+    {}
   );
 
-  let discountValue = parseNumber(
-    offer.discountValue
-  );
+  const discountType =
+    normalizeDiscountType(
+      offer.discountType
+    );
+
+  let discountValue =
+    parseNumber(
+      offer.discountValue
+    );
 
   if (discountValue < 0) {
     discountValue = 0;
   }
 
   if (
-    discountType === "percentage" &&
+    discountType ===
+      "percentage" &&
     discountValue > 100
   ) {
     discountValue = 100;
   }
 
   return {
-    enabled: parseBoolean(offer.enabled, false),
-    title: String(offer.title || "").trim(),
+    enabled: parseBoolean(
+      offer.enabled,
+      false
+    ),
+    title: String(
+      offer.title || ""
+    ).trim(),
     description: String(
       offer.description || ""
     ).trim(),
-    badge: String(offer.badge || "").trim(),
+    badge: String(
+      offer.badge || ""
+    ).trim(),
     discountType,
     discountValue,
-    startDate: offer.startDate || null,
-    endDate: offer.endDate || null,
-    active: parseBoolean(offer.active, true),
+    startDate:
+      offer.startDate || null,
+    endDate:
+      offer.endDate || null,
+    active: parseBoolean(
+      offer.active,
+      true
+    ),
   };
 };
 
-const validateOffer = (offer) => {
+const validateOffer = (
+  offer
+) => {
   if (!offer.enabled) {
     return null;
   }
 
   if (
-    !["none", "flat", "percentage"].includes(
+    ![
+      "none",
+      "flat",
+      "percentage",
+    ].includes(
       offer.discountType
     )
   ) {
     return "Invalid offer discount type.";
   }
 
-  if (offer.discountValue < 0) {
+  if (
+    offer.discountValue < 0
+  ) {
     return "Offer discount value cannot be negative.";
   }
 
   if (
-    offer.discountType === "percentage" &&
+    offer.discountType ===
+      "percentage" &&
     offer.discountValue > 100
   ) {
     return "Offer percentage discount cannot exceed 100.";
@@ -331,8 +519,12 @@ const validateOffer = (offer) => {
   if (
     offer.startDate &&
     offer.endDate &&
-    new Date(offer.startDate) >
-      new Date(offer.endDate)
+    new Date(
+      offer.startDate
+    ) >
+      new Date(
+        offer.endDate
+      )
   ) {
     return "Offer start date cannot be after the end date.";
   }
@@ -355,15 +547,13 @@ const getProductType = (
   return "regular";
 };
 
-// --------------------------------------------------
-// Review and rating helpers
-// --------------------------------------------------
-
 const calculateProductRating = (
   reviewList = []
 ) => {
   if (
-    !Array.isArray(reviewList) ||
+    !Array.isArray(
+      reviewList
+    ) ||
     reviewList.length === 0
   ) {
     return {
@@ -372,44 +562,27 @@ const calculateProductRating = (
     };
   }
 
-  const totalRating = reviewList.reduce(
-    (sum, review) =>
-      sum + Number(review.rating || 0),
-    0
-  );
+  const totalRating =
+    reviewList.reduce(
+      (sum, review) =>
+        sum +
+        Number(
+          review.rating || 0
+        ),
+      0
+    );
 
   return {
     rating: Number(
       (
-        totalRating / reviewList.length
+        totalRating /
+        reviewList.length
       ).toFixed(1)
     ),
-    reviews: reviewList.length,
+    reviews:
+      reviewList.length,
   };
 };
-
-// --------------------------------------------------
-// Get active products with filters
-//
-// GET /api/products
-//
-// Supported query parameters:
-//
-// ?category=Beauty
-// ?subcategory=Face Wash
-// ?brand=Lakme
-// ?search=lipstick
-// ?minPrice=300
-// ?maxPrice=1500
-// ?minRating=4
-// ?inStock=true
-// ?sort=newest
-// ?sort=oldest
-// ?sort=price-low
-// ?sort=price-high
-// ?sort=rating
-// ?sort=popular
-// --------------------------------------------------
 
 export const getProducts = async (
   req,
@@ -432,92 +605,70 @@ export const getProducts = async (
       active: true,
     };
 
-    // --------------------------------------------------
-    // Category filter
-    // --------------------------------------------------
-
     if (
       category &&
       String(category).trim()
     ) {
       query.category = {
-        $regex: `^${String(
-          category
-        ).trim()}$`,
+        $regex:
+          `^${String(
+            category
+          ).trim()}$`,
         $options: "i",
       };
     }
-
-    // --------------------------------------------------
-    // Subcategory filter
-    // --------------------------------------------------
 
     if (
       subcategory &&
       String(subcategory).trim()
     ) {
       query.subcategory = {
-        $regex: `^${String(
-          subcategory
-        ).trim()}$`,
+        $regex:
+          `^${String(
+            subcategory
+          ).trim()}$`,
         $options: "i",
       };
     }
-
-    // --------------------------------------------------
-    // Brand filter
-    // --------------------------------------------------
 
     if (
       brand &&
       String(brand).trim()
     ) {
       query.brand = {
-        $regex: `^${String(
-          brand
-        ).trim()}$`,
+        $regex:
+          `^${String(
+            brand
+          ).trim()}$`,
         $options: "i",
       };
     }
-
-    // --------------------------------------------------
-    // Search filter
-    // --------------------------------------------------
 
     if (
       search &&
       String(search).trim()
     ) {
       const searchRegex = {
-        $regex: String(search).trim(),
+        $regex:
+          String(search).trim(),
         $options: "i",
       };
 
       query.$or = [
+        { name: searchRegex },
+        { brand: searchRegex },
+        { category: searchRegex },
         {
-          name: searchRegex,
+          subcategory:
+            searchRegex,
         },
         {
-          brand: searchRegex,
+          description:
+            searchRegex,
         },
-        {
-          category: searchRegex,
-        },
-        {
-          subcategory: searchRegex,
-        },
-        {
-          description: searchRegex,
-        },
-        {
-          tags: searchRegex,
-        },
+        { tags: searchRegex },
       ];
     }
-
-    // --------------------------------------------------
-    // Price filters
-    // --------------------------------------------------
 
     const priceFilter = {};
 
@@ -558,15 +709,13 @@ export const getProducts = async (
     }
 
     if (
-      Object.keys(priceFilter)
-        .length > 0
+      Object.keys(
+        priceFilter
+      ).length > 0
     ) {
-      query.price = priceFilter;
+      query.price =
+        priceFilter;
     }
-
-    // --------------------------------------------------
-    // Minimum rating filter
-    // --------------------------------------------------
 
     if (
       minRating !== undefined &&
@@ -588,22 +737,15 @@ export const getProducts = async (
       }
     }
 
-    // --------------------------------------------------
-    // In-stock filter
-    // --------------------------------------------------
-
     if (
-      String(inStock).toLowerCase() ===
+      String(inStock)
+        .toLowerCase() ===
       "true"
     ) {
       query.stock = {
         $gt: 0,
       };
     }
-
-    // --------------------------------------------------
-    // Sorting
-    // --------------------------------------------------
 
     let sortOption = {
       createdAt: -1,
@@ -685,335 +827,318 @@ export const getProducts = async (
   }
 };
 
-// --------------------------------------------------
-// Get all products - admin
-// GET /api/products/all
-// --------------------------------------------------
+export const getAllProducts =
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const products =
+        await Product.find({})
+          .sort({
+            createdAt: -1,
+          })
+          .lean();
 
-export const getAllProducts = async (
-  req,
-  res
-) => {
-  try {
-    const products =
-      await Product.find({})
-        .sort({
-          createdAt: -1,
-        })
-        .lean();
+      return res
+        .status(200)
+        .json({
+          success: true,
+          count:
+            products.length,
+          products,
+        });
+    } catch (error) {
+      console.error(
+        "Get all products error:",
+        error
+      );
 
-    return res.status(200).json({
-      success: true,
-      count: products.length,
-      products,
-    });
-  } catch (error) {
-    console.error(
-      "Get all products error:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message:
-        "Failed to fetch products.",
-      error:
-        process.env.NODE_ENV ===
-        "development"
-          ? error.message
-          : undefined,
-    });
-  }
-};
-
-// --------------------------------------------------
-// Get new arrivals
-// GET /api/products/new-arrivals
-// --------------------------------------------------
-
-export const getNewArrivals = async (
-  req,
-  res
-) => {
-  try {
-    const products =
-      await Product.find({
-        active: true,
-        isNewArrival: true,
-      })
-        .sort({
-          createdAt: -1,
-        })
-        .lean();
-
-    return res.status(200).json({
-      success: true,
-      count: products.length,
-      products,
-    });
-  } catch (error) {
-    console.error(
-      "Get new arrivals error:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message:
-        "Failed to fetch new arrivals.",
-      error:
-        process.env.NODE_ENV ===
-        "development"
-          ? error.message
-          : undefined,
-    });
-  }
-};
-
-// --------------------------------------------------
-// Get bestsellers
-// GET /api/products/bestsellers
-// --------------------------------------------------
-
-export const getBestsellers = async (
-  req,
-  res
-) => {
-  try {
-    const products =
-      await Product.find({
-        active: true,
-        isBestseller: true,
-      })
-        .sort({
-          reviews: -1,
-          rating: -1,
-          createdAt: -1,
-        })
-        .lean();
-
-    return res.status(200).json({
-      success: true,
-      count: products.length,
-      products,
-    });
-  } catch (error) {
-    console.error(
-      "Get bestsellers error:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message:
-        "Failed to fetch bestsellers.",
-      error:
-        process.env.NODE_ENV ===
-        "development"
-          ? error.message
-          : undefined,
-    });
-  }
-};
-
-// --------------------------------------------------
-// Get product by slug
-// GET /api/products/slug/:slug
-// --------------------------------------------------
-
-export const getProductBySlug = async (
-  req,
-  res
-) => {
-  try {
-    const { slug } = req.params;
-
-    if (!slug) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Product slug is required.",
-      });
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Failed to fetch products.",
+          error:
+            process.env.NODE_ENV ===
+            "development"
+              ? error.message
+              : undefined,
+        });
     }
+  };
 
-    const product =
-      await Product.findOne({
-        slug,
-        active: true,
-      }).lean();
+export const getNewArrivals =
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const products =
+        await Product.find({
+          active: true,
+          isNewArrival:
+            true,
+        })
+          .sort({
+            createdAt: -1,
+          })
+          .lean();
 
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "Product not found.",
-      });
+      return res
+        .status(200)
+        .json({
+          success: true,
+          count:
+            products.length,
+          products,
+        });
+    } catch (error) {
+      console.error(
+        "Get new arrivals error:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Failed to fetch new arrivals.",
+          error:
+            process.env.NODE_ENV ===
+            "development"
+              ? error.message
+              : undefined,
+        });
     }
+  };
 
-    return res.status(200).json({
-      success: true,
-      product,
-    });
-  } catch (error) {
-    console.error(
-      "Get product by slug error:",
-      error
-    );
+export const getBestsellers =
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const products =
+        await Product.find({
+          active: true,
+          isBestseller:
+            true,
+        })
+          .sort({
+            reviews: -1,
+            rating: -1,
+            createdAt: -1,
+          })
+          .lean();
 
-    return res.status(500).json({
-      success: false,
-      message:
-        "Failed to fetch product.",
-      error:
-        process.env.NODE_ENV ===
-        "development"
-          ? error.message
-          : undefined,
-    });
-  }
-};
+      return res
+        .status(200)
+        .json({
+          success: true,
+          count:
+            products.length,
+          products,
+        });
+    } catch (error) {
+      console.error(
+        "Get bestsellers error:",
+        error
+      );
 
-// --------------------------------------------------
-// Get product by ID
-// GET /api/products/:id
-// --------------------------------------------------
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Failed to fetch bestsellers.",
+          error:
+            process.env.NODE_ENV ===
+            "development"
+              ? error.message
+              : undefined,
+        });
+    }
+  };
 
-export const getProductById = async (
-  req,
-  res
-) => {
+export const getProductBySlug =
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const { slug } =
+        req.params;
+
+      if (!slug) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Product slug is required.",
+          });
+      }
+
+      const product =
+        await Product.findOne({
+          slug,
+          active: true,
+        }).lean();
+
+      if (!product) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "Product not found.",
+          });
+      }
+
+      return res
+        .status(200)
+        .json({
+          success: true,
+          product,
+        });
+    } catch (error) {
+      console.error(
+        "Get product by slug error:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Failed to fetch product.",
+          error:
+            process.env.NODE_ENV ===
+            "development"
+              ? error.message
+              : undefined,
+        });
+    }
+  };
+
+export const getProductById =
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const { id } =
+        req.params;
+
+      if (
+        !mongoose.Types.ObjectId.isValid(
+          id
+        )
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Invalid product ID.",
+          });
+      }
+
+      const product =
+        await Product.findOne({
+          _id: id,
+          active: true,
+        }).lean();
+
+      if (!product) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "Product not found.",
+          });
+      }
+
+      return res
+        .status(200)
+        .json({
+          success: true,
+          product,
+        });
+    } catch (error) {
+      console.error(
+        "Get product by ID error:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Failed to fetch product.",
+          error:
+            process.env.NODE_ENV ===
+            "development"
+              ? error.message
+              : undefined,
+        });
+    }
+  };
+  export const getProductReviews = async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid product ID.",
+        message: "Invalid product ID.",
       });
     }
 
-    const product =
-      await Product.findOne({
-        _id: id,
-        active: true,
-      }).lean();
+    const product = await Product.findById(id)
+      .select("reviewList rating reviews")
+      .lean();
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message:
-          "Product not found.",
+        message: "Product not found.",
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      product,
-    });
-  } catch (error) {
-    console.error(
-      "Get product by ID error:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message:
-        "Failed to fetch product.",
-      error:
-        process.env.NODE_ENV ===
-        "development"
-          ? error.message
-          : undefined,
-    });
-  }
-};
-
-// --------------------------------------------------
-// Get product reviews
-// GET /api/products/:id/reviews
-// --------------------------------------------------
-
-export const getProductReviews = async (
-  req,
-  res
-) => {
-  try {
-    const { id } = req.params;
-
-    if (
-      !mongoose.Types.ObjectId.isValid(id)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Invalid product ID.",
-      });
-    }
-
-    const product =
-      await Product.findById(id)
-        .select(
-          "reviewsList rating reviews"
-        )
-        .lean();
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "Product not found.",
-      });
-    }
-
-    const reviewList =
-      Array.isArray(
-        product.reviewsList
-      )
-        ? product.reviewsList
-        : [];
+    const reviewList = Array.isArray(product.reviewList)
+      ? product.reviewList
+      : [];
 
     return res.status(200).json({
       success: true,
       reviews: reviewList,
-      rating: Number(
-        product.rating || 0
-      ),
+      rating: Number(product.rating || 0),
       reviewCount: Number(
-        product.reviews ||
-          reviewList.length ||
-          0
+        product.reviews || reviewList.length || 0
       ),
     });
   } catch (error) {
-    console.error(
-      "Get product reviews error:",
-      error
-    );
+    console.error("Get product reviews error:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to fetch product reviews.",
+      message: "Failed to fetch product reviews.",
       error:
-        process.env.NODE_ENV ===
-        "development"
+        process.env.NODE_ENV === "development"
           ? error.message
           : undefined,
     });
   }
 };
 
-// --------------------------------------------------
-// Add product review
-// POST /api/products/:id/reviews
-// --------------------------------------------------
-
-export const addProductReview = async (
-  req,
-  res
-) => {
+export const addProductReview = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -1030,21 +1155,9 @@ export const addProductReview = async (
       comment,
     } = req.body;
 
-    // --------------------------------------------------
-    // Validate review data
-    // --------------------------------------------------
-
-    const reviewerName = String(
-      name || ""
-    ).trim();
-
-    const reviewComment = String(
-      comment || ""
-    ).trim();
-
-    const reviewRating = Number(
-      rating
-    );
+    const reviewerName = String(name || "").trim();
+    const reviewComment = String(comment || "").trim();
+    const reviewRating = Number(rating);
 
     if (!reviewerName) {
       return res.status(400).json({
@@ -1067,17 +1180,11 @@ export const addProductReview = async (
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Rating must be between 1 and 5.",
+        message: "Rating must be between 1 and 5.",
       });
     }
 
-    // --------------------------------------------------
-    // Find product
-    // --------------------------------------------------
-
-    const product =
-      await Product.findById(id);
+    const product = await Product.findById(id);
 
     if (!product) {
       return res.status(404).json({
@@ -1086,117 +1193,72 @@ export const addProductReview = async (
       });
     }
 
-    // --------------------------------------------------
-    // Make sure reviewsList exists
-    // --------------------------------------------------
-
-    if (
-      !Array.isArray(
-        product.reviewsList
-      )
-    ) {
-      product.reviewsList = [];
+    if (!Array.isArray(product.reviewList)) {
+      product.reviewList = [];
     }
 
-    // --------------------------------------------------
-    // Add review
-    // --------------------------------------------------
-
-    product.reviewsList.push({
+    product.reviewList.push({
       name: reviewerName,
       rating: reviewRating,
       comment: reviewComment,
       createdAt: new Date(),
     });
 
-    // --------------------------------------------------
-    // Recalculate rating and review count
-    // --------------------------------------------------
+    const ratingData = calculateProductRating(
+      product.reviewList
+    );
 
-    const ratingData =
-      calculateProductRating(
-        product.reviewsList
-      );
-
-    product.rating =
-      ratingData.rating;
-
-    product.reviews =
-      ratingData.reviews;
+    product.rating = ratingData.rating;
+    product.reviews = ratingData.reviews;
 
     await product.save();
 
     return res.status(201).json({
       success: true,
-      message:
-        "Review added successfully.",
+      message: "Review added successfully.",
       review:
-        product.reviewsList[
-          product.reviewsList.length - 1
+        product.reviewList[
+          product.reviewList.length - 1
         ],
       rating: product.rating,
       reviewCount: product.reviews,
     });
   } catch (error) {
-    console.error(
-      "Add product review error:",
-      error
-    );
+    console.error("Add product review error:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to add product review.",
+      message: "Failed to add product review.",
       error:
-        process.env.NODE_ENV ===
-        "development"
+        process.env.NODE_ENV === "development"
           ? error.message
           : undefined,
     });
   }
 };
 
-// --------------------------------------------------
-// Delete product review
-// DELETE /api/products/:id/reviews/:reviewId
-// --------------------------------------------------
-
-export const deleteProductReview = async (
-  req,
-  res
-) => {
+export const deleteProductReview = async (req, res) => {
   try {
     const {
       id,
       reviewId,
     } = req.params;
 
-    if (
-      !mongoose.Types.ObjectId.isValid(id)
-    ) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
         message: "Invalid product ID.",
       });
     }
 
-    if (
-      !mongoose.Types.ObjectId.isValid(
-        reviewId
-      )
-    ) {
+    if (!mongoose.Types.ObjectId.isValid(reviewId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid review ID.",
       });
     }
 
-    // --------------------------------------------------
-    // Find product
-    // --------------------------------------------------
-
-    const product =
-      await Product.findById(id);
+    const product = await Product.findById(id);
 
     if (!product) {
       return res.status(404).json({
@@ -1205,28 +1267,14 @@ export const deleteProductReview = async (
       });
     }
 
-    // --------------------------------------------------
-    // Make sure reviewsList exists
-    // --------------------------------------------------
-
-    if (
-      !Array.isArray(
-        product.reviewsList
-      )
-    ) {
-      product.reviewsList = [];
+    if (!Array.isArray(product.reviewList)) {
+      product.reviewList = [];
     }
 
-    // --------------------------------------------------
-    // Find review
-    // --------------------------------------------------
-
-    const reviewIndex =
-      product.reviewsList.findIndex(
-        (review) =>
-          String(review._id) ===
-          String(reviewId)
-      );
+    const reviewIndex = product.reviewList.findIndex(
+      (review) =>
+        String(review._id) === String(reviewId)
+    );
 
     if (reviewIndex === -1) {
       return res.status(404).json({
@@ -1235,36 +1283,20 @@ export const deleteProductReview = async (
       });
     }
 
-    // --------------------------------------------------
-    // Remove review
-    // --------------------------------------------------
+    product.reviewList.splice(reviewIndex, 1);
 
-    product.reviewsList.splice(
-      reviewIndex,
-      1
+    const ratingData = calculateProductRating(
+      product.reviewList
     );
 
-    // --------------------------------------------------
-    // Recalculate rating and count
-    // --------------------------------------------------
-
-    const ratingData =
-      calculateProductRating(
-        product.reviewsList
-      );
-
-    product.rating =
-      ratingData.rating;
-
-    product.reviews =
-      ratingData.reviews;
+    product.rating = ratingData.rating;
+    product.reviews = ratingData.reviews;
 
     await product.save();
 
     return res.status(200).json({
       success: true,
-      message:
-        "Review deleted successfully.",
+      message: "Review deleted successfully.",
       rating: product.rating,
       reviewCount: product.reviews,
     });
@@ -1276,38 +1308,23 @@ export const deleteProductReview = async (
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to delete product review.",
+      message: "Failed to delete product review.",
       error:
-        process.env.NODE_ENV ===
-        "development"
+        process.env.NODE_ENV === "development"
           ? error.message
           : undefined,
     });
   }
 };
-// --------------------------------------------------
-// Create product
-// POST /api/products
-// --------------------------------------------------
 
 export const createProduct = async (req, res) => {
   try {
     console.log("Product body:", req.body);
     console.log("Product files:", req.files);
 
-    const name = String(
-      req.body.name || ""
-    ).trim();
-
-    const brand = String(
-      req.body.brand || ""
-    ).trim();
-
-    const category = String(
-      req.body.category || ""
-    ).trim();
-
+    const name = String(req.body.name || "").trim();
+    const brand = String(req.body.brand || "").trim();
+    const category = String(req.body.category || "").trim();
     const subcategory = String(
       req.body.subcategory || ""
     ).trim();
@@ -1344,10 +1361,9 @@ export const createProduct = async (req, res) => {
       req.body.oldPrice
     );
 
-    const discountType =
-      normalizeDiscountType(
-        req.body.discountType || "none"
-      );
+    const discountType = normalizeDiscountType(
+      req.body.discountType || "none"
+    );
 
     const discountValue = parseNumber(
       req.body.discountValue
@@ -1372,84 +1388,62 @@ export const createProduct = async (req, res) => {
       false
     );
 
-    const newArrivalSortOrder =
-      parseNumber(
-        req.body.newArrivalSortOrder,
-        0
-      );
-
-    const bestSellerSortOrder =
-      parseNumber(
-        req.body.bestSellerSortOrder,
-        0
-      );
-
-    const tags = parseArray(
-      req.body.tags
+    const newArrivalSortOrder = parseNumber(
+      req.body.newArrivalSortOrder,
+      0
     );
 
-    const shades = parseArray(
-      req.body.shades
+    const bestSellerSortOrder = parseNumber(
+      req.body.bestSellerSortOrder,
+      0
     );
+
+    const tags = parseArray(req.body.tags);
+    const shades = parseArray(req.body.shades);
 
     const offer = normalizeOffer(
       req.body.offer
     );
 
-    const offerError =
-      validateOffer(offer);
-
-    // --------------------------------------------------
-    // Required fields validation
-    // --------------------------------------------------
+    const offerError = validateOffer(offer);
 
     if (!name) {
       return res.status(400).json({
         success: false,
-        message:
-          "Product name is required.",
+        message: "Product name is required.",
       });
     }
 
     if (!brand) {
       return res.status(400).json({
         success: false,
-        message:
-          "Brand is required.",
+        message: "Brand is required.",
       });
     }
 
     if (!category) {
       return res.status(400).json({
         success: false,
-        message:
-          "Category is required.",
+        message: "Category is required.",
       });
     }
-
-    // --------------------------------------------------
-    // Price validation
-    // --------------------------------------------------
 
     if (oldPrice < 0) {
       return res.status(400).json({
         success: false,
-        message:
-          "Original price cannot be negative.",
+        message: "Original price cannot be negative.",
       });
     }
 
     if (discountValue < 0) {
       return res.status(400).json({
         success: false,
-        message:
-          "Discount value cannot be negative.",
+        message: "Discount value cannot be negative.",
       });
     }
 
     if (
-      discountType ===
-        "percentage" &&
+      discountType === "percentage" &&
       discountValue > 100
     ) {
       return res.status(400).json({
@@ -1459,21 +1453,12 @@ export const createProduct = async (req, res) => {
       });
     }
 
-    // --------------------------------------------------
-    // Stock validation
-    // --------------------------------------------------
-
     if (stock < 0) {
       return res.status(400).json({
         success: false,
-        message:
-          "Stock cannot be negative.",
+        message: "Stock cannot be negative.",
       });
     }
-
-    // --------------------------------------------------
-    // Sort order validation
-    // --------------------------------------------------
 
     if (
       newArrivalSortOrder < 0 ||
@@ -1481,14 +1466,9 @@ export const createProduct = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Sort order cannot be negative.",
+        message: "Sort order cannot be negative.",
       });
     }
-
-    // --------------------------------------------------
-    // Offer validation
-    // --------------------------------------------------
 
     if (offerError) {
       return res.status(400).json({
@@ -1497,18 +1477,9 @@ export const createProduct = async (req, res) => {
       });
     }
 
-    // --------------------------------------------------
-    // Cloudinary uploads
-    //
-    // IMPORTANT:
-    // These helpers are async because files are uploaded
-    // from multer memory buffers to Cloudinary.
-    // --------------------------------------------------
-
-    const images =
-      await getUploadedImages(
-        req.files
-      );
+    const images = await getUploadedImages(
+      req.files
+    );
 
     if (images.length === 0) {
       return res.status(400).json({
@@ -1518,32 +1489,24 @@ export const createProduct = async (req, res) => {
       });
     }
 
-    const hoverImage =
-      await getUploadedImage(
-        req.files,
-        "hoverImage"
-      );
+    const hoverImage = await getUploadedImage(
+      req.files,
+      "hoverImage"
+    );
 
-    const beforeImage =
-      await getUploadedImage(
-        req.files,
-        "beforeImage"
-      );
+    const beforeImage = await getUploadedImage(
+      req.files,
+      "beforeImage"
+    );
 
-    const afterImage =
-      await getUploadedImage(
-        req.files,
-        "afterImage"
-      );
+    const afterImage = await getUploadedImage(
+      req.files,
+      "afterImage"
+    );
 
-    const video =
-      await getUploadedVideo(
-        req.files
-      );
-
-    // --------------------------------------------------
-    // Calculate selling price
-    // --------------------------------------------------
+    const video = await getUploadedVideo(
+      req.files
+    );
 
     const price = calculatePrice(
       oldPrice,
@@ -1551,81 +1514,53 @@ export const createProduct = async (req, res) => {
       discountValue
     );
 
-    // --------------------------------------------------
-    // Create unique slug
-    // --------------------------------------------------
+    const slug = await createUniqueSlug(name);
 
-    const slug =
-      await createUniqueSlug(name);
+    const productType = getProductType(
+      isNewArrival,
+      isBestseller
+    );
 
-    // --------------------------------------------------
-    // Product type
-    // --------------------------------------------------
-
-    const productType =
-      getProductType(
-        isNewArrival,
-        isBestseller
-      );
-
-    // --------------------------------------------------
-    // Create product
-    // --------------------------------------------------
-
-    const product =
-      await Product.create({
-        name,
-        slug,
-        brand,
-        category,
-        subcategory,
-
-        description,
-        howToUse,
-        ingredients,
-        additionalDetails,
-        benefits,
-        composition,
-
-        tags,
-
-        price,
-        oldPrice,
-        discountType,
-        discountValue,
-
-        images,
-        hoverImage,
-        beforeImage,
-        afterImage,
-        video,
-
-        youtubeVideoUrl,
-
-        shades,
-
-        active,
-        stock,
-
-        isNewArrival,
-        newArrivalSortOrder,
-
-        isBestseller,
-        bestSellerSortOrder,
-
-        productType,
-
-        offer,
-
-        rating: 0,
-        reviews: 0,
-        reviewList: [],
-      });
+    const product = await Product.create({
+      name,
+      slug,
+      brand,
+      category,
+      subcategory,
+      description,
+      howToUse,
+      ingredients,
+      additionalDetails,
+      benefits,
+      composition,
+      tags,
+      price,
+      oldPrice,
+      discountType,
+      discountValue,
+      images,
+      hoverImage,
+      beforeImage,
+      afterImage,
+      video,
+      youtubeVideoUrl,
+      shades,
+      active,
+      stock,
+      isNewArrival,
+      newArrivalSortOrder,
+      isBestseller,
+      bestSellerSortOrder,
+      productType,
+      offer,
+      rating: 0,
+      reviews: 0,
+      reviewList: [],
+    });
 
     return res.status(201).json({
       success: true,
-      message:
-        "Product created successfully",
+      message: "Product created successfully",
       product,
     });
   } catch (error) {
@@ -1636,245 +1571,155 @@ export const createProduct = async (req, res) => {
 
     return res.status(400).json({
       success: false,
-      message:
-        "Failed to create product",
+      message: "Failed to create product",
       error: error.message,
     });
   }
 };
-
-// --------------------------------------------------
-// Update product
-// PUT /api/products/:id
-// --------------------------------------------------
-
-export const updateProduct = async (
-  req,
-  res
-) => {
+export const updateProduct = async (req, res) => {
   try {
-    console.log(
-      "Update product body:",
-      req.body
-    );
+    const { id } = req.params;
 
-    console.log(
-      "Update product files:",
-      req.files
-    );
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID.",
+      });
+    }
 
-    const product =
-      await Product.findById(
-        req.params.id
-      );
+    const product = await Product.findById(id);
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message:
-          "Product not found",
+        message: "Product not found.",
       });
     }
 
-    // --------------------------------------------------
-    // Basic information
-    // --------------------------------------------------
+    const removedImages = parseArray(
+      req.body.removedImages
+    );
 
-    const name =
-      req.body.name !== undefined
-        ? String(
-            req.body.name
-          ).trim()
-        : product.name;
+    const removeHoverImage = parseBoolean(
+      req.body.removeHoverImage,
+      false
+    );
 
-    const brand =
-      req.body.brand !== undefined
-        ? String(
-            req.body.brand
-          ).trim()
-        : product.brand;
+    const removeBeforeImage = parseBoolean(
+      req.body.removeBeforeImage,
+      false
+    );
 
-    const category =
-      req.body.category !== undefined
-        ? String(
-            req.body.category
-          ).trim()
-        : product.category;
+    const removeAfterImage = parseBoolean(
+      req.body.removeAfterImage,
+      false
+    );
 
-    // --------------------------------------------------
-    // Price information
-    // --------------------------------------------------
+    const removeVideo = parseBoolean(
+      req.body.removeVideo,
+      false
+    );
 
-    const oldPrice =
-      req.body.oldPrice !==
-      undefined
-        ? parseNumber(
-            req.body.oldPrice
-          )
-        : product.oldPrice;
+    const cloudinaryAssetsToDelete = [];
 
-    const discountType =
-      req.body.discountType !==
-      undefined
-        ? normalizeDiscountType(
-            req.body.discountType
-          )
-        : product.discountType;
-
-    const discountValue =
-      req.body.discountValue !==
-      undefined
-        ? parseNumber(
-            req.body.discountValue
-          )
-        : product.discountValue;
-
-    // --------------------------------------------------
-    // Required validation
-    // --------------------------------------------------
-
-    if (
-      !name ||
-      !brand ||
-      !category
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Product name, brand, and category are required.",
-      });
-    }
-
-    if (oldPrice < 0) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Original price cannot be negative.",
-      });
-    }
-
-    if (discountValue < 0) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Discount value cannot be negative.",
-      });
-    }
-
-    if (
-      discountType ===
-        "percentage" &&
-      discountValue > 100
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Percentage discount cannot exceed 100.",
-      });
-    }
-
-    // --------------------------------------------------
-    // Existing offer
-    // --------------------------------------------------
-
-    const currentOffer =
-      product.offer
-        ? product.offer.toObject
-          ? product.offer.toObject()
-          : product.offer
-        : {};
-
-    const offer =
-      req.body.offer !==
-      undefined
-        ? normalizeOffer(
-            req.body.offer
-          )
-        : normalizeOffer(
-            currentOffer
-          );
-
-    const offerError =
-      validateOffer(offer);
-
-    if (offerError) {
-      return res.status(400).json({
-        success: false,
-        message: offerError,
-      });
-    }
-
-    // --------------------------------------------------
-    // Update basic product fields
-    // --------------------------------------------------
-
-    product.name = name;
-
-    product.brand = brand;
-
-    product.category =
-      category;
-
-    product.oldPrice =
-      oldPrice;
-
-    product.discountType =
-      discountType;
-
-    product.discountValue =
-      discountValue;
-
-    product.price =
-      calculatePrice(
-        oldPrice,
-        discountType,
-        discountValue
+    if (removedImages.length > 0) {
+      cloudinaryAssetsToDelete.push(
+        ...removedImages
       );
-
-    product.offer = offer;
-
-    // --------------------------------------------------
-    // Optional text fields
-    // --------------------------------------------------
-
-    if (
-      req.body.subcategory !==
-      undefined
-    ) {
-      product.subcategory =
-        String(
-          req.body.subcategory
-        ).trim();
     }
 
     if (
-      req.body.description !==
-      undefined
+      removeHoverImage &&
+      product.hoverImage
     ) {
-      product.description =
-        String(
-          req.body.description
-        ).trim();
+      cloudinaryAssetsToDelete.push(
+        product.hoverImage
+      );
     }
 
     if (
-      req.body.howToUse !==
-      undefined
+      removeBeforeImage &&
+      product.beforeImage
     ) {
-      product.howToUse =
-        String(
-          req.body.howToUse
-        ).trim();
+      cloudinaryAssetsToDelete.push(
+        product.beforeImage
+      );
     }
 
     if (
-      req.body.ingredients !==
-      undefined
+      removeAfterImage &&
+      product.afterImage
     ) {
-      product.ingredients =
-        String(
-          req.body.ingredients
-        ).trim();
+      cloudinaryAssetsToDelete.push(
+        product.afterImage
+      );
+    }
+
+    if (
+      removeVideo &&
+      product.video
+    ) {
+      cloudinaryAssetsToDelete.push(
+        product.video
+      );
+    }
+
+    const remainingImages =
+      Array.isArray(product.images)
+        ? product.images.filter(
+            (image) =>
+              !removedImages.includes(image)
+          )
+        : [];
+
+    if (req.body.name !== undefined) {
+      product.name = String(
+        req.body.name
+      ).trim();
+    }
+
+    if (req.body.brand !== undefined) {
+      product.brand = String(
+        req.body.brand
+      ).trim();
+    }
+
+    if (req.body.category !== undefined) {
+      product.category = String(
+        req.body.category
+      ).trim();
+    }
+
+    if (
+      req.body.subcategory !== undefined
+    ) {
+      product.subcategory = String(
+        req.body.subcategory
+      ).trim();
+    }
+
+    if (
+      req.body.description !== undefined
+    ) {
+      product.description = String(
+        req.body.description
+      ).trim();
+    }
+
+    if (
+      req.body.howToUse !== undefined
+    ) {
+      product.howToUse = String(
+        req.body.howToUse
+      ).trim();
+    }
+
+    if (
+      req.body.ingredients !== undefined
+    ) {
+      product.ingredients = String(
+        req.body.ingredients
+      ).trim();
     }
 
     if (
@@ -1888,23 +1733,19 @@ export const updateProduct = async (
     }
 
     if (
-      req.body.benefits !==
-      undefined
+      req.body.benefits !== undefined
     ) {
-      product.benefits =
-        String(
-          req.body.benefits
-        ).trim();
+      product.benefits = String(
+        req.body.benefits
+      ).trim();
     }
 
     if (
-      req.body.composition !==
-      undefined
+      req.body.composition !== undefined
     ) {
-      product.composition =
-        String(
-          req.body.composition
-        ).trim();
+      product.composition = String(
+        req.body.composition
+      ).trim();
     }
 
     if (
@@ -1917,44 +1758,32 @@ export const updateProduct = async (
         ).trim();
     }
 
-    // --------------------------------------------------
-    // Arrays
-    // --------------------------------------------------
-
-    if (
-      req.body.tags !==
-      undefined
-    ) {
-      product.tags =
-        parseArray(
-          req.body.tags
-        );
+    if (req.body.tags !== undefined) {
+      product.tags = parseArray(
+        req.body.tags
+      );
     }
 
-    if (
-      req.body.shades !==
-      undefined
-    ) {
-      product.shades =
-        parseArray(
-          req.body.shades
-        );
+    if (req.body.shades !== undefined) {
+      product.shades = parseArray(
+        req.body.shades
+      );
     }
 
-    // --------------------------------------------------
-    // Stock
-    // --------------------------------------------------
+    if (req.body.active !== undefined) {
+      product.active = parseBoolean(
+        req.body.active,
+        product.active
+      );
+    }
 
-    if (
-      req.body.stock !==
-      undefined
-    ) {
-      const newStock =
-        parseNumber(
-          req.body.stock
-        );
+    if (req.body.stock !== undefined) {
+      const stock = parseNumber(
+        req.body.stock,
+        product.stock
+      );
 
-      if (newStock < 0) {
+      if (stock < 0) {
         return res.status(400).json({
           success: false,
           message:
@@ -1962,159 +1791,114 @@ export const updateProduct = async (
         });
       }
 
-      product.stock =
-        newStock;
+      product.stock = stock;
     }
 
-    // --------------------------------------------------
-    // Active status
-    // --------------------------------------------------
-
     if (
-      req.body.active !==
-      undefined
-    ) {
-      product.active =
-        parseBoolean(
-          req.body.active,
-          true
-        );
-    }
-
-    // --------------------------------------------------
-    // New arrival
-    // --------------------------------------------------
-
-    if (
-      req.body.isNewArrival !==
-      undefined
+      req.body.isNewArrival !== undefined
     ) {
       product.isNewArrival =
         parseBoolean(
           req.body.isNewArrival,
-          false
+          product.isNewArrival
         );
     }
 
-    // --------------------------------------------------
-    // Bestseller
-    // --------------------------------------------------
-
     if (
-      req.body.isBestseller !==
-      undefined
+      req.body.isBestseller !== undefined
     ) {
       product.isBestseller =
         parseBoolean(
           req.body.isBestseller,
-          false
+          product.isBestseller
         );
     }
-
-    // --------------------------------------------------
-    // New arrival sort order
-    // --------------------------------------------------
 
     if (
       req.body.newArrivalSortOrder !==
       undefined
     ) {
-      const sortOrder =
+      product.newArrivalSortOrder =
         parseNumber(
           req.body.newArrivalSortOrder,
-          0
+          product.newArrivalSortOrder
         );
-
-      if (sortOrder < 0) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "New Arrival sort order cannot be negative.",
-        });
-      }
-
-      product.newArrivalSortOrder =
-        sortOrder;
     }
-
-    // --------------------------------------------------
-    // Best seller sort order
-    // --------------------------------------------------
 
     if (
       req.body.bestSellerSortOrder !==
       undefined
     ) {
-      const sortOrder =
+      product.bestSellerSortOrder =
         parseNumber(
           req.body.bestSellerSortOrder,
-          0
+          product.bestSellerSortOrder
         );
+    }
 
-      if (sortOrder < 0) {
+    if (
+      req.body.discountType !==
+      undefined
+    ) {
+      product.discountType =
+        normalizeDiscountType(
+          req.body.discountType
+        );
+    }
+
+    if (
+      req.body.discountValue !==
+      undefined
+    ) {
+      product.discountValue =
+        parseNumber(
+          req.body.discountValue,
+          product.discountValue
+        );
+    }
+
+    if (
+      req.body.oldPrice !== undefined
+    ) {
+      product.oldPrice = parseNumber(
+        req.body.oldPrice,
+        product.oldPrice
+      );
+    }
+
+    product.price = calculatePrice(
+      product.oldPrice,
+      product.discountType,
+      product.discountValue
+    );
+
+    product.productType = getProductType(
+      product.isNewArrival,
+      product.isBestseller
+    );
+
+    if (req.body.offer !== undefined) {
+      const offer = normalizeOffer(
+        req.body.offer
+      );
+
+      const offerError =
+        validateOffer(offer);
+
+      if (offerError) {
         return res.status(400).json({
           success: false,
-          message:
-            "Best Seller sort order cannot be negative.",
+          message: offerError,
         });
       }
 
-      product.bestSellerSortOrder =
-        sortOrder;
+      product.offer = offer;
     }
-
-    // --------------------------------------------------
-    // Product type
-    // --------------------------------------------------
-
-    product.productType =
-      getProductType(
-        product.isNewArrival,
-        product.isBestseller
-      );
-
-    // --------------------------------------------------
-    // Update slug only when name changes
-    // --------------------------------------------------
-
-    if (
-      req.body.name !==
-      undefined
-    ) {
-      product.slug =
-        await createUniqueSlug(
-          name,
-          product._id
-        );
-    }
-
-    // --------------------------------------------------
-    // Cloudinary image uploads
-    //
-    // New files are added to the existing image array.
-    // --------------------------------------------------
 
     const newImages =
       await getUploadedImages(
         req.files
       );
-
-    if (
-      newImages.length > 0
-    ) {
-      product.images = [
-        ...(Array.isArray(
-          product.images
-        )
-          ? product.images
-          : []),
-        ...newImages,
-      ];
-    }
-
-    // --------------------------------------------------
-    // Hover image
-    // --------------------------------------------------
 
     const newHoverImage =
       await getUploadedImage(
@@ -2122,29 +1906,11 @@ export const updateProduct = async (
         "hoverImage"
       );
 
-    if (newHoverImage) {
-      product.hoverImage =
-        newHoverImage;
-    }
-
-    // --------------------------------------------------
-    // Before image
-    // --------------------------------------------------
-
     const newBeforeImage =
       await getUploadedImage(
         req.files,
         "beforeImage"
       );
-
-    if (newBeforeImage) {
-      product.beforeImage =
-        newBeforeImage;
-    }
-
-    // --------------------------------------------------
-    // After image
-    // --------------------------------------------------
 
     const newAfterImage =
       await getUploadedImage(
@@ -2152,34 +1918,68 @@ export const updateProduct = async (
         "afterImage"
       );
 
-    if (newAfterImage) {
-      product.afterImage =
-        newAfterImage;
-    }
-
-    // --------------------------------------------------
-    // Video upload
-    // --------------------------------------------------
-
     const newVideo =
       await getUploadedVideo(
         req.files
       );
 
-    if (newVideo) {
-      product.video =
-        newVideo;
+    if (newImages.length > 0) {
+      product.images = [
+        ...remainingImages,
+        ...newImages,
+      ];
+    } else {
+      product.images = remainingImages;
     }
-        // --------------------------------------------------
-    // Save updated product
-    // --------------------------------------------------
+
+    if (newHoverImage) {
+      product.hoverImage =
+        newHoverImage;
+    } else if (removeHoverImage) {
+      product.hoverImage = "";
+    }
+
+    if (newBeforeImage) {
+      product.beforeImage =
+        newBeforeImage;
+    } else if (removeBeforeImage) {
+      product.beforeImage = "";
+    }
+
+    if (newAfterImage) {
+      product.afterImage =
+        newAfterImage;
+    } else if (removeAfterImage) {
+      product.afterImage = "";
+    }
+
+    if (newVideo) {
+      product.video = newVideo;
+    } else if (removeVideo) {
+      product.video = "";
+    }
+
+    if (
+      !Array.isArray(product.images) ||
+      product.images.length === 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Product must have at least one image.",
+      });
+    }
 
     await product.save();
+
+    await deleteCloudinaryAssets(
+      cloudinaryAssetsToDelete
+    );
 
     return res.status(200).json({
       success: true,
       message:
-        "Product updated successfully",
+        "Product updated successfully.",
       product,
     });
   } catch (error) {
@@ -2191,16 +1991,12 @@ export const updateProduct = async (
     return res.status(400).json({
       success: false,
       message:
-        "Failed to update product",
+        "Failed to update product.",
       error: error.message,
     });
   }
 };
 
-// --------------------------------------------------
-// Delete product
-// DELETE /api/products/:id
-// --------------------------------------------------
 
 export const deleteProduct = async (
   req,
@@ -2209,33 +2005,44 @@ export const deleteProduct = async (
   try {
     const { id } = req.params;
 
-    if (
-      !mongoose.Types.ObjectId.isValid(id)
-    ) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid product ID",
+        message: "Invalid product ID.",
       });
     }
 
     const product =
-      await Product.findByIdAndDelete(
-        id
-      );
+      await Product.findById(id);
 
     if (!product) {
       return res.status(404).json({
         success: false,
         message:
-          "Product not found",
+          "Product not found.",
       });
     }
+
+    const cloudinaryAssetsToDelete = [
+      ...(Array.isArray(product.images)
+        ? product.images
+        : []),
+      product.hoverImage,
+      product.beforeImage,
+      product.afterImage,
+      product.video,
+    ].filter(Boolean);
+
+    await Product.findByIdAndDelete(id);
+
+    await deleteCloudinaryAssets(
+      cloudinaryAssetsToDelete
+    );
 
     return res.status(200).json({
       success: true,
       message:
-        "Product deleted successfully",
+        "Product deleted successfully.",
     });
   } catch (error) {
     console.error(
@@ -2246,8 +2053,12 @@ export const deleteProduct = async (
     return res.status(500).json({
       success: false,
       message:
-        "Failed to delete product",
-      error: error.message,
+        "Failed to delete product.",
+      error:
+        process.env.NODE_ENV ===
+        "development"
+          ? error.message
+          : undefined,
     });
   }
 };

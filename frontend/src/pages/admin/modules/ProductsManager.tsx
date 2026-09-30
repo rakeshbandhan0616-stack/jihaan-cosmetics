@@ -236,6 +236,14 @@ const ProductManager = () => {
   const [existingAfterImage, setExistingAfterImage] = useState("");
   const [existingVideo, setExistingVideo] = useState("");
 
+  // Media removed while editing. These values are sent to the backend
+  // so the update request can persist the deletion.
+  const [removedImages, setRemovedImages] = useState<string[]>([]);
+  const [removeHoverImage, setRemoveHoverImage] = useState(false);
+  const [removeBeforeImage, setRemoveBeforeImage] = useState(false);
+  const [removeAfterImage, setRemoveAfterImage] = useState(false);
+  const [removeVideo, setRemoveVideo] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
 
@@ -411,6 +419,12 @@ const ProductManager = () => {
     setExistingAfterImage("");
     setExistingVideo("");
 
+    setRemovedImages([]);
+    setRemoveHoverImage(false);
+    setRemoveBeforeImage(false);
+    setRemoveAfterImage(false);
+    setRemoveVideo(false);
+
     setUploadProgress(0);
 
     resetInput("product-images");
@@ -476,12 +490,77 @@ const ProductManager = () => {
     setBeforeImageFile(null);
     setAfterImageFile(null);
     setVideoFile(null);
+
+    setRemovedImages([]);
+    setRemoveHoverImage(false);
+    setRemoveBeforeImage(false);
+    setRemoveAfterImage(false);
+    setRemoveVideo(false);
+
     setUploadProgress(0);
 
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
+  };
+
+  const removeExistingImage = (image: string) => {
+    if (!image) return;
+
+    setExistingImages((current) =>
+      current.filter((item) => item !== image),
+    );
+
+    setRemovedImages((current) =>
+      current.includes(image) ? current : [...current, image],
+    );
+
+    setError("");
+  };
+
+  const removeExistingSingleMedia = (
+    type: "hover" | "before" | "after" | "video",
+  ) => {
+    switch (type) {
+      case "hover":
+        setExistingHoverImage("");
+        setRemoveHoverImage(true);
+        break;
+      case "before":
+        setExistingBeforeImage("");
+        setRemoveBeforeImage(true);
+        break;
+      case "after":
+        setExistingAfterImage("");
+        setRemoveAfterImage(true);
+        break;
+      case "video":
+        setExistingVideo("");
+        setRemoveVideo(true);
+        break;
+    }
+
+    setError("");
+  };
+
+  const restoreExistingSingleMedia = (
+    type: "hover" | "before" | "after" | "video",
+  ) => {
+    switch (type) {
+      case "hover":
+        setRemoveHoverImage(false);
+        break;
+      case "before":
+        setRemoveBeforeImage(false);
+        break;
+      case "after":
+        setRemoveAfterImage(false);
+        break;
+      case "video":
+        setRemoveVideo(false);
+        break;
+    }
   };
 
   const createFormData = () => {
@@ -565,6 +644,36 @@ const ProductManager = () => {
 
     if (videoFile) {
       formData.append("video", videoFile);
+    }
+
+    // Existing media that the admin removed while editing.
+    // The backend should use these values to update MongoDB and,
+    // where supported, remove the corresponding Cloudinary asset.
+    if (isEditing) {
+      formData.append("existingImages", JSON.stringify(existingImages));
+      formData.append("removedImages", JSON.stringify(removedImages));
+
+      formData.append(
+        "existingHoverImage",
+        removeHoverImage ? "" : existingHoverImage,
+      );
+      formData.append(
+        "existingBeforeImage",
+        removeBeforeImage ? "" : existingBeforeImage,
+      );
+      formData.append(
+        "existingAfterImage",
+        removeAfterImage ? "" : existingAfterImage,
+      );
+      formData.append(
+        "existingVideo",
+        removeVideo ? "" : existingVideo,
+      );
+
+      formData.append("removeHoverImage", String(removeHoverImage));
+      formData.append("removeBeforeImage", String(removeBeforeImage));
+      formData.append("removeAfterImage", String(removeAfterImage));
+      formData.append("removeVideo", String(removeVideo));
     }
 
     return formData;
@@ -1426,11 +1535,40 @@ const ProductManager = () => {
 
                   <div className={styles.imageGrid}>
                     {existingImages.map((image, index) => (
-                      <img
+                      <div
                         key={`${image}-${index}`}
-                        src={getImageUrl(image)}
-                        alt={`${form.name} ${index + 1}`}
-                      />
+                        style={{
+                          position: "relative",
+                          display: "inline-block",
+                        }}
+                      >
+                        <img
+                          src={getImageUrl(image)}
+                          alt={`${form.name} ${index + 1}`}
+                        />
+
+                        <button
+                          type="button"
+                          className={styles.deleteButton}
+                          onClick={() => removeExistingImage(image)}
+                          aria-label={`Remove image ${index + 1}`}
+                          title="Remove image"
+                          disabled={loading}
+                          style={{
+                            position: "absolute",
+                            top: 6,
+                            right: 6,
+                            width: 30,
+                            height: 30,
+                            padding: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -1512,30 +1650,162 @@ const ProductManager = () => {
 
               {(existingHoverImage ||
                 existingBeforeImage ||
-                existingAfterImage) && (
+                existingAfterImage ||
+                removeHoverImage ||
+                removeBeforeImage ||
+                removeAfterImage) && (
                 <div className={styles.existingMedia}>
                   <p>Existing additional images</p>
 
                   <div className={styles.imageGrid}>
-                    {existingHoverImage && (
-                      <img
-                        src={getImageUrl(existingHoverImage)}
-                        alt="Existing hover image"
-                      />
+                    {existingHoverImage && !removeHoverImage && (
+                      <div
+                        style={{
+                          position: "relative",
+                          display: "inline-block",
+                        }}
+                      >
+                        <img
+                          src={getImageUrl(existingHoverImage)}
+                          alt="Existing hover image"
+                        />
+
+                        <button
+                          type="button"
+                          className={styles.deleteButton}
+                          onClick={() =>
+                            removeExistingSingleMedia("hover")
+                          }
+                          aria-label="Remove hover image"
+                          title="Remove hover image"
+                          disabled={loading}
+                          style={{
+                            position: "absolute",
+                            top: 6,
+                            right: 6,
+                            width: 30,
+                            height: 30,
+                            padding: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     )}
 
-                    {existingBeforeImage && (
-                      <img
-                        src={getImageUrl(existingBeforeImage)}
-                        alt="Existing before image"
-                      />
+                    {existingBeforeImage && !removeBeforeImage && (
+                      <div
+                        style={{
+                          position: "relative",
+                          display: "inline-block",
+                        }}
+                      >
+                        <img
+                          src={getImageUrl(existingBeforeImage)}
+                          alt="Existing before image"
+                        />
+
+                        <button
+                          type="button"
+                          className={styles.deleteButton}
+                          onClick={() =>
+                            removeExistingSingleMedia("before")
+                          }
+                          aria-label="Remove before image"
+                          title="Remove before image"
+                          disabled={loading}
+                          style={{
+                            position: "absolute",
+                            top: 6,
+                            right: 6,
+                            width: 30,
+                            height: 30,
+                            padding: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     )}
 
-                    {existingAfterImage && (
-                      <img
-                        src={getImageUrl(existingAfterImage)}
-                        alt="Existing after image"
-                      />
+                    {existingAfterImage && !removeAfterImage && (
+                      <div
+                        style={{
+                          position: "relative",
+                          display: "inline-block",
+                        }}
+                      >
+                        <img
+                          src={getImageUrl(existingAfterImage)}
+                          alt="Existing after image"
+                        />
+
+                        <button
+                          type="button"
+                          className={styles.deleteButton}
+                          onClick={() =>
+                            removeExistingSingleMedia("after")
+                          }
+                          aria-label="Remove after image"
+                          title="Remove after image"
+                          disabled={loading}
+                          style={{
+                            position: "absolute",
+                            top: 6,
+                            right: 6,
+                            width: 30,
+                            height: 30,
+                            padding: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    )}
+
+                    {removeHoverImage && (
+                      <button
+                        type="button"
+                        className={styles.cancelButton}
+                        onClick={() =>
+                          restoreExistingSingleMedia("hover")
+                        }
+                      >
+                        Restore hover image
+                      </button>
+                    )}
+
+                    {removeBeforeImage && (
+                      <button
+                        type="button"
+                        className={styles.cancelButton}
+                        onClick={() =>
+                          restoreExistingSingleMedia("before")
+                        }
+                      >
+                        Restore before image
+                      </button>
+                    )}
+
+                    {removeAfterImage && (
+                      <button
+                        type="button"
+                        className={styles.cancelButton}
+                        onClick={() =>
+                          restoreExistingSingleMedia("after")
+                        }
+                      >
+                        Restore after image
+                      </button>
                     )}
                   </div>
                 </div>
@@ -1560,13 +1830,59 @@ const ProductManager = () => {
                 </div>
               </label>
 
-              {existingVideo && (
+              {(existingVideo || removeVideo) && (
                 <div className={styles.existingVideo}>
-                  <video
-                    src={getImageUrl(existingVideo)}
-                    controls
-                    preload="metadata"
-                  />
+                  {existingVideo && !removeVideo && (
+                    <div
+                      style={{
+                        position: "relative",
+                        display: "inline-block",
+                        width: "100%",
+                      }}
+                    >
+                      <video
+                        src={getImageUrl(existingVideo)}
+                        controls
+                        preload="metadata"
+                      />
+
+                      <button
+                        type="button"
+                        className={styles.deleteButton}
+                        onClick={() =>
+                          removeExistingSingleMedia("video")
+                        }
+                        aria-label="Remove product video"
+                        title="Remove product video"
+                        disabled={loading}
+                        style={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          width: 32,
+                          height: 32,
+                          padding: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  )}
+
+                  {removeVideo && (
+                    <button
+                      type="button"
+                      className={styles.cancelButton}
+                      onClick={() =>
+                        restoreExistingSingleMedia("video")
+                      }
+                    >
+                      Restore product video
+                    </button>
+                  )}
                 </div>
               )}
 

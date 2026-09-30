@@ -30,24 +30,56 @@ const router = express.Router();
    PUBLIC PRODUCT ROUTES
 ========================================================= */
 
-// GET /api/products
+/*
+  GET /api/products
+
+  Get active products for storefront.
+*/
 router.get("/", getProducts);
 
-// GET /api/products/new-arrivals
-router.get("/new-arrivals", getNewArrivals);
 
-// GET /api/products/bestsellers
-router.get("/bestsellers", getBestsellers);
+/*
+  GET /api/products/new-arrivals
 
-// GET /api/products/slug/:slug
-router.get("/slug/:slug", getProductBySlug);
+  Get new arrival products.
+*/
+router.get(
+  "/new-arrivals",
+  getNewArrivals
+);
+
+
+/*
+  GET /api/products/bestsellers
+
+  Get bestseller products.
+*/
+router.get(
+  "/bestsellers",
+  getBestsellers
+);
+
+
+/*
+  GET /api/products/slug/:slug
+
+  Get single product using slug.
+*/
+router.get(
+  "/slug/:slug",
+  getProductBySlug
+);
 
 
 /* =========================================================
    ADMIN PRODUCT ROUTES
 ========================================================= */
 
-// GET /api/products/admin
+/*
+  GET /api/products/admin
+
+  Admin-only product management list.
+*/
 router.get(
   "/admin",
   protect,
@@ -60,16 +92,26 @@ router.get(
    PRODUCT REVIEW ROUTES
 ========================================================= */
 
-// GET /api/products/:id/reviews
-// Public: everyone can read reviews.
+/*
+  GET /api/products/:id/reviews
+
+  Public route.
+  Anyone can view product reviews.
+*/
 router.get(
   "/:id/reviews",
   getProductReviews
 );
 
 
-// POST /api/products/:id/reviews
-// Protected: only logged-in customers can submit reviews.
+/*
+  POST /api/products/:id/reviews
+
+  Logged-in customer can submit a review.
+
+  Images:
+    images[] -> reviewUpload
+*/
 router.post(
   "/:id/reviews",
   protect,
@@ -79,8 +121,15 @@ router.post(
 );
 
 
-// DELETE /api/products/:id/reviews/:reviewId
-// Protected: controller should verify ownership or admin access.
+/*
+  DELETE /api/products/:id/reviews/:reviewId
+
+  Logged-in user/admin can request deletion.
+
+  IMPORTANT:
+  Ownership/admin authorization should be checked
+  inside deleteProductReview.
+*/
 router.delete(
   "/:id/reviews/:reviewId",
   protect,
@@ -92,7 +141,22 @@ router.delete(
    CREATE PRODUCT
 ========================================================= */
 
-// POST /api/products
+/*
+  POST /api/products
+
+  Admin-only.
+
+  Product media fields:
+
+    images[]       -> multiple product images
+    hoverImage     -> hover image
+    beforeImage    -> before image
+    afterImage     -> after image
+    video          -> product video
+
+  productUpload uses memoryStorage.
+  The controller uploads these files to Cloudinary.
+*/
 router.post(
   "/",
   protect,
@@ -106,7 +170,11 @@ router.post(
    GET PRODUCT BY ID
 ========================================================= */
 
-// GET /api/products/:id
+/*
+  GET /api/products/:id
+
+  Public product details.
+*/
 router.get(
   "/:id",
   getProductById
@@ -117,7 +185,29 @@ router.get(
    UPDATE PRODUCT
 ========================================================= */
 
-// PUT /api/products/:id
+/*
+  PUT /api/products/:id
+
+  Admin-only.
+
+  Supports:
+
+    - Product information update
+    - New product images
+    - Hover image
+    - Before image
+    - After image
+    - Product video
+    - Removing existing Cloudinary media
+
+  Expected removal fields:
+
+    removedImages
+    removeHoverImage
+    removeBeforeImage
+    removeAfterImage
+    removeVideo
+*/
 router.put(
   "/:id",
   protect,
@@ -131,7 +221,15 @@ router.put(
    DELETE PRODUCT
 ========================================================= */
 
-// DELETE /api/products/:id
+/*
+  DELETE /api/products/:id
+
+  Admin-only.
+
+  Controller:
+    1. Deletes product from MongoDB
+    2. Deletes associated Cloudinary media
+*/
 router.delete(
   "/:id",
   protect,
@@ -139,5 +237,9 @@ router.delete(
   deleteProduct
 );
 
+
+/* =========================================================
+   EXPORT ROUTER
+========================================================= */
 
 export default router;
