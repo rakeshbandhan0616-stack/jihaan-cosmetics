@@ -42,6 +42,7 @@ router.get("/bestsellers", getBestsellers);
 // GET /api/products/slug/:slug
 router.get("/slug/:slug", getProductBySlug);
 
+
 /* =========================================================
    ADMIN PRODUCT ROUTES
 ========================================================= */
@@ -51,8 +52,9 @@ router.get(
   "/admin",
   protect,
   adminOnly,
-  getAllProducts,
+  getAllProducts
 );
+
 
 /* =========================================================
    PRODUCT REVIEW ROUTES
@@ -60,7 +62,11 @@ router.get(
 
 // GET /api/products/:id/reviews
 // Public: everyone can read reviews.
-router.get("/:id/reviews", getProductReviews);
+router.get(
+  "/:id/reviews",
+  getProductReviews
+);
+
 
 // POST /api/products/:id/reviews
 // Protected: only logged-in customers can submit reviews.
@@ -69,16 +75,18 @@ router.post(
   protect,
   userOnly,
   reviewUpload.array("images", 5),
-  addProductReview,
+  addProductReview
 );
+
 
 // DELETE /api/products/:id/reviews/:reviewId
 // Protected: controller should verify ownership or admin access.
 router.delete(
   "/:id/reviews/:reviewId",
   protect,
-  deleteProductReview,
+  deleteProductReview
 );
+
 
 /* =========================================================
    CREATE PRODUCT
@@ -89,37 +97,21 @@ router.post(
   "/",
   protect,
   adminOnly,
-  productUpload.fields([
-    {
-      name: "images",
-      maxCount: 10,
-    },
-    {
-      name: "hoverImage",
-      maxCount: 1,
-    },
-    {
-      name: "beforeImage",
-      maxCount: 1,
-    },
-    {
-      name: "afterImage",
-      maxCount: 1,
-    },
-    {
-      name: "video",
-      maxCount: 1,
-    },
-  ]),
-  createProduct,
+  productUpload,
+  createProduct
 );
+
 
 /* =========================================================
    GET PRODUCT BY ID
 ========================================================= */
 
 // GET /api/products/:id
-router.get("/:id", getProductById);
+router.get(
+  "/:id",
+  getProductById
+);
+
 
 /* =========================================================
    UPDATE PRODUCT
@@ -130,30 +122,10 @@ router.put(
   "/:id",
   protect,
   adminOnly,
-  productUpload.fields([
-    {
-      name: "images",
-      maxCount: 10,
-    },
-    {
-      name: "hoverImage",
-      maxCount: 1,
-    },
-    {
-      name: "beforeImage",
-      maxCount: 1,
-    },
-    {
-      name: "afterImage",
-      maxCount: 1,
-    },
-    {
-      name: "video",
-      maxCount: 1,
-    },
-  ]),
-  updateProduct,
+  productUpload,
+  updateProduct
 );
+
 
 /* =========================================================
    DELETE PRODUCT
@@ -164,7 +136,8 @@ router.delete(
   "/:id",
   protect,
   adminOnly,
-  deleteProduct,
+  deleteProduct
 );
+
 
 export default router;
