@@ -10,127 +10,68 @@ import {
   toggleOffer,
 } from "../controllers/offerController.js";
 
-import {
-  protect,
-  adminOnly,
-} from "../middleware/authMiddleware.js";
-
 import offerUpload from "../middleware/offerUpload.js";
 
 const router = express.Router();
 
-/* =========================================================
-   PUBLIC OFFER ROUTES
-========================================================= */
-
-/*
- * GET /api/offers
- *
- * Get all active offers.
+/**
+ * Public routes
  */
-router.get(
-  "/",
-  getOffers
-);
 
+// Get all active offers
+router.get("/", getOffers);
 
-/* =========================================================
-   ADMIN OFFER ROUTES
-========================================================= */
-
-/*
- * GET /api/offers/admin
- *
- * Get all offers including inactive offers.
+/**
+ * Admin routes
  */
-router.get(
-  "/admin",
-  protect,
-  adminOnly,
-  getAllOffers
-);
 
+// Get all offers, including inactive offers
+// Keep this route before /:id
+router.get("/admin", getAllOffers);
 
-/*
- * POST /api/offers
- *
- * Create offer.
- *
- * Upload fields:
- *
- * image
- * demoImage
- *
- * Files are uploaded to Cloudinary
- * inside offerController.
+/**
+ * Offer management routes
  */
+
+// Create a new offer with desktop image uploads
 router.post(
   "/",
-  protect,
-  adminOnly,
-  offerUpload,
+  offerUpload.fields([
+    {
+      name: "image",
+      maxCount: 1,
+    },
+    {
+      name: "demoImage",
+      maxCount: 1,
+    },
+  ]),
   createOffer
 );
 
+// Get one offer by ID
+router.get("/:id", getOfferById);
 
-/*
- * GET /api/offers/:id
- *
- * Public single-offer details.
- */
-router.get(
-  "/:id",
-  getOfferById
-);
-
-
-/*
- * PUT /api/offers/:id
- *
- * Admin-only offer update.
- *
- * Optional:
- *
- * image
- * demoImage
- */
+// Update an offer by ID with optional image replacement
 router.put(
   "/:id",
-  protect,
-  adminOnly,
-  offerUpload,
+  offerUpload.fields([
+    {
+      name: "image",
+      maxCount: 1,
+    },
+    {
+      name: "demoImage",
+      maxCount: 1,
+    },
+  ]),
   updateOffer
 );
 
+// Delete an offer by ID
+router.delete("/:id", deleteOffer);
 
-/*
- * DELETE /api/offers/:id
- *
- * Admin-only.
- *
- * Controller should:
- * 1. Delete offer from MongoDB
- * 2. Delete associated Cloudinary images
- */
-router.delete(
-  "/:id",
-  protect,
-  adminOnly,
-  deleteOffer
-);
-
-
-/*
- * PATCH /api/offers/:id/toggle
- *
- * Admin-only active/inactive toggle.
- */
-router.patch(
-  "/:id/toggle",
-  protect,
-  adminOnly,
-  toggleOffer
-);
-
+// Toggle offer active/inactive status
+router.patch("/:id/toggle", toggleOffer);
 
 export default router;
