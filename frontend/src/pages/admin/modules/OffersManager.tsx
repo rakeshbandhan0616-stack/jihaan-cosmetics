@@ -92,6 +92,41 @@ const getErrorMessage = (error: unknown) => {
   return "Something went wrong";
 };
 
+/* =========================================================
+   AUTHENTICATION HELPERS
+========================================================= */
+
+const getAuthToken = () => {
+  const tokenKeys = [
+    "token",
+    "accessToken",
+    "authToken",
+    "jwt",
+  ];
+
+  for (const key of tokenKeys) {
+    const token = localStorage.getItem(key);
+
+    if (token) {
+      return token;
+    }
+  }
+
+  return "";
+};
+
+const getAuthHeaders = (): HeadersInit => {
+  const token = getAuthToken();
+
+  if (!token) {
+    return {};
+  }
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+};
+
 export default function OfferManager() {
   const [products, setProducts] = useState<Product[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -157,7 +192,10 @@ export default function OfferManager() {
     try {
       setLoadingProducts(true);
 
-      const response = await fetch(`${API_BASE_URL}/products`);
+      const response = await fetch(`${API_BASE_URL}/products`, {
+        credentials: "include",
+        headers: getAuthHeaders(),
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -180,7 +218,10 @@ export default function OfferManager() {
     try {
       setLoadingOffers(true);
 
-      const response = await fetch(`${API_BASE_URL}/offers/admin`);
+      const response = await fetch(`${API_BASE_URL}/offers/admin`, {
+        credentials: "include",
+        headers: getAuthHeaders(),
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -361,6 +402,8 @@ export default function OfferManager() {
 
       const response = await fetch(endpoint, {
         method: isEditing ? "PUT" : "POST",
+        credentials: "include",
+        headers: getAuthHeaders(),
         body: formData,
       });
 
@@ -435,6 +478,8 @@ export default function OfferManager() {
 
       const response = await fetch(`${API_BASE_URL}/offers/${offerId}`, {
         method: "DELETE",
+        credentials: "include",
+        headers: getAuthHeaders(),
       });
 
       const data = await response.json();
@@ -466,6 +511,8 @@ export default function OfferManager() {
         `${API_BASE_URL}/offers/${offer._id}/toggle`,
         {
           method: "PATCH",
+          credentials: "include",
+          headers: getAuthHeaders(),
         }
       );
 
