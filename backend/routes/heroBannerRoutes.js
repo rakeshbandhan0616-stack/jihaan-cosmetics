@@ -14,6 +14,16 @@ import heroBannerUpload from "../middleware/heroBannerUpload.js";
 
 const router = express.Router();
 
+// ============================================================
+// HERO BANNER UPLOAD
+// ============================================================
+// desktopSrc = Desktop banner
+// mobileSrc  = Mobile banner
+//
+// heroBannerUpload uses memoryStorage(), so files are
+// temporarily kept in memory and then uploaded to Cloudinary
+// by heroBannerController.js.
+// ============================================================
 const uploadHeroBannerFiles = heroBannerUpload.fields([
   {
     name: "desktopSrc",
@@ -25,25 +35,56 @@ const uploadHeroBannerFiles = heroBannerUpload.fields([
   },
 ]);
 
-// Public routes
-router.get("/", getActiveHeroBanners);
+// ============================================================
+// PUBLIC ROUTES
+// ============================================================
 
-// Admin route
-router.get("/admin", getAllHeroBanners);
+// Get only active hero banners
+router.get(
+  "/",
+  getActiveHeroBanners
+);
 
-// Single banner
-router.get("/:id", getHeroBannerById);
+// Get a single hero banner
+router.get(
+  "/:id",
+  getHeroBannerById
+);
 
-// Create banner with desktop/mobile files
-router.post("/", uploadHeroBannerFiles, createHeroBanner);
+// ============================================================
+// ADMIN / MANAGEMENT ROUTES
+// ============================================================
 
-// Update banner with optional replacement files
-router.put("/:id", uploadHeroBannerFiles, updateHeroBanner);
+// Get all hero banners
+router.get(
+  "/admin",
+  getAllHeroBanners
+);
 
-// Delete banner
-router.delete("/:id", deleteHeroBanner);
+// Create hero banner
+router.post(
+  "/",
+  uploadHeroBannerFiles,
+  createHeroBanner
+);
 
-// Toggle active status
-router.patch("/:id/toggle", toggleHeroBanner);
+// Update hero banner
+router.put(
+  "/:id",
+  uploadHeroBannerFiles,
+  updateHeroBanner
+);
+
+// Delete hero banner
+router.delete(
+  "/:id",
+  deleteHeroBanner
+);
+
+// Activate / deactivate hero banner
+router.patch(
+  "/:id/toggle",
+  toggleHeroBanner
+);
 
 export default router;

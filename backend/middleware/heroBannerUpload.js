@@ -1,64 +1,53 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 
-const uploadDirectory = path.join(
-  process.cwd(),
-  "uploads",
-  "hero-banners",
-);
-
-if (!fs.existsSync(uploadDirectory)) {
-  fs.mkdirSync(uploadDirectory, {
-    recursive: true,
-  });
-}
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDirectory);
-  },
-
-  filename: function (req, file, cb) {
-    const extension = path.extname(file.originalname);
-
-    const safeFileName = `${Date.now()}-${Math.round(
-      Math.random() * 1e9,
-    )}${extension}`;
-
-    cb(null, safeFileName);
-  },
-});
-
+// ============================================================
+// ALLOWED FILE TYPES
+// ============================================================
 const allowedMimeTypes = [
+  // Images
   "image/jpeg",
   "image/jpg",
   "image/png",
   "image/webp",
   "image/avif",
+
+  // Videos
   "video/mp4",
   "video/webm",
   "video/quicktime",
 ];
 
+// ============================================================
+// FILE FILTER
+// ============================================================
 const fileFilter = (req, file, cb) => {
   if (!allowedMimeTypes.includes(file.mimetype)) {
     return cb(
       new Error(
-        "Only JPG, PNG, WEBP, AVIF, MP4, WEBM and MOV files are allowed",
+        "Only JPG, PNG, WEBP, AVIF, MP4, WEBM and MOV files are allowed."
       ),
-      false,
+      false
     );
   }
 
   cb(null, true);
 };
 
+// ============================================================
+// MULTER CONFIGURATION
+// ============================================================
+// memoryStorage() keeps the uploaded file in RAM temporarily.
+// The controller then sends file.buffer to Cloudinary.
+// Nothing is permanently stored on the Render server.
+// ============================================================
 const heroBannerUpload = multer({
-  storage,
+  storage: multer.memoryStorage(),
+
   fileFilter,
+
   limits: {
-    fileSize: 100 * 1024 * 1024,
+    files: 2,
+    fileSize: 100 * 1024 * 1024, // 100 MB
   },
 });
 

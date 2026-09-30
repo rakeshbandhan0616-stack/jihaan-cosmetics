@@ -1,42 +1,32 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 
-const uploadDirectory = "uploads/categories";
-
-if (!fs.existsSync(uploadDirectory)) {
-  fs.mkdirSync(uploadDirectory, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDirectory);
-  },
-
-  filename: (req, file, cb) => {
-    const extension = path.extname(file.originalname);
-
-    cb(
-      null,
-      `category-${Date.now()}-${Math.round(
-        Math.random() * 1e9,
-      )}${extension}`,
-    );
-  },
-});
+/*
+|--------------------------------------------------------------------------
+| Category Upload Middleware
+|--------------------------------------------------------------------------
+| Files are kept in memory temporarily.
+| categoryController uploads the image to Cloudinary.
+|--------------------------------------------------------------------------
+*/
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/")) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only image files are allowed."));
+  if (!file.mimetype?.startsWith("image/")) {
+    return cb(
+      new Error("Only image files are allowed."),
+      false
+    );
   }
+
+  cb(null, true);
 };
 
 const categoryUpload = multer({
-  storage,
+  storage: multer.memoryStorage(),
+
   fileFilter,
+
   limits: {
+    files: 1,
     fileSize: 5 * 1024 * 1024,
   },
 });

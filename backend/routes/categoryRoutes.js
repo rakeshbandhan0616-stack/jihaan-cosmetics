@@ -12,22 +12,55 @@ import categoryUpload from "../middleware/categoryUpload.js";
 
 const router = express.Router();
 
-router.get("/", getCategories);
+/*
+|--------------------------------------------------------------------------
+| Public categories
+|--------------------------------------------------------------------------
+*/
 
-router.get("/all", getAllCategories);
+router.get(
+  "/",
+  getCategories
+);
+
+router.get(
+  "/all",
+  getAllCategories
+);
+
+/*
+|--------------------------------------------------------------------------
+| Create category
+|--------------------------------------------------------------------------
+*/
 
 router.post(
   "/",
   categoryUpload.single("image"),
-  createCategory,
+  createCategory
 );
+
+/*
+|--------------------------------------------------------------------------
+| Update category
+|--------------------------------------------------------------------------
+*/
 
 router.put(
   "/:id",
   categoryUpload.single("image"),
-  updateCategory,
+  updateCategory
 );
 
-router.delete("/:id", deleteCategory);
+/*
+|--------------------------------------------------------------------------
+| Delete category
+|--------------------------------------------------------------------------
+*/
+
+router.delete(
+  "/:id",
+  deleteCategory
+);
 
 export default router;
