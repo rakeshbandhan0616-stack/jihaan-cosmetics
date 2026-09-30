@@ -16,7 +16,6 @@ const connectDB = async () => {
       {
         serverSelectionTimeoutMS: 15000,
         family: 4,
-        dbName: "jihaan",
       }
     );
 
@@ -35,6 +34,7 @@ const connectDB = async () => {
     );
 
     console.log("----------------------------------------");
+
   } catch (error) {
     console.error(
       "MongoDB connection failed:",
