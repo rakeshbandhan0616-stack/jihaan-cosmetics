@@ -42,6 +42,8 @@ import AccountsDashboard from "./pages/AccountsDashboard/AccountsDashboard";
 import LogisticsDashboard from "./pages/LogisticsDashboard/LogisticsDashboard";
 
 import NotificationsPage from "./components/header/MainHeader/NotificationsPage/NotificationsPage";
+
+import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
 /* =========================================================
    TYPES
    ========================================================= */
@@ -505,6 +507,11 @@ function App() {
   element={<NotificationsPage />}
 />
 
+
+<Route
+  path="/forgot-password"
+  element={<ForgotPassword />}
+/>
           {/* =================================================
               PUBLIC HEALTH CHECK
               -------------------------------------------------

@@ -45,7 +45,7 @@ import accountRoutes from "./routes/accountRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import adminOrderRoutes from "./routes/adminOrderRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
-
+import forgotPasswordRoutes from "./routes/forgotPasswordRoutes.js";
 // --------------------------------------------------
 // Accounts dashboard
 // --------------------------------------------------
@@ -324,6 +324,11 @@ app.use(
 app.use(
   "/api/admin/partners",
   adminPartnerRoutes,
+);
+
+app.use(
+  "/api",
+  forgotPasswordRoutes
 );
 
 // ==================================================
