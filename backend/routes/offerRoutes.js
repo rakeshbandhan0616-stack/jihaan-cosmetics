@@ -10,68 +10,155 @@ import {
   toggleOffer,
 } from "../controllers/offerController.js";
 
+import {
+  protect,
+  adminOnly,
+} from "../middleware/authMiddleware.js";
+
 import offerUpload from "../middleware/offerUpload.js";
 
 const router = express.Router();
 
-/**
- * Public routes
+/* =========================================================
+   PUBLIC OFFER ROUTES
+========================================================= */
+
+/*
+ * GET /api/offers
+ *
+ * Get all active offers.
  */
+router.get(
+  "/",
+  getOffers
+);
 
-// Get all active offers
-router.get("/", getOffers);
 
-/**
- * Admin routes
+/* =========================================================
+   ADMIN OFFER ROUTES
+========================================================= */
+
+/*
+ * GET /api/offers/admin
+ *
+ * Get all offers including inactive offers.
+ *
+ * IMPORTANT:
+ * Keep /admin before /:id.
  */
+router.get(
+  "/admin",
+  protect,
+  adminOnly,
+  getAllOffers
+);
 
-// Get all offers, including inactive offers
-// Keep this route before /:id
-router.get("/admin", getAllOffers);
 
-/**
- * Offer management routes
+/* =========================================================
+   CREATE OFFER
+========================================================= */
+
+/*
+ * POST /api/offers
+ *
+ * Admin only.
+ *
+ * offerUpload already handles:
+ *
+ *   image
+ *   demoImage
+ *
+ * It uses multer.memoryStorage().
+ * The controller uploads the buffers to Cloudinary.
  */
-
-// Create a new offer with desktop image uploads
 router.post(
   "/",
-  offerUpload.fields([
-    {
-      name: "image",
-      maxCount: 1,
-    },
-    {
-      name: "demoImage",
-      maxCount: 1,
-    },
-  ]),
+  protect,
+  adminOnly,
+  offerUpload,
   createOffer
 );
 
-// Get one offer by ID
-router.get("/:id", getOfferById);
 
-// Update an offer by ID with optional image replacement
+/* =========================================================
+   GET OFFER BY ID
+========================================================= */
+
+/*
+ * GET /api/offers/:id
+ *
+ * Public single offer.
+ */
+router.get(
+  "/:id",
+  getOfferById
+);
+
+
+/* =========================================================
+   UPDATE OFFER
+========================================================= */
+
+/*
+ * PUT /api/offers/:id
+ *
+ * Admin only.
+ *
+ * Optional replacement files:
+ *
+ *   image
+ *   demoImage
+ *
+ * offerUpload already contains .fields(),
+ * therefore DO NOT use:
+ *
+ *   offerUpload.fields(...)
+ */
 router.put(
   "/:id",
-  offerUpload.fields([
-    {
-      name: "image",
-      maxCount: 1,
-    },
-    {
-      name: "demoImage",
-      maxCount: 1,
-    },
-  ]),
+  protect,
+  adminOnly,
+  offerUpload,
   updateOffer
 );
 
-// Delete an offer by ID
-router.delete("/:id", deleteOffer);
 
-// Toggle offer active/inactive status
-router.patch("/:id/toggle", toggleOffer);
+/* =========================================================
+   DELETE OFFER
+========================================================= */
+
+/*
+ * DELETE /api/offers/:id
+ *
+ * Admin only.
+ */
+router.delete(
+  "/:id",
+  protect,
+  adminOnly,
+  deleteOffer
+);
+
+
+/* =========================================================
+   TOGGLE OFFER
+========================================================= */
+
+/*
+ * PATCH /api/offers/:id/toggle
+ *
+ * Admin only.
+ */
+router.patch(
+  "/:id/toggle",
+  protect,
+  adminOnly,
+  toggleOffer
+);
+
+
+/* =========================================================
+   EXPORT
+========================================================= */
 
 export default router;
