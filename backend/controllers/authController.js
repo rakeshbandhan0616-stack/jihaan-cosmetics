@@ -19,107 +19,159 @@ const STAFF_ROLES = [
 
 const CUSTOMER_ROLE = "user";
 
-const SOCIAL_PROVIDERS = [
-  "google",
-  "facebook",
-];
-
 /* =========================================================
    GOOGLE CLIENT
 ========================================================= */
 
 const googleClient = new OAuth2Client(
-  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_ID
 );
 
 /* =========================================================
-   EMAIL OTP CONFIGURATION
+   OTP CONFIGURATION
 ========================================================= */
 
 const OTP_LENGTH = 6;
-
 const OTP_EXPIRY_MINUTES = 5;
-
 const OTP_EXPIRY_MS =
   OTP_EXPIRY_MINUTES * 60 * 1000;
 
 const OTP_MAX_ATTEMPTS = 5;
-
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
 
 const RESET_TOKEN_EXPIRY = "10m";
+const PASSWORD_RESET_TOKEN_EXPIRY_MINUTES = 10;
 
 const EMAIL_OTP_COLLECTION_NAME =
   "emailotpverifications";
 
 /* =========================================================
-   EMAIL TRANSPORTER
+   SMTP CONFIGURATION
 
-   Configure these environment variables:
-
-   SMTP_HOST
-   SMTP_PORT
-   SMTP_SECURE
-   SMTP_USER
-   SMTP_PASS
-   SMTP_FROM
-
-   GoDaddy Professional Email / Titan SMTP:
+   GoDaddy Professional Email / Titan
 
    SMTP_HOST=smtpout.secureserver.net
    SMTP_PORT=465
    SMTP_SECURE=true
    SMTP_USER=no-reply@jinicosmetics.com
-   SMTP_PASS=your_GoDaddy_mailbox_password
+   SMTP_PASS=YOUR_MAILBOX_PASSWORD
    SMTP_FROM=no-reply@jinicosmetics.com
+========================================================= */
 
-   Use your GoDaddy mailbox password.
-   Never expose SMTP_PASS in frontend code.
+const SMTP_HOST =
+  process.env.SMTP_HOST ||
+  "smtpout.secureserver.net";
+
+const SMTP_PORT = Number(
+  process.env.SMTP_PORT || 465
+);
+
+const SMTP_SECURE =
+  String(
+    process.env.SMTP_SECURE ?? "true"
+  ).toLowerCase() === "true";
+
+const SMTP_USER =
+  process.env.SMTP_USER ||
+  "no-reply@jinicosmetics.com";
+
+const SMTP_PASS =
+  process.env.SMTP_PASS || "";
+
+const SMTP_FROM =
+  process.env.SMTP_FROM ||
+  SMTP_USER ||
+  "no-reply@jinicosmetics.com";
+
+/* =========================================================
+   POOLED SMTP TRANSPORTER
+
+   Important:
+   - Reuses SMTP connections
+   - Does not create a new connection for every OTP
+   - Short connection timeout
+   - Email sending is handled asynchronously
 ========================================================= */
 
 const emailTransporter =
   nodemailer.createTransport({
-    host:
-      process.env.SMTP_HOST ||
-      "smtpout.secureserver.net",
-
-    port:
-      Number(
-        process.env.SMTP_PORT ||
-        465,
-      ),
-
-    secure:
-      String(
-        process.env.SMTP_SECURE ??
-          "true",
-      ).toLowerCase() ===
-      "true",
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_SECURE,
 
     auth: {
-      user:
-        process.env.SMTP_USER,
-
-      pass:
-        process.env.SMTP_PASS,
+      user: SMTP_USER,
+      pass: SMTP_PASS,
     },
+
+    pool: true,
+    maxConnections: 3,
+    maxMessages: 100,
+
+    connectionTimeout: 3000,
+    greetingTimeout: 3000,
+    socketTimeout: 5000,
   });
 
+/* =========================================================
+   ROLE HELPERS
+========================================================= */
+
+const normalizeRole = (role) =>
+  String(role || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[ _-]/g, "");
+
+const isStaffRole = (role) => {
+  const normalized =
+    normalizeRole(role);
+
+  return STAFF_ROLES.some(
+    (staffRole) =>
+      normalizeRole(staffRole) ===
+      normalized
+  );
+};
+
+/* =========================================================
+   PASSWORD VALIDATION
+========================================================= */
+
+const validatePassword = (
+  password
+) => {
+  const value =
+    String(password || "");
+
+  if (value.length < 6) {
+    return {
+      valid: false,
+      message:
+        "Password must contain at least 6 characters.",
+    };
+  }
+
+  return {
+    valid: true,
+    message: "",
+  };
+};
+
+/* =========================================================
+   EMAIL HELPERS
+========================================================= */
+
 const getEmailFromAddress = () =>
-  process.env.SMTP_FROM ||
-  process.env.SMTP_USER ||
-  "no-reply@jinicosmetics.com";
+  SMTP_FROM;
 
 /* =========================================================
    SEND EMAIL OTP
 
-   Used for:
+   This function performs the actual SMTP operation.
 
-   1. Manual registration
-   2. Forgot password
-
-   Google login does NOT use this function.
-   WhatsApp OTP is NOT used.
+   It is intentionally NOT awaited by the OTP challenge
+   creation function so the API can respond quickly.
 ========================================================= */
 
 const sendEmailOtp = async ({
@@ -127,22 +179,18 @@ const sendEmailOtp = async ({
   otp,
   purpose,
 }) => {
-  const from =
-    getEmailFromAddress();
-
   if (
-    !process.env.SMTP_USER ||
-    !process.env.SMTP_PASS ||
-    !from
+    !SMTP_USER ||
+    !SMTP_PASS ||
+    !SMTP_FROM
   ) {
     throw new Error(
-      "Email SMTP configuration is missing. Please configure SMTP_USER, SMTP_PASS and SMTP_FROM.",
+      "Email SMTP configuration is missing. Please configure SMTP_USER, SMTP_PASS and SMTP_FROM."
     );
   }
 
   const isRegistration =
-    purpose ===
-    "registration";
+    purpose === "registration";
 
   const subject =
     isRegistration
@@ -160,8 +208,11 @@ const sendEmailOtp = async ({
       : "Use the OTP below to verify your identity and create a new password for your Jihaan Cosmetics account.";
 
   await emailTransporter.sendMail({
-    from,
+    from:
+      getEmailFromAddress(),
+
     to: email,
+
     subject,
 
     text:
@@ -169,7 +220,7 @@ const sendEmailOtp = async ({
       `${description}\n\n` +
       `Your OTP is: ${otp}\n\n` +
       `This OTP expires in ${OTP_EXPIRY_MINUTES} minutes.\n` +
-      `If you did not request this, you can safely ignore this email.\n\n` +
+      `If you did not request this email, you can safely ignore it.\n\n` +
       `Jihaan Cosmetics`,
 
     html: `
@@ -187,6 +238,7 @@ const sendEmailOtp = async ({
           padding:32px;
           box-shadow:0 8px 30px rgba(0,0,0,.06);
         ">
+
           <h2 style="
             margin:0 0 12px;
             color:#222;
@@ -209,6 +261,7 @@ const sendEmailOtp = async ({
             background:#f6f1eb;
             border-radius:12px;
           ">
+
             <div style="
               font-size:13px;
               color:#777;
@@ -225,6 +278,7 @@ const sendEmailOtp = async ({
             ">
               ${otp}
             </div>
+
           </div>
 
           <p style="
@@ -244,6 +298,7 @@ const sendEmailOtp = async ({
           ">
             Jihaan Cosmetics
           </p>
+
         </div>
       </div>
     `,
@@ -251,13 +306,69 @@ const sendEmailOtp = async ({
 };
 
 /* =========================================================
-   CREATE JWT TOKEN
+   SMTP BACKGROUND SEND
+
+   The API does not wait for SMTP.
+
+   If SMTP fails:
+   - Error is logged
+   - OTP challenge is invalidated
+========================================================= */
+
+const queueEmailOtp = ({
+  collection,
+  insertedId,
+  email,
+  otp,
+  purpose,
+}) => {
+  void sendEmailOtp({
+    email,
+    otp,
+    purpose,
+  })
+    .then(() => {
+      console.log(
+        `OTP email sent successfully: ${purpose} -> ${email}`
+      );
+    })
+    .catch(async (error) => {
+      console.error(
+        "OTP EMAIL SEND ERROR:",
+        error?.message || error
+      );
+
+      try {
+        await collection.updateOne(
+          {
+            _id: insertedId,
+            consumedAt: null,
+          },
+          {
+            $set: {
+              consumedAt:
+                new Date(),
+            },
+          }
+        );
+      } catch (cleanupError) {
+        console.error(
+          "OTP CLEANUP ERROR:",
+          cleanupError?.message ||
+            cleanupError
+        );
+      }
+    });
+};
+
+/* =========================================================
+   JWT
 ========================================================= */
 
 const createToken = (user) => {
   if (!process.env.JWT_SECRET) {
     throw new Error(
-      "JWT_SECRET is missing in the .env file",
+      "JWT_SECRET is missing in the environment variables."
     );
   }
 
@@ -270,66 +381,81 @@ const createToken = (user) => {
     process.env.JWT_SECRET,
     {
       expiresIn: "7d",
-    },
+    }
   );
 };
 
 /* =========================================================
-   FORMAT USER RESPONSE
-
-   Never return password or sensitive provider information.
+   USER RESPONSE
 ========================================================= */
 
-const getUserResponse = (user) => {
-  return {
-    id: user._id.toString(),
+const getUserResponse = (user) => ({
+  id: user._id.toString(),
 
-    _id: user._id.toString(),
+  _id: user._id.toString(),
 
-    name: user.name,
+  name: user.name,
 
-    email: user.email,
+  email: user.email,
 
-    phone: user.phone || "",
+  phone: user.phone || "",
 
-    profileImage:
-      user.profileImage || "",
+  profileImage:
+    user.profileImage || "",
 
-    role: user.role,
+  role: user.role,
 
-    authProvider:
-      user.authProvider || "local",
+  authProvider:
+    user.authProvider || "local",
 
-    isActive:
-      user.isActive,
+  isActive:
+    user.isActive,
 
-    isBlocked:
-      user.isBlocked,
+  isBlocked:
+    user.isBlocked,
 
-    isEmailVerified:
-      user.isEmailVerified,
+  isEmailVerified:
+    user.isEmailVerified,
 
-    isPhoneVerified:
-      user.isPhoneVerified || false,
+  isPhoneVerified:
+    user.isPhoneVerified || false,
 
-    lastLoginAt:
-      user.lastLoginAt || null,
+  gender:
+    user.gender || "",
 
-    createdAt:
-      user.createdAt,
+  dateOfBirth:
+    user.dateOfBirth || null,
 
-    updatedAt:
-      user.updatedAt,
-  };
-};
+  address:
+    user.address || null,
+
+  department:
+    user.department || "",
+
+  designation:
+    user.designation || "",
+
+  lastLoginAt:
+    user.lastLoginAt || null,
+
+  createdAt:
+    user.createdAt,
+
+  updatedAt:
+    user.updatedAt,
+});
+
+const sanitizeUser = (
+  user
+) => getUserResponse(user);
 
 /* =========================================================
-   SET AUTH COOKIE
+   AUTH COOKIE
 ========================================================= */
 
 const setAuthCookie = (
   res,
-  token,
+  token
 ) => {
   const isProduction =
     process.env.NODE_ENV ===
@@ -355,88 +481,68 @@ const setAuthCookie = (
         60 *
         60 *
         1000,
-    },
+    }
   );
 };
 
 /* =========================================================
-   NORMALIZE PHONE NUMBER
+   PHONE HELPERS
 ========================================================= */
 
 const normalizePhone = (
-  phone,
+  phone
 ) => {
-  let normalizedPhone =
-    String(
-      phone || "",
-    ).replace(
-      /\D/g,
-      "",
-    );
+  let value =
+    String(phone || "")
+      .replace(/\D/g, "");
 
   if (
-    normalizedPhone.startsWith(
-      "91",
-    ) &&
-    normalizedPhone.length ===
-      12
+    value.startsWith("91") &&
+    value.length === 12
   ) {
-    normalizedPhone =
-      normalizedPhone.slice(2);
+    value =
+      value.slice(2);
   }
 
-  return normalizedPhone;
+  return value;
 };
-
-/* =========================================================
-   VALIDATE INDIAN PHONE NUMBER
-========================================================= */
 
 const isValidPhone = (
-  phone,
-) => {
-  return /^[6-9][0-9]{9}$/.test(
-    phone,
+  phone
+) =>
+  /^[6-9][0-9]{9}$/.test(
+    phone
   );
-};
 
 /* =========================================================
-   VALIDATE EMAIL
+   EMAIL HELPERS
 ========================================================= */
 
 const isValidEmail = (
-  email,
-) => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-    email,
+  email
+) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+    email
   );
-};
-
-/* =========================================================
-   NORMALIZE NAME
-========================================================= */
 
 const normalizeName = (
-  name,
-) => {
-  return String(
-    name || "",
-  ).trim();
-};
+  name
+) =>
+  String(name || "").trim();
 
 /* =========================================================
-   CHECK ACCOUNT STATUS
+   ACCOUNT STATUS
 ========================================================= */
 
 const checkAccountStatus = (
   user,
-  res,
+  res
 ) => {
   if (!user) {
     res.status(401).json({
       success: false,
       message:
-        "Account not found",
+        "Account not found.",
     });
 
     return false;
@@ -448,7 +554,7 @@ const checkAccountStatus = (
     res.status(403).json({
       success: false,
       message:
-        "Your account has been blocked",
+        "Your account has been blocked.",
     });
 
     return false;
@@ -460,7 +566,7 @@ const checkAccountStatus = (
     res.status(403).json({
       success: false,
       message:
-        "Your account is inactive",
+        "Your account is inactive.",
     });
 
     return false;
@@ -470,13 +576,13 @@ const checkAccountStatus = (
 };
 
 /* =========================================================
-   COMPLETE LOGIN RESPONSE
+   COMPLETE LOGIN
 ========================================================= */
 
 const completeLogin = async (
   user,
   res,
-  message = "Login successful",
+  message = "Login successful."
 ) => {
   user.lastLoginAt =
     new Date();
@@ -488,37 +594,39 @@ const completeLogin = async (
 
   setAuthCookie(
     res,
-    token,
+    token
   );
 
   return res.status(200).json({
     success: true,
+
     message,
+
     token,
+
     user:
       getUserResponse(user),
   });
 };
 
 /* =========================================================
-   EMAIL OTP COLLECTION
+   OTP COLLECTION
 ========================================================= */
 
 const getEmailOtpCollection =
   async () => {
     if (
       mongoose.connection
-        .readyState !==
-      1
+        .readyState !== 1
     ) {
       throw new Error(
-        "MongoDB connection is not ready",
+        "MongoDB connection is not ready."
       );
     }
 
     const collection =
       mongoose.connection.collection(
-        EMAIL_OTP_COLLECTION_NAME,
+        EMAIL_OTP_COLLECTION_NAME
       );
 
     try {
@@ -530,19 +638,19 @@ const getEmailOtpCollection =
           expireAfterSeconds: 0,
           name:
             "email_otp_expiry_ttl",
-        },
+        }
       );
     } catch (error) {
       if (
         !String(
-          error?.message || "",
+          error?.message || ""
         ).includes(
-          "already exists",
+          "already exists"
         )
       ) {
         console.error(
           "EMAIL OTP TTL INDEX ERROR:",
-          error,
+          error
         );
       }
     }
@@ -557,19 +665,19 @@ const getEmailOtpCollection =
         {
           name:
             "email_otp_lookup_index",
-        },
+        }
       );
     } catch (error) {
       if (
         !String(
-          error?.message || "",
+          error?.message || ""
         ).includes(
-          "already exists",
+          "already exists"
         )
       ) {
         console.error(
           "EMAIL OTP LOOKUP INDEX ERROR:",
-          error,
+          error
         );
       }
     }
@@ -578,28 +686,27 @@ const getEmailOtpCollection =
   };
 
 /* =========================================================
-   HASH OTP
+   OTP HASH
 ========================================================= */
 
 const hashOtp = (
-  otp,
-) => {
-  return crypto
+  otp
+) =>
+  crypto
     .createHash("sha256")
     .update(
-      String(otp),
+      String(otp)
     )
     .digest("hex");
-};
 
 /* =========================================================
-   GENERATE OTP
+   OTP GENERATOR
 ========================================================= */
 
 const generateOtp = () => {
   const minimum =
     10 **
-      (OTP_LENGTH - 1);
+    (OTP_LENGTH - 1);
 
   const maximum =
     10 ** OTP_LENGTH;
@@ -607,24 +714,9 @@ const generateOtp = () => {
   return String(
     crypto.randomInt(
       minimum,
-      maximum,
-    ),
-  );
-};
-
-/* =========================================================
-   HASH CHALLENGE KEY
-========================================================= */
-
-const hashChallengeKey = (
-  value,
-) => {
-  return crypto
-    .createHash("sha256")
-    .update(
-      String(value),
+      maximum
     )
-    .digest("hex");
+  );
 };
 
 /* =========================================================
@@ -632,16 +724,18 @@ const hashChallengeKey = (
 ========================================================= */
 
 const getResendCooldown = (
-  record,
+  record
 ) => {
-  if (!record?.lastSentAt) {
+  if (
+    !record?.lastSentAt
+  ) {
     return 0;
   }
 
   const elapsed =
     Date.now() -
     new Date(
-      record.lastSentAt,
+      record.lastSentAt
     ).getTime();
 
   const remaining =
@@ -654,12 +748,18 @@ const getResendCooldown = (
   }
 
   return Math.ceil(
-    remaining / 1000,
+    remaining / 1000
   );
 };
 
 /* =========================================================
-   CREATE EMAIL OTP CHALLENGE
+   CREATE OTP CHALLENGE
+
+   IMPORTANT CHANGE:
+   SMTP is NOT awaited.
+
+   MongoDB stores the OTP and the HTTP response is returned
+   immediately. Email sending happens in background.
 ========================================================= */
 
 const createEmailOtpChallenge =
@@ -686,18 +786,18 @@ const createEmailOtpChallenge =
           sort: {
             createdAt: -1,
           },
-        },
+        }
       );
 
     const cooldown =
       getResendCooldown(
-        existing,
+        existing
       );
 
     if (cooldown > 0) {
       const error =
         new Error(
-          "Please wait before requesting another OTP",
+          "Please wait before requesting another OTP."
         );
 
       error.code =
@@ -721,7 +821,7 @@ const createEmailOtpChallenge =
             consumedAt:
               new Date(),
           },
-        },
+        }
       );
     }
 
@@ -734,17 +834,18 @@ const createEmailOtpChallenge =
     const expiresAt =
       new Date(
         now.getTime() +
-          OTP_EXPIRY_MS,
+          OTP_EXPIRY_MS
       );
 
     const record = {
       email,
+
       purpose,
 
       userId:
         userId
           ? new mongoose.Types.ObjectId(
-              userId,
+              userId
             )
           : null,
 
@@ -773,39 +874,32 @@ const createEmailOtpChallenge =
 
     const insertResult =
       await collection.insertOne(
-        record,
+        record
       );
 
-    try {
-      await sendEmailOtp({
-        email,
-        otp,
-        purpose,
-      });
-    } catch (error) {
-      await collection.updateOne(
-        {
-          _id:
-            insertResult.insertedId,
-        },
-        {
-          $set: {
-            consumedAt:
-              new Date(),
-          },
-        },
-      );
+    /* =====================================================
+       DO NOT AWAIT SMTP
+    ===================================================== */
 
-      throw error;
-    }
+    queueEmailOtp({
+      collection,
+
+      insertedId:
+        insertResult.insertedId,
+
+      email,
+
+      otp,
+
+      purpose,
+    });
 
     return {
       challengeId:
         insertResult.insertedId.toString(),
 
       expiresIn:
-        OTP_EXPIRY_MINUTES *
-        60,
+        OTP_EXPIRY_MINUTES * 60,
 
       resendAfter:
         OTP_RESEND_COOLDOWN_SECONDS,
@@ -813,7 +907,7 @@ const createEmailOtpChallenge =
   };
 
 /* =========================================================
-   VERIFY EMAIL OTP CHALLENGE
+   VERIFY OTP
 ========================================================= */
 
 const verifyEmailOtpChallenge =
@@ -839,7 +933,7 @@ const verifyEmailOtpChallenge =
           sort: {
             createdAt: -1,
           },
-        },
+        }
       );
 
     if (!record) {
@@ -866,7 +960,7 @@ const verifyEmailOtpChallenge =
             consumedAt:
               new Date(),
           },
-        },
+        }
       );
 
       return {
@@ -909,23 +1003,26 @@ const verifyEmailOtpChallenge =
           _id:
             record._id,
         },
-        update,
+        update
       );
 
       return {
         success: false,
+
         code:
           "OTP_INCORRECT",
+
         message:
           newAttempts >=
           record.maxAttempts
             ? "Too many incorrect OTP attempts. Please request a new OTP."
             : "Incorrect OTP.",
+
         attemptsRemaining:
           Math.max(
             0,
             record.maxAttempts -
-              newAttempts,
+              newAttempts
           ),
       };
     }
@@ -945,7 +1042,7 @@ const verifyEmailOtpChallenge =
 
           verifiedAt,
         },
-      },
+      }
     );
 
     return {
@@ -962,11 +1059,11 @@ const verifyEmailOtpChallenge =
   };
 
 /* =========================================================
-   MASK PHONE NUMBER
+   MASKING
 ========================================================= */
 
 const maskPhone = (
-  phone,
+  phone
 ) => {
   if (!phone) {
     return "";
@@ -976,38 +1073,35 @@ const maskPhone = (
     normalizePhone(phone);
 
   if (
-    normalized.length !==
-    10
+    normalized.length !== 10
   ) {
     return "**********";
   }
 
   return `${normalized.slice(
     0,
-    2,
+    2
   )}******${normalized.slice(
-    -2,
+    -2
   )}`;
 };
 
-/* =========================================================
-   MASK EMAIL
-========================================================= */
-
 const maskEmail = (
-  email,
+  email
 ) => {
   if (!email) {
     return "";
   }
 
-  const [local, domain] =
-    String(email).split("@");
+  const [
+    local,
+    domain,
+  ] =
+    String(email).split(
+      "@"
+    );
 
-  if (
-    !local ||
-    !domain
-  ) {
+  if (!local || !domain) {
     return email;
   }
 
@@ -1017,12 +1111,12 @@ const maskEmail = (
 
   return `${local.slice(
     0,
-    2,
+    2
   )}***@${domain}`;
 };
 
 /* =========================================================
-   REGISTRATION DATA VALIDATION
+   REGISTRATION VALIDATION
 ========================================================= */
 
 const validateRegistrationData =
@@ -1038,9 +1132,7 @@ const validateRegistrationData =
       normalizeName(name);
 
     const normalizedEmail =
-      String(
-        email || "",
-      )
+      String(email || "")
         .trim()
         .toLowerCase();
 
@@ -1048,38 +1140,40 @@ const validateRegistrationData =
       normalizePhone(phone);
 
     if (
-      normalizedName.length <
-      2
+      normalizedName.length < 2
     ) {
       errors.name =
-        "Name must contain at least 2 characters";
+        "Name must contain at least 2 characters.";
     }
 
     if (
       !isValidEmail(
-        normalizedEmail,
+        normalizedEmail
       )
     ) {
       errors.email =
-        "Please enter a valid email address";
+        "Please enter a valid email address.";
     }
 
     if (
       !isValidPhone(
-        normalizedPhone,
+        normalizedPhone
       )
     ) {
       errors.phone =
-        "Please enter a valid 10-digit Indian mobile number";
+        "Please enter a valid 10-digit Indian mobile number.";
     }
 
+    const passwordValidation =
+      validatePassword(
+        password
+      );
+
     if (
-      !password ||
-      String(password).length <
-        6
+      !passwordValidation.valid
     ) {
       errors.password =
-        "Password must contain at least 6 characters";
+        passwordValidation.message;
     }
 
     return {
@@ -1100,7 +1194,9 @@ const validateRegistrationData =
           normalizedPhone,
 
         password:
-          String(password || ""),
+          String(
+            password || ""
+          ),
       },
     };
   };
@@ -1117,22 +1213,25 @@ const checkRegistrationDuplicates =
     const conditions = [
       {
         email,
-        role: CUSTOMER_ROLE,
+        role:
+          CUSTOMER_ROLE,
       },
     ];
 
     if (phone) {
       conditions.push({
         phone,
-        role: CUSTOMER_ROLE,
+        role:
+          CUSTOMER_ROLE,
       });
     }
 
     const existing =
       await User.findOne({
-        $or: conditions,
+        $or:
+          conditions,
       }).select(
-        "_id name email phone role authProvider isEmailVerified isPhoneVerified",
+        "_id name email phone role authProvider isEmailVerified isPhoneVerified"
       );
 
     if (!existing) {
@@ -1178,22 +1277,21 @@ const checkRegistrationDuplicates =
   };
 
 /* =========================================================
-   CREATE PASSWORD RESET TOKEN
+   PASSWORD RESET TOKEN
 ========================================================= */
 
 const createPasswordResetToken =
   (user) => {
-    if (
-      !process.env.JWT_SECRET
-    ) {
+    if (!process.env.JWT_SECRET) {
       throw new Error(
-        "JWT_SECRET is missing in the .env file",
+        "JWT_SECRET is missing in the environment variables."
       );
     }
 
     return jwt.sign(
       {
-        id: user._id.toString(),
+        userId:
+          user._id.toString(),
 
         purpose:
           "password-reset",
@@ -1204,21 +1302,15 @@ const createPasswordResetToken =
       {
         expiresIn:
           RESET_TOKEN_EXPIRY,
-      },
+      }
     );
   };
 
-/* =========================================================
-   VERIFY PASSWORD RESET TOKEN
-========================================================= */
-
 const verifyPasswordResetToken =
   (token) => {
-    if (
-      !process.env.JWT_SECRET
-    ) {
+    if (!process.env.JWT_SECRET) {
       throw new Error(
-        "JWT_SECRET is missing in the .env file",
+        "JWT_SECRET is missing in the environment variables."
       );
     }
 
@@ -1226,7 +1318,7 @@ const verifyPasswordResetToken =
       const decoded =
         jwt.verify(
           token,
-          process.env.JWT_SECRET,
+          process.env.JWT_SECRET
         );
 
       if (
@@ -1241,14 +1333,17 @@ const verifyPasswordResetToken =
       return null;
     }
   };
-  /* =========================================================
+
+/* =========================================================
    REGISTER USER
+
+   POST /api/auth/register
 ========================================================= */
 
 export const registerUser =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const {
@@ -1260,21 +1355,17 @@ export const registerUser =
         req.body || {};
 
       const validation =
-        validateRegistrationData(
-          {
-            name,
-            email,
-            phone,
-            password,
-          },
-        );
+        validateRegistrationData({
+          name,
+          email,
+          phone,
+          password,
+        });
 
       if (
         !validation.valid
       ) {
-        return res.status(
-          400,
-        ).json({
+        return res.status(400).json({
           success: false,
 
           message:
@@ -1290,22 +1381,18 @@ export const registerUser =
       } = validation;
 
       const duplicate =
-        await checkRegistrationDuplicates(
-          {
-            email:
-              data.email,
+        await checkRegistrationDuplicates({
+          email:
+            data.email,
 
-            phone:
-              data.phone,
-          },
-        );
+          phone:
+            data.phone,
+        });
 
       if (
         duplicate.exists
       ) {
-        return res.status(
-          409,
-        ).json({
+        return res.status(409).json({
           success: false,
 
           message:
@@ -1328,7 +1415,7 @@ export const registerUser =
 
                   phone:
                     maskPhone(
-                      duplicate.user.phone,
+                      duplicate.user.phone
                     ),
 
                   authProvider:
@@ -1339,43 +1426,30 @@ export const registerUser =
         });
       }
 
-      /*
-       * MANUAL EMAIL REGISTRATION
-       *
-       * Always send email OTP.
-       *
-       * Google registration does not use this
-       * function and therefore does not receive OTP.
-       */
-
       const challenge =
-        await createEmailOtpChallenge(
-          {
+        await createEmailOtpChallenge({
+          email:
+            data.email,
+
+          purpose:
+            "registration",
+
+          registrationData: {
+            name:
+              data.name,
+
             email:
               data.email,
 
-            purpose:
-              "registration",
+            phone:
+              data.phone,
 
-            registrationData: {
-              name:
-                data.name,
-
-              email:
-                data.email,
-
-              phone:
-                data.phone,
-
-              password:
-                data.password,
-            },
+            password:
+              data.password,
           },
-        );
+        });
 
-      return res.status(
-        200,
-      ).json({
+      return res.status(200).json({
         success: true,
 
         requiresOtp: true,
@@ -1388,7 +1462,7 @@ export const registerUser =
 
         maskedEmail:
           maskEmail(
-            data.email,
+            data.email
           ),
 
         challengeId:
@@ -1403,16 +1477,14 @@ export const registerUser =
     } catch (error) {
       console.error(
         "REGISTER USER ERROR:",
-        error,
+        error
       );
 
       if (
         error?.code ===
         "OTP_RESEND_COOLDOWN"
       ) {
-        return res.status(
-          429,
-        ).json({
+        return res.status(429).json({
           success: false,
 
           message:
@@ -1424,12 +1496,9 @@ export const registerUser =
       }
 
       if (
-        error?.code ===
-        11000
+        error?.code === 11000
       ) {
-        return res.status(
-          409,
-        ).json({
+        return res.status(409).json({
           success: false,
 
           message:
@@ -1437,9 +1506,7 @@ export const registerUser =
         });
       }
 
-      return res.status(
-        500,
-      ).json({
+      return res.status(500).json({
         success: false,
 
         message:
@@ -1455,7 +1522,7 @@ export const registerUser =
 export const verifyRegistrationOtp =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const {
@@ -1466,26 +1533,23 @@ export const verifyRegistrationOtp =
 
       const normalizedEmail =
         String(
-          email || "",
+          email || ""
         )
           .trim()
           .toLowerCase();
 
       const normalizedOtp =
         String(
-          otp || "",
+          otp || ""
         ).trim();
 
       if (
         !isValidEmail(
-          normalizedEmail,
+          normalizedEmail
         )
       ) {
-        return res.status(
-          400,
-        ).json({
+        return res.status(400).json({
           success: false,
-
           message:
             "Please enter a valid email address.",
         });
@@ -1493,39 +1557,32 @@ export const verifyRegistrationOtp =
 
       if (
         !/^\d{6}$/.test(
-          normalizedOtp,
+          normalizedOtp
         )
       ) {
-        return res.status(
-          400,
-        ).json({
+        return res.status(400).json({
           success: false,
-
           message:
             "Please enter the 6-digit OTP.",
         });
       }
 
       const verification =
-        await verifyEmailOtpChallenge(
-          {
-            email:
-              normalizedEmail,
+        await verifyEmailOtpChallenge({
+          email:
+            normalizedEmail,
 
-            purpose:
-              "registration",
+          purpose:
+            "registration",
 
-            otp:
-              normalizedOtp,
-          },
-        );
+          otp:
+            normalizedOtp,
+        });
 
       if (
         !verification.success
       ) {
-        return res.status(
-          400,
-        ).json({
+        return res.status(400).json({
           success: false,
 
           message:
@@ -1546,9 +1603,7 @@ export const verifyRegistrationOtp =
       if (
         !registrationData
       ) {
-        return res.status(
-          400,
-        ).json({
+        return res.status(400).json({
           success: false,
 
           message:
@@ -1556,29 +1611,19 @@ export const verifyRegistrationOtp =
         });
       }
 
-      /*
-       * Check again immediately before account creation.
-       * This prevents duplicate accounts if somebody registered
-       * the same email/phone while OTP was pending.
-       */
-
       const duplicate =
-        await checkRegistrationDuplicates(
-          {
-            email:
-              normalizedEmail,
+        await checkRegistrationDuplicates({
+          email:
+            normalizedEmail,
 
-            phone:
-              registrationData.phone,
-          },
-        );
+          phone:
+            registrationData.phone,
+        });
 
       if (
         duplicate.exists
       ) {
-        return res.status(
-          409,
-        ).json({
+        return res.status(409).json({
           success: false,
 
           message:
@@ -1586,36 +1631,13 @@ export const verifyRegistrationOtp =
 
           field:
             duplicate.field,
-
-          account:
-            duplicate.user
-              ? {
-                  id:
-                    duplicate.user._id.toString(),
-
-                  name:
-                    duplicate.user.name,
-
-                  email:
-                    duplicate.user.email,
-
-                  phone:
-                    maskPhone(
-                      duplicate.user.phone,
-                    ),
-
-                  authProvider:
-                    duplicate.user.authProvider ||
-                    "local",
-                }
-              : null,
         });
       }
 
       const hashedPassword =
         await bcrypt.hash(
           registrationData.password,
-          12,
+          12
         );
 
       const user =
@@ -1654,21 +1676,19 @@ export const verifyRegistrationOtp =
       return completeLogin(
         user,
         res,
-        "Registration successful. Welcome to Jihaan Cosmetics!",
+        "Registration successful. Welcome to Jihaan Cosmetics!"
       );
     } catch (error) {
       console.error(
         "VERIFY REGISTRATION OTP ERROR:",
-        error,
+        error
       );
 
       if (
         error?.code ===
         11000
       ) {
-        return res.status(
-          409,
-        ).json({
+        return res.status(409).json({
           success: false,
 
           message:
@@ -1676,9 +1696,7 @@ export const verifyRegistrationOtp =
         });
       }
 
-      return res.status(
-        500,
-      ).json({
+      return res.status(500).json({
         success: false,
 
         message:
@@ -1694,7 +1712,7 @@ export const verifyRegistrationOtp =
 export const resendRegistrationOtp =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const {
@@ -1704,19 +1722,17 @@ export const resendRegistrationOtp =
 
       const normalizedEmail =
         String(
-          email || "",
+          email || ""
         )
           .trim()
           .toLowerCase();
 
       if (
         !isValidEmail(
-          normalizedEmail,
+          normalizedEmail
         )
       ) {
-        return res.status(
-          400,
-        ).json({
+        return res.status(400).json({
           success: false,
 
           message:
@@ -1739,19 +1755,16 @@ export const resendRegistrationOtp =
             consumedAt:
               null,
           },
-
           {
             sort: {
               createdAt:
                 -1,
             },
-          },
+          }
         );
 
       if (!previous) {
-        return res.status(
-          404,
-        ).json({
+        return res.status(404).json({
           success: false,
 
           message:
@@ -1759,15 +1772,10 @@ export const resendRegistrationOtp =
         });
       }
 
-      const registrationData =
-        previous.registrationData;
-
       if (
-        !registrationData
+        !previous.registrationData
       ) {
-        return res.status(
-          400,
-        ).json({
+        return res.status(400).json({
           success: false,
 
           message:
@@ -1776,24 +1784,18 @@ export const resendRegistrationOtp =
       }
 
       const challenge =
-        await createEmailOtpChallenge(
-          {
-            email:
-              normalizedEmail,
+        await createEmailOtpChallenge({
+          email:
+            normalizedEmail,
 
-            purpose:
-              "registration",
+          purpose:
+            "registration",
 
-            registrationData,
+          registrationData:
+            previous.registrationData,
+        });
 
-            userId:
-              null,
-          },
-        );
-
-      return res.status(
-        200,
-      ).json({
+      return res.status(200).json({
         success: true,
 
         message:
@@ -1807,7 +1809,7 @@ export const resendRegistrationOtp =
 
         maskedEmail:
           maskEmail(
-            normalizedEmail,
+            normalizedEmail
           ),
 
         challengeId:
@@ -1822,16 +1824,14 @@ export const resendRegistrationOtp =
     } catch (error) {
       console.error(
         "RESEND REGISTRATION OTP ERROR:",
-        error,
+        error
       );
 
       if (
         error?.code ===
         "OTP_RESEND_COOLDOWN"
       ) {
-        return res.status(
-          429,
-        ).json({
+        return res.status(429).json({
           success: false,
 
           message:
@@ -1842,9 +1842,7 @@ export const resendRegistrationOtp =
         });
       }
 
-      return res.status(
-        500,
-      ).json({
+      return res.status(500).json({
         success: false,
 
         message:
@@ -1854,35 +1852,30 @@ export const resendRegistrationOtp =
   };
 
 /* =========================================================
-   USER LOGIN
+   CUSTOMER LOGIN
 
    POST /api/auth/login
-
-   Supports:
-   - email + password
-   - phone + password
-   - identifier + password
 ========================================================= */
 
 export const userLogin =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const identifier =
         String(
           req.body?.identifier ??
-            req.body?.login ??
-            req.body?.email ??
-            req.body?.phone ??
-            "",
+          req.body?.login ??
+          req.body?.email ??
+          req.body?.phone ??
+          ""
         ).trim();
 
       const password =
         String(
           req.body?.password ??
-            "",
+          ""
         );
 
       if (
@@ -1891,6 +1884,7 @@ export const userLogin =
       ) {
         return res.status(400).json({
           success: false,
+
           message:
             "Email/phone and password are required.",
         });
@@ -1901,13 +1895,14 @@ export const userLogin =
 
       const normalizedPhone =
         normalizePhone(
-          identifier,
+          identifier
         );
 
       const conditions = [
         {
           email:
             normalizedIdentifier,
+
           role:
             CUSTOMER_ROLE,
         },
@@ -1915,12 +1910,13 @@ export const userLogin =
 
       if (
         isValidPhone(
-          normalizedPhone,
+          normalizedPhone
         )
       ) {
         conditions.push({
           phone:
             normalizedPhone,
+
           role:
             CUSTOMER_ROLE,
         });
@@ -1928,14 +1924,16 @@ export const userLogin =
 
       const user =
         await User.findOne({
-          $or: conditions,
+          $or:
+            conditions,
         }).select(
-          "+password",
+          "+password"
         );
 
       if (!user) {
         return res.status(401).json({
           success: false,
+
           message:
             "Invalid email/phone or password.",
         });
@@ -1944,7 +1942,7 @@ export const userLogin =
       if (
         !checkAccountStatus(
           user,
-          res,
+          res
         )
       ) {
         return;
@@ -1953,6 +1951,7 @@ export const userLogin =
       if (!user.password) {
         return res.status(401).json({
           success: false,
+
           message:
             "This account does not have a password. Please use the appropriate social login method or reset your password.",
         });
@@ -1961,12 +1960,13 @@ export const userLogin =
       const passwordValid =
         await bcrypt.compare(
           password,
-          user.password,
+          user.password
         );
 
       if (!passwordValid) {
         return res.status(401).json({
           success: false,
+
           message:
             "Invalid email/phone or password.",
         });
@@ -1975,18 +1975,20 @@ export const userLogin =
       return completeLogin(
         user,
         res,
-        "Login successful.",
+        "Login successful."
       );
     } catch (error) {
       console.error(
         "USER LOGIN ERROR:",
-        error,
+        error
       );
 
       return res.status(500).json({
         success: false,
+
         message:
           "Server error during login.",
+
         error:
           process.env.NODE_ENV ===
           "development"
@@ -1999,35 +2001,14 @@ export const userLogin =
 /* =========================================================
    GOOGLE LOGIN
 
-   POST /api/auth/google
-
-   Flow:
-
-   Existing Google account
-        ↓
-   Login immediately
-
-   Existing email account
-        ↓
-   Link Google account
-        ↓
-   Login immediately
-
-   New Google account
-        ↓
-   Create account
-        ↓
-   Login immediately
-
-   IMPORTANT:
-   Google login does NOT use email OTP.
-   Google login does NOT use WhatsApp OTP.
+   No email OTP.
+   No WhatsApp OTP.
 ========================================================= */
 
 export const googleLogin =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const {
@@ -2045,6 +2026,7 @@ export const googleLogin =
       if (!googleToken) {
         return res.status(400).json({
           success: false,
+
           message:
             "Google credential is required.",
         });
@@ -2053,12 +2035,9 @@ export const googleLogin =
       if (
         !process.env.GOOGLE_CLIENT_ID
       ) {
-        console.error(
-          "GOOGLE_CLIENT_ID is missing.",
-        );
-
         return res.status(500).json({
           success: false,
+
           message:
             "Google authentication is not configured.",
         });
@@ -2079,6 +2058,7 @@ export const googleLogin =
       if (!payload) {
         return res.status(401).json({
           success: false,
+
           message:
             "Unable to verify Google account.",
         });
@@ -2089,8 +2069,7 @@ export const googleLogin =
 
       const email =
         String(
-          payload.email ||
-            "",
+          payload.email || ""
         )
           .trim()
           .toLowerCase();
@@ -2098,13 +2077,12 @@ export const googleLogin =
       const name =
         normalizeName(
           payload.name ||
-            payload.given_name ||
-            "Jihaan User",
+          payload.given_name ||
+          "Jihaan User"
         );
 
       const picture =
-        payload.picture ||
-        "";
+        payload.picture || "";
 
       const emailVerified =
         payload.email_verified ===
@@ -2113,6 +2091,7 @@ export const googleLogin =
       if (!googleId) {
         return res.status(401).json({
           success: false,
+
           message:
             "Google account ID is missing.",
         });
@@ -2121,6 +2100,7 @@ export const googleLogin =
       if (!email) {
         return res.status(400).json({
           success: false,
+
           message:
             "Your Google account does not provide an email address.",
         });
@@ -2129,19 +2109,16 @@ export const googleLogin =
       if (!emailVerified) {
         return res.status(401).json({
           success: false,
+
           message:
             "Your Google email address is not verified.",
         });
       }
 
-      /*
-       * STEP 1:
-       * Find account using Google ID.
-       */
-
       let user =
         await User.findOne({
           googleId,
+
           role:
             CUSTOMER_ROLE,
         });
@@ -2150,7 +2127,7 @@ export const googleLogin =
         if (
           !checkAccountStatus(
             user,
-            res,
+            res
           )
         ) {
           return;
@@ -2159,23 +2136,14 @@ export const googleLogin =
         return completeLogin(
           user,
           res,
-          "Google login successful.",
+          "Google login successful."
         );
       }
-
-      /*
-       * STEP 2:
-       * Find existing account by email.
-       *
-       * We link the Google ID to the existing account.
-       *
-       * No email OTP is required.
-       * No WhatsApp OTP is required.
-       */
 
       user =
         await User.findOne({
           email,
+
           role:
             CUSTOMER_ROLE,
         });
@@ -2184,18 +2152,14 @@ export const googleLogin =
         if (
           !checkAccountStatus(
             user,
-            res,
+            res
           )
         ) {
           return;
         }
 
-        if (
-          !user.googleId
-        ) {
-          user.googleId =
-            googleId;
-        }
+        user.googleId =
+          googleId;
 
         if (
           !user.profileImage &&
@@ -2224,66 +2188,51 @@ export const googleLogin =
         return completeLogin(
           user,
           res,
-          "Google login successful.",
+          "Google login successful."
         );
       }
 
-      /*
-       * STEP 3:
-       * New Google user.
-       *
-       * Create immediately.
-       *
-       * No email OTP.
-       * No phone OTP.
-       * No WhatsApp verification.
-       */
-
-      const userData = {
-        name:
-          name ||
-          "Jihaan User",
-
-        email,
-
-        googleId,
-
-        profileImage:
-          picture,
-
-        role:
-          CUSTOMER_ROLE,
-
-        authProvider:
-          "google",
-
-        isEmailVerified:
-          true,
-
-        isPhoneVerified:
-          false,
-
-        isActive:
-          true,
-
-        isBlocked:
-          false,
-      };
-
       user =
-        await User.create(
-          userData,
-        );
+        await User.create({
+          name:
+            name ||
+            "Jihaan User",
+
+          email,
+
+          googleId,
+
+          profileImage:
+            picture,
+
+          role:
+            CUSTOMER_ROLE,
+
+          authProvider:
+            "google",
+
+          isEmailVerified:
+            true,
+
+          isPhoneVerified:
+            false,
+
+          isActive:
+            true,
+
+          isBlocked:
+            false,
+        });
 
       return completeLogin(
         user,
         res,
-        "Google account created successfully. Welcome to Jihaan Cosmetics!",
+        "Google account created successfully. Welcome to Jihaan Cosmetics!"
       );
     } catch (error) {
       console.error(
         "GOOGLE LOGIN ERROR:",
-        error,
+        error
       );
 
       if (
@@ -2292,33 +2241,18 @@ export const googleLogin =
       ) {
         return res.status(409).json({
           success: false,
+
           message:
             "An account with this Google email already exists. Please try logging in again.",
         });
       }
 
-      if (
-        error?.message?.includes(
-          "Wrong number of segments",
-        ) ||
-        error?.message?.includes(
-          "Invalid token",
-        ) ||
-        error?.message?.includes(
-          "Token used too late",
-        )
-      ) {
-        return res.status(401).json({
-          success: false,
-          message:
-            "Invalid or expired Google credential.",
-        });
-      }
-
       return res.status(500).json({
         success: false,
+
         message:
           "Server error during Google login.",
+
         error:
           process.env.NODE_ENV ===
           "development"
@@ -2331,34 +2265,13 @@ export const googleLogin =
 /* =========================================================
    FACEBOOK LOGIN
 
-   POST /api/auth/facebook
-
-   Flow:
-
-   Existing Facebook account
-        ↓
-   Login immediately
-
-   Existing email account
-        ↓
-   Link Facebook account
-        ↓
-   Login immediately
-
-   New Facebook account
-        ↓
-   Create account
-        ↓
-   Login immediately
-
-   IMPORTANT:
-   Facebook login does NOT use WhatsApp OTP.
+   No WhatsApp OTP.
 ========================================================= */
 
 export const facebookLogin =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const {
@@ -2374,6 +2287,7 @@ export const facebookLogin =
       if (!facebookToken) {
         return res.status(400).json({
           success: false,
+
           message:
             "Facebook access token is required.",
         });
@@ -2393,12 +2307,9 @@ export const facebookLogin =
         !appId ||
         !appSecret
       ) {
-        console.error(
-          "Facebook authentication environment variables are missing.",
-        );
-
         return res.status(500).json({
           success: false,
+
           message:
             "Facebook authentication is not configured.",
         });
@@ -2410,15 +2321,15 @@ export const facebookLogin =
       const debugUrl =
         `https://graph.facebook.com/${graphVersion}/debug_token` +
         `?input_token=${encodeURIComponent(
-          facebookToken,
+          facebookToken
         )}` +
         `&access_token=${encodeURIComponent(
-          appAccessToken,
+          appAccessToken
         )}`;
 
       const debugResponse =
         await fetch(
-          debugUrl,
+          debugUrl
         );
 
       const debugData =
@@ -2430,6 +2341,7 @@ export const facebookLogin =
       ) {
         return res.status(401).json({
           success: false,
+
           message:
             "Invalid or expired Facebook access token.",
         });
@@ -2441,12 +2353,13 @@ export const facebookLogin =
       if (
         tokenData.app_id &&
         String(
-          tokenData.app_id,
+          tokenData.app_id
         ) !==
           String(appId)
       ) {
         return res.status(401).json({
           success: false,
+
           message:
             "Facebook token does not belong to this application.",
         });
@@ -2456,12 +2369,12 @@ export const facebookLogin =
         `https://graph.facebook.com/${graphVersion}/me` +
         `?fields=id,name,email,picture.type(large)` +
         `&access_token=${encodeURIComponent(
-          facebookToken,
+          facebookToken
         )}`;
 
       const profileResponse =
         await fetch(
-          profileUrl,
+          profileUrl
         );
 
       const profileData =
@@ -2471,13 +2384,9 @@ export const facebookLogin =
         !profileResponse.ok ||
         !profileData?.id
       ) {
-        console.error(
-          "FACEBOOK PROFILE ERROR:",
-          profileData,
-        );
-
         return res.status(401).json({
           success: false,
+
           message:
             "Unable to retrieve your Facebook account information.",
         });
@@ -2489,7 +2398,7 @@ export const facebookLogin =
       const email =
         String(
           profileData.email ||
-            "",
+          ""
         )
           .trim()
           .toLowerCase();
@@ -2497,17 +2406,19 @@ export const facebookLogin =
       const name =
         normalizeName(
           profileData.name ||
-            "Jihaan User",
+          "Jihaan User"
         );
 
       const picture =
-        profileData?.picture
-          ?.data?.url ||
-        "";
+        profileData
+          ?.picture
+          ?.data
+          ?.url || "";
 
       if (!email) {
         return res.status(400).json({
           success: false,
+
           message:
             "Your Facebook account does not provide an email address. Please use email registration instead.",
         });
@@ -2516,6 +2427,7 @@ export const facebookLogin =
       let user =
         await User.findOne({
           facebookId,
+
           role:
             CUSTOMER_ROLE,
         });
@@ -2524,7 +2436,7 @@ export const facebookLogin =
         if (
           !checkAccountStatus(
             user,
-            res,
+            res
           )
         ) {
           return;
@@ -2533,13 +2445,14 @@ export const facebookLogin =
         return completeLogin(
           user,
           res,
-          "Facebook login successful.",
+          "Facebook login successful."
         );
       }
 
       user =
         await User.findOne({
           email,
+
           role:
             CUSTOMER_ROLE,
         });
@@ -2548,18 +2461,14 @@ export const facebookLogin =
         if (
           !checkAccountStatus(
             user,
-            res,
+            res
           )
         ) {
           return;
         }
 
-        if (
-          !user.facebookId
-        ) {
-          user.facebookId =
-            facebookId;
-        }
+        user.facebookId =
+          facebookId;
 
         if (
           !user.profileImage &&
@@ -2588,7 +2497,7 @@ export const facebookLogin =
         return completeLogin(
           user,
           res,
-          "Facebook login successful.",
+          "Facebook login successful."
         );
       }
 
@@ -2627,12 +2536,12 @@ export const facebookLogin =
       return completeLogin(
         user,
         res,
-        "Facebook account created successfully. Welcome to Jihaan Cosmetics!",
+        "Facebook account created successfully. Welcome to Jihaan Cosmetics!"
       );
     } catch (error) {
       console.error(
         "FACEBOOK LOGIN ERROR:",
-        error,
+        error
       );
 
       if (
@@ -2641,6 +2550,7 @@ export const facebookLogin =
       ) {
         return res.status(409).json({
           success: false,
+
           message:
             "An account with this Facebook email already exists. Please try logging in again.",
         });
@@ -2648,8 +2558,10 @@ export const facebookLogin =
 
       return res.status(500).json({
         success: false,
+
         message:
           "Server error during Facebook login.",
+
         error:
           process.env.NODE_ENV ===
           "development"
@@ -2658,14 +2570,25 @@ export const facebookLogin =
       });
     }
   };
-  /* =========================================================
-   ADMIN LOGIN
+
+/* =========================================================
+   ADMIN / STAFF LOGIN
+
+   Supported:
+   - superadmin
+   - admin
+   - accounts
+   - logistics
+
+   FIX:
+   The old code called undefined isAdminRole().
+   This version uses isStaffRole().
 ========================================================= */
 
 export const adminLogin =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const {
@@ -2676,7 +2599,7 @@ export const adminLogin =
 
       const normalizedEmail =
         String(
-          email || "",
+          email || ""
         )
           .trim()
           .toLowerCase();
@@ -2687,6 +2610,7 @@ export const adminLogin =
       ) {
         return res.status(400).json({
           success: false,
+
           message:
             "Email and password are required.",
         });
@@ -2697,25 +2621,30 @@ export const adminLogin =
           email:
             normalizedEmail,
         }).select(
-          "+password",
+          "+password"
         );
 
       if (!user) {
         return res.status(401).json({
           success: false,
+
           message:
             "Invalid email or password.",
         });
       }
 
-      const isAdmin =
-        isAdminRole(
-          user.role,
-        );
+      /* ===================================================
+         STAFF ROLE CHECK
+      =================================================== */
 
-      if (!isAdmin) {
+      if (
+        !isStaffRole(
+          user.role
+        )
+      ) {
         return res.status(403).json({
           success: false,
+
           message:
             "You are not authorized to access the admin panel.",
         });
@@ -2724,7 +2653,7 @@ export const adminLogin =
       if (
         !checkAccountStatus(
           user,
-          res,
+          res
         )
       ) {
         return;
@@ -2733,20 +2662,22 @@ export const adminLogin =
       if (!user.password) {
         return res.status(401).json({
           success: false,
+
           message:
-            "This admin account does not have a password configured.",
+            "This staff account does not have a password configured.",
         });
       }
 
       const passwordValid =
         await bcrypt.compare(
           password,
-          user.password,
+          user.password
         );
 
       if (!passwordValid) {
         return res.status(401).json({
           success: false,
+
           message:
             "Invalid email or password.",
         });
@@ -2755,18 +2686,20 @@ export const adminLogin =
       return completeLogin(
         user,
         res,
-        "Admin login successful.",
+        "Admin login successful."
       );
     } catch (error) {
       console.error(
         "ADMIN LOGIN ERROR:",
-        error,
+        error
       );
 
       return res.status(500).json({
         success: false,
+
         message:
           "Server error during admin login.",
+
         error:
           process.env.NODE_ENV ===
           "development"
@@ -2779,33 +2712,14 @@ export const adminLogin =
 /* =========================================================
    FORGOT PASSWORD
 
-   POST /api/auth/forgot-password
-
-   Flow:
-
-   Email
-      ↓
-   Find account
-      ↓
-   Generate email OTP
-      ↓
-   Send OTP through SMTP
-      ↓
-   User verifies OTP
-      ↓
-   Reset token is issued
-      ↓
-   User sets new password
-
-   IMPORTANT:
-   Forgot password uses EMAIL OTP.
-   It does NOT use WhatsApp OTP.
+   Email OTP only.
+   No WhatsApp OTP.
 ========================================================= */
 
 export const forgotPassword =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const {
@@ -2815,18 +2729,19 @@ export const forgotPassword =
 
       const normalizedEmail =
         String(
-          email || "",
+          email || ""
         )
           .trim()
           .toLowerCase();
 
       if (
         !isValidEmail(
-          normalizedEmail,
+          normalizedEmail
         )
       ) {
         return res.status(400).json({
           success: false,
+
           message:
             "Please enter a valid email address.",
         });
@@ -2840,11 +2755,6 @@ export const forgotPassword =
           role:
             CUSTOMER_ROLE,
         });
-
-      /*
-       * Do not reveal whether an email exists.
-       * This prevents account/email enumeration.
-       */
 
       if (!user) {
         return res.status(200).json({
@@ -2860,25 +2770,23 @@ export const forgotPassword =
       if (
         !checkAccountStatus(
           user,
-          res,
+          res
         )
       ) {
         return;
       }
 
       const challenge =
-        await createEmailOtpChallenge(
-          {
-            email:
-              normalizedEmail,
+        await createEmailOtpChallenge({
+          email:
+            normalizedEmail,
 
-            purpose:
-              "forgot-password",
+          purpose:
+            "forgot-password",
 
-            userId:
-              user._id.toString(),
-          },
-        );
+          userId:
+            user._id.toString(),
+        });
 
       return res.status(200).json({
         success: true,
@@ -2893,7 +2801,7 @@ export const forgotPassword =
 
         maskedEmail:
           maskEmail(
-            normalizedEmail,
+            normalizedEmail
           ),
 
         challengeId:
@@ -2908,7 +2816,7 @@ export const forgotPassword =
     } catch (error) {
       console.error(
         "FORGOT PASSWORD ERROR:",
-        error,
+        error
       );
 
       if (
@@ -2937,20 +2845,12 @@ export const forgotPassword =
 
 /* =========================================================
    VERIFY FORGOT PASSWORD OTP
-
-   POST /api/auth/forgot-password/verify-otp
-
-   Successful verification returns a short-lived
-   password reset token.
-
-   The reset token can then be used with:
-      POST /api/auth/reset-password
 ========================================================= */
 
 export const verifyForgotPasswordOtp =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const {
@@ -2961,23 +2861,24 @@ export const verifyForgotPasswordOtp =
 
       const normalizedEmail =
         String(
-          email || "",
+          email || ""
         )
           .trim()
           .toLowerCase();
 
       const normalizedOtp =
         String(
-          otp || "",
+          otp || ""
         ).trim();
 
       if (
         !isValidEmail(
-          normalizedEmail,
+          normalizedEmail
         )
       ) {
         return res.status(400).json({
           success: false,
+
           message:
             "Please enter a valid email address.",
         });
@@ -2985,29 +2886,28 @@ export const verifyForgotPasswordOtp =
 
       if (
         !/^\d{6}$/.test(
-          normalizedOtp,
+          normalizedOtp
         )
       ) {
         return res.status(400).json({
           success: false,
+
           message:
             "Please enter the 6-digit OTP.",
         });
       }
 
       const verification =
-        await verifyEmailOtpChallenge(
-          {
-            email:
-              normalizedEmail,
+        await verifyEmailOtpChallenge({
+          email:
+            normalizedEmail,
 
-            purpose:
-              "forgot-password",
+          purpose:
+            "forgot-password",
 
-            otp:
-              normalizedOtp,
-          },
-        );
+          otp:
+            normalizedOtp,
+        });
 
       if (
         !verification.success
@@ -3059,21 +2959,15 @@ export const verifyForgotPasswordOtp =
       if (
         !checkAccountStatus(
           user,
-          res,
+          res
         )
       ) {
         return;
       }
 
-      /*
-       * OTP has now been successfully verified.
-       *
-       * Only now create the password reset token.
-       */
-
       const resetToken =
         createPasswordResetToken(
-          user,
+          user
         );
 
       return res.status(200).json({
@@ -3091,7 +2985,7 @@ export const verifyForgotPasswordOtp =
     } catch (error) {
       console.error(
         "VERIFY FORGOT PASSWORD OTP ERROR:",
-        error,
+        error
       );
 
       return res.status(500).json({
@@ -3105,14 +2999,12 @@ export const verifyForgotPasswordOtp =
 
 /* =========================================================
    RESEND FORGOT PASSWORD OTP
-
-   POST /api/auth/forgot-password/resend-otp
 ========================================================= */
 
 export const resendForgotPasswordOtp =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const {
@@ -3122,14 +3014,14 @@ export const resendForgotPasswordOtp =
 
       const normalizedEmail =
         String(
-          email || "",
+          email || ""
         )
           .trim()
           .toLowerCase();
 
       if (
         !isValidEmail(
-          normalizedEmail,
+          normalizedEmail
         )
       ) {
         return res.status(400).json({
@@ -3149,11 +3041,6 @@ export const resendForgotPasswordOtp =
             CUSTOMER_ROLE,
         });
 
-      /*
-       * Keep the response generic if the account
-       * does not exist.
-       */
-
       if (!user) {
         return res.status(200).json({
           success: true,
@@ -3166,30 +3053,29 @@ export const resendForgotPasswordOtp =
       if (
         !checkAccountStatus(
           user,
-          res,
+          res
         )
       ) {
         return;
       }
 
       const challenge =
-        await createEmailOtpChallenge(
-          {
-            email:
-              normalizedEmail,
+        await createEmailOtpChallenge({
+          email:
+            normalizedEmail,
 
-            purpose:
-              "forgot-password",
+          purpose:
+            "forgot-password",
 
-            userId:
-              user._id.toString(),
-          },
-        );
+          userId:
+            user._id.toString(),
+        });
 
       return res.status(200).json({
         success: true,
 
-        requiresOtp: true,
+        requiresOtp:
+          true,
 
         message:
           "A new password reset OTP has been sent to your email.",
@@ -3199,7 +3085,7 @@ export const resendForgotPasswordOtp =
 
         maskedEmail:
           maskEmail(
-            normalizedEmail,
+            normalizedEmail
           ),
 
         challengeId:
@@ -3214,7 +3100,7 @@ export const resendForgotPasswordOtp =
     } catch (error) {
       console.error(
         "RESEND FORGOT PASSWORD OTP ERROR:",
-        error,
+        error
       );
 
       if (
@@ -3243,20 +3129,12 @@ export const resendForgotPasswordOtp =
 
 /* =========================================================
    RESET PASSWORD
-
-   POST /api/auth/reset-password
-
-   Body:
-   {
-     resetToken,
-     password
-   }
 ========================================================= */
 
 export const resetPassword =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const {
@@ -3299,7 +3177,7 @@ export const resetPassword =
 
       const passwordValidation =
         validatePassword(
-          finalPassword,
+          finalPassword
         );
 
       if (
@@ -3313,14 +3191,12 @@ export const resetPassword =
         });
       }
 
-      let decoded;
+      const decoded =
+        verifyPasswordResetToken(
+          passwordResetToken
+        );
 
-      try {
-        decoded =
-          verifyPasswordResetToken(
-            passwordResetToken,
-          );
-      } catch (tokenError) {
+      if (!decoded) {
         return res.status(400).json({
           success: false,
 
@@ -3329,9 +3205,11 @@ export const resetPassword =
         });
       }
 
-      if (
-        !decoded?.userId
-      ) {
+      const resetUserId =
+        decoded?.userId ||
+        decoded?.id;
+
+      if (!resetUserId) {
         return res.status(400).json({
           success: false,
 
@@ -3343,12 +3221,12 @@ export const resetPassword =
       const user =
         await User.findOne({
           _id:
-            decoded.userId,
+            resetUserId,
 
           role:
             CUSTOMER_ROLE,
         }).select(
-          "+password",
+          "+password"
         );
 
       if (!user) {
@@ -3363,33 +3241,20 @@ export const resetPassword =
       if (
         !checkAccountStatus(
           user,
-          res,
+          res
         )
       ) {
         return;
       }
 
-      const hashedPassword =
+      user.password =
         await bcrypt.hash(
           finalPassword,
-          12,
+          12
         );
-
-      user.password =
-        hashedPassword;
-
-      /*
-       * A password reset through verified email
-       * confirms the email address.
-       */
 
       user.isEmailVerified =
         true;
-
-      /*
-       * Keep the account as a local/password-capable
-       * account when it previously had no local password.
-       */
 
       if (
         !user.authProvider
@@ -3409,7 +3274,7 @@ export const resetPassword =
     } catch (error) {
       console.error(
         "RESET PASSWORD ERROR:",
-        error,
+        error
       );
 
       return res.status(500).json({
@@ -3422,24 +3287,15 @@ export const resetPassword =
   };
 
 /* =========================================================
-   LOGOUT USER
+   LOGOUT
 ========================================================= */
 
 export const logoutUser =
   async (
     req,
-    res,
+    res
   ) => {
     try {
-      /*
-       * JWT authentication is stateless.
-       *
-       * The frontend should remove the stored token.
-       *
-       * If refresh-token/session storage is added later,
-       * revoke it here.
-       */
-
       return res.status(200).json({
         success: true,
 
@@ -3449,7 +3305,7 @@ export const logoutUser =
     } catch (error) {
       console.error(
         "LOGOUT ERROR:",
-        error,
+        error
       );
 
       return res.status(500).json({
@@ -3468,7 +3324,7 @@ export const logoutUser =
 export const getCurrentUser =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const userId =
@@ -3487,7 +3343,7 @@ export const getCurrentUser =
 
       const user =
         await User.findById(
-          userId,
+          userId
         );
 
       if (!user) {
@@ -3502,7 +3358,7 @@ export const getCurrentUser =
       if (
         !checkAccountStatus(
           user,
-          res,
+          res
         )
       ) {
         return;
@@ -3512,14 +3368,12 @@ export const getCurrentUser =
         success: true,
 
         user:
-          sanitizeUser(
-            user,
-          ),
+          sanitizeUser(user),
       });
     } catch (error) {
       console.error(
         "GET CURRENT USER ERROR:",
-        error,
+        error
       );
 
       return res.status(500).json({
@@ -3530,14 +3384,15 @@ export const getCurrentUser =
       });
     }
   };
-  /* =========================================================
+
+/* =========================================================
    UPDATE PROFILE
 ========================================================= */
 
 export const updateProfile =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const userId =
@@ -3555,7 +3410,7 @@ export const updateProfile =
 
       const user =
         await User.findById(
-          userId,
+          userId
         );
 
       if (!user) {
@@ -3569,7 +3424,7 @@ export const updateProfile =
       if (
         !checkAccountStatus(
           user,
-          res,
+          res
         )
       ) {
         return;
@@ -3589,14 +3444,11 @@ export const updateProfile =
         name !== undefined
       ) {
         const normalizedName =
-          normalizeName(
-            name,
-          );
+          normalizeName(name);
 
         if (
           !normalizedName ||
-          normalizedName.length <
-            2
+          normalizedName.length < 2
         ) {
           return res.status(400).json({
             success: false,
@@ -3613,14 +3465,12 @@ export const updateProfile =
         phone !== undefined
       ) {
         const normalizedPhone =
-          normalizePhone(
-            phone,
-          );
+          normalizePhone(phone);
 
         if (
           normalizedPhone &&
           !isValidPhone(
-            normalizedPhone,
+            normalizedPhone
           )
         ) {
           return res.status(400).json({
@@ -3649,6 +3499,7 @@ export const updateProfile =
           if (existingUser) {
             return res.status(409).json({
               success: false,
+
               message:
                 "This phone number is already registered with another account.",
             });
@@ -3668,7 +3519,7 @@ export const updateProfile =
       ) {
         user.profileImage =
           String(
-            profileImage || "",
+            profileImage || ""
           ).trim();
       }
 
@@ -3677,7 +3528,7 @@ export const updateProfile =
       ) {
         user.gender =
           String(
-            gender || "",
+            gender || ""
           ).trim();
       }
 
@@ -3705,14 +3556,12 @@ export const updateProfile =
           "Profile updated successfully.",
 
         user:
-          sanitizeUser(
-            user,
-          ),
+          sanitizeUser(user),
       });
     } catch (error) {
       console.error(
         "UPDATE PROFILE ERROR:",
-        error,
+        error
       );
 
       if (
@@ -3721,6 +3570,7 @@ export const updateProfile =
       ) {
         return res.status(409).json({
           success: false,
+
           message:
             "One of the provided profile details is already in use.",
         });
@@ -3742,7 +3592,7 @@ export const updateProfile =
 export const updateStaffProfile =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const userId =
@@ -3761,7 +3611,7 @@ export const updateStaffProfile =
 
       const user =
         await User.findById(
-          userId,
+          userId
         );
 
       if (!user) {
@@ -3775,7 +3625,7 @@ export const updateStaffProfile =
 
       if (
         !isStaffRole(
-          user.role,
+          user.role
         )
       ) {
         return res.status(403).json({
@@ -3789,7 +3639,7 @@ export const updateStaffProfile =
       if (
         !checkAccountStatus(
           user,
-          res,
+          res
         )
       ) {
         return;
@@ -3808,14 +3658,11 @@ export const updateStaffProfile =
         name !== undefined
       ) {
         const normalizedName =
-          normalizeName(
-            name,
-          );
+          normalizeName(name);
 
         if (
           !normalizedName ||
-          normalizedName.length <
-            2
+          normalizedName.length < 2
         ) {
           return res.status(400).json({
             success: false,
@@ -3833,14 +3680,12 @@ export const updateStaffProfile =
         phone !== undefined
       ) {
         const normalizedPhone =
-          normalizePhone(
-            phone,
-          );
+          normalizePhone(phone);
 
         if (
           normalizedPhone &&
           !isValidPhone(
-            normalizedPhone,
+            normalizedPhone
           )
         ) {
           return res.status(400).json({
@@ -3890,7 +3735,7 @@ export const updateStaffProfile =
       ) {
         user.profileImage =
           String(
-            profileImage || "",
+            profileImage || ""
           ).trim();
       }
 
@@ -3900,7 +3745,7 @@ export const updateStaffProfile =
       ) {
         user.department =
           String(
-            department || "",
+            department || ""
           ).trim();
       }
 
@@ -3910,7 +3755,7 @@ export const updateStaffProfile =
       ) {
         user.designation =
           String(
-            designation || "",
+            designation || ""
           ).trim();
       }
 
@@ -3923,14 +3768,12 @@ export const updateStaffProfile =
           "Staff profile updated successfully.",
 
         user:
-          sanitizeUser(
-            user,
-          ),
+          sanitizeUser(user),
       });
     } catch (error) {
       console.error(
         "UPDATE STAFF PROFILE ERROR:",
-        error,
+        error
       );
 
       if (
@@ -3956,20 +3799,12 @@ export const updateStaffProfile =
 
 /* =========================================================
    CHANGE PASSWORD
-
-   POST /api/auth/change-password
-
-   Body:
-   {
-     currentPassword,
-     newPassword
-   }
 ========================================================= */
 
 export const changePassword =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       const userId =
@@ -4011,7 +3846,7 @@ export const changePassword =
 
       const passwordValidation =
         validatePassword(
-          finalNewPassword,
+          finalNewPassword
         );
 
       if (
@@ -4027,9 +3862,9 @@ export const changePassword =
 
       const user =
         await User.findById(
-          userId,
+          userId
         ).select(
-          "+password",
+          "+password"
         );
 
       if (!user) {
@@ -4044,7 +3879,7 @@ export const changePassword =
       if (
         !checkAccountStatus(
           user,
-          res,
+          res
         )
       ) {
         return;
@@ -4062,7 +3897,7 @@ export const changePassword =
       const currentPasswordValid =
         await bcrypt.compare(
           currentPassword,
-          user.password,
+          user.password
         );
 
       if (!currentPasswordValid) {
@@ -4077,7 +3912,7 @@ export const changePassword =
       const samePassword =
         await bcrypt.compare(
           finalNewPassword,
-          user.password,
+          user.password
         );
 
       if (samePassword) {
@@ -4092,7 +3927,7 @@ export const changePassword =
       user.password =
         await bcrypt.hash(
           finalNewPassword,
-          12,
+          12
         );
 
       await user.save();
@@ -4106,7 +3941,7 @@ export const changePassword =
     } catch (error) {
       console.error(
         "CHANGE PASSWORD ERROR:",
-        error,
+        error
       );
 
       return res.status(500).json({
@@ -4119,20 +3954,15 @@ export const changePassword =
   };
 
 /* =========================================================
-   VERIFY EMAIL TRANSPORTER
-   Useful for checking SMTP configuration.
+   VERIFY SMTP
 
-   This uses the GoDaddy mailbox configured in:
-   SMTP_HOST
-   SMTP_PORT
-   SMTP_USER
-   SMTP_PASS
+   Optional diagnostic endpoint.
 ========================================================= */
 
 export const verifyEmailTransport =
   async (
     req,
-    res,
+    res
   ) => {
     try {
       await emailTransporter.verify();
@@ -4146,7 +3976,16 @@ export const verifyEmailTransport =
     } catch (error) {
       console.error(
         "EMAIL TRANSPORT VERIFY ERROR:",
-        error,
+        {
+          message:
+            error?.message,
+          code:
+            error?.code,
+          command:
+            error?.command,
+          response:
+            error?.response,
+        }
       );
 
       return res.status(500).json({

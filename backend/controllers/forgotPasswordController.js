@@ -49,11 +49,19 @@ const SMTP_FROM =
 
 /* =========================================================
    SMTP TRANSPORTER
+
+   Important:
+   The transporter uses a connection pool and short
+   connection timeouts.
+
+   The OTP API itself does NOT wait for SMTP delivery.
 ========================================================= */
 
 const emailTransporter = nodemailer.createTransport({
   host: SMTP_HOST,
+
   port: SMTP_PORT,
+
   secure: SMTP_SECURE,
 
   auth: {
@@ -64,11 +72,16 @@ const emailTransporter = nodemailer.createTransport({
   pool: true,
 
   maxConnections: 3,
+
   maxMessages: 50,
 
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
+  // Keep SMTP connection attempts short.
+  // OTP API requests do not wait for SMTP delivery.
+  connectionTimeout: 3000,
+
+  greetingTimeout: 3000,
+
+  socketTimeout: 5000,
 });
 
 /* =========================================================
@@ -113,6 +126,7 @@ const normalizeEmail = (email) => {
  */
 const generateOtp = () => {
   const min = 10 ** (OTP_LENGTH - 1);
+
   const max = 10 ** OTP_LENGTH - 1;
 
   return String(
@@ -240,6 +254,7 @@ const sendForgotPasswordOtpEmail = async ({
 
   const mailOptions = {
     from: `"Jihaan Cosmetics" <${SMTP_FROM}>`,
+
     to: email,
 
     subject:
@@ -260,10 +275,12 @@ Jihaan Cosmetics
 <html>
 <head>
   <meta charset="UTF-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0"
   />
+
   <title>Password Reset OTP</title>
 </head>
 
@@ -458,14 +475,81 @@ Jihaan Cosmetics
 };
 
 /* =========================================================
+   BACKGROUND EMAIL DELIVERY
+
+   The API must not wait for GoDaddy SMTP.
+   The OTP challenge is stored first, then email delivery
+   continues in the background.
+
+   If SMTP delivery fails, the challenge is invalidated so
+   the undelivered OTP cannot remain usable.
+========================================================= */
+
+const queueForgotPasswordOtpEmail = ({
+  challengeId,
+  email,
+  otp,
+}) => {
+  Promise.resolve()
+    .then(() =>
+      sendForgotPasswordOtpEmail({
+        email,
+        otp,
+      })
+    )
+    .then(() => {
+      console.log(
+        `✅ Forgot password OTP email accepted by SMTP for ${email}`
+      );
+    })
+    .catch(async (error) => {
+      console.error(
+        `❌ Forgot password OTP email failed for ${email}:`,
+        error?.message || error
+      );
+
+      try {
+        const collection = getEmailOtpCollection();
+
+        await collection.updateOne(
+          {
+            _id: challengeId,
+            purpose: "forgot-password",
+            consumed: false,
+          },
+          {
+            $set: {
+              consumed: true,
+              consumedAt: new Date(),
+              emailSendFailed: true,
+              emailSendError: String(
+                error?.message ||
+                  error ||
+                  "SMTP delivery failed"
+              ).slice(0, 500),
+            },
+          }
+        );
+      } catch (dbError) {
+        console.error(
+          "❌ Failed to invalidate OTP after SMTP failure:",
+          dbError?.message || dbError
+        );
+      }
+    });
+};
+
+/* =========================================================
    CREATE FORGOT PASSWORD OTP
+
+   Part 2 continues from this function.
 ========================================================= */
 
 const createForgotPasswordOtp = async ({
   email,
   userId,
 }) => {
-  const normalizedEmail = normalizeEmail(email);
+    const normalizedEmail = normalizeEmail(email);
 
   const collection =
     getEmailOtpCollection();
@@ -529,35 +613,26 @@ const createForgotPasswordOtp = async ({
 
   await collection.insertOne(challenge);
 
-  try {
-    await sendForgotPasswordOtpEmail({
-      email: normalizedEmail,
-      otp,
-    });
-  } catch (error) {
-    /*
-     * Do not leave an active OTP if the email
-     * could not be sent.
-     */
-    await collection.updateOne(
-      {
-        _id: challengeId,
-      },
-      {
-        $set: {
-          consumed: true,
-          consumedAt: new Date(),
-          emailSendFailed: true,
-        },
-      }
-    );
-
-    throw error;
-  }
+  /*
+   * IMPORTANT:
+   *
+   * Do NOT await SMTP here.
+   *
+   * The challenge is already stored, so the API
+   * can return immediately while the email is
+   * delivered in the background.
+   */
+  queueForgotPasswordOtpEmail({
+    challengeId,
+    email: normalizedEmail,
+    otp,
+  });
 
   return {
     challengeId: challengeId.toString(),
+
     expiresAt,
+
     resendAfter: new Date(
       now.getTime() +
         OTP_RESEND_COOLDOWN_SECONDS * 1000
@@ -583,7 +658,8 @@ const verifyForgotOtp = async ({
   if (!/^\d{6}$/.test(cleanOtp)) {
     return {
       success: false,
-      message: "Please enter a valid 6-digit OTP.",
+      message:
+        "Please enter a valid 6-digit OTP.",
     };
   }
 
@@ -703,6 +779,7 @@ const verifyForgotOtp = async ({
       )
     ) {
       update.$set.consumed = true;
+
       update.$set.consumedAt = now;
     }
 
@@ -783,11 +860,12 @@ const createPasswordResetToken = ({
 
   /*
    * IMPORTANT:
+   *
    * Use userId consistently.
-   * The old controller used "id" while
-   * resetPassword expected "userId".
+   *
+   * The reset-password controller expects
+   * userId from the token.
    */
-
   return jwt.sign(
     {
       userId: userId.toString(),
@@ -907,8 +985,6 @@ export const forgotPassword = async (
     }
 
     /*
-     * Optional role protection.
-     *
      * Forgot password is intended for
      * customer/user accounts.
      */
@@ -930,6 +1006,7 @@ export const forgotPassword = async (
     const challenge =
       await createForgotPasswordOtp({
         email,
+
         userId: user._id,
       });
 
@@ -937,7 +1014,7 @@ export const forgotPassword = async (
       success: true,
 
       message:
-        "Password reset OTP has been sent to your email.",
+        "Password reset OTP has been queued for email delivery.",
 
       requiresOtp: true,
 
@@ -1108,8 +1185,7 @@ export const verifyForgotPasswordOtp =
       });
     }
   };
-
-/* =========================================================
+  /* =========================================================
    RESEND FORGOT PASSWORD OTP
    POST /auth/forgot-password/resend-otp
 ========================================================= */
@@ -1219,10 +1295,14 @@ export const resendForgotPasswordOtp =
 
       /*
        * Create and send a fresh OTP.
+       *
+       * SMTP delivery is handled in the background,
+       * so this API does not wait for GoDaddy SMTP.
        */
       const challenge =
         await createForgotPasswordOtp({
           email,
+
           userId: user._id,
         });
 
@@ -1230,7 +1310,7 @@ export const resendForgotPasswordOtp =
         success: true,
 
         message:
-          "A new password reset OTP has been sent to your email.",
+          "A new password reset OTP has been queued for email delivery.",
 
         requiresOtp: true,
 
@@ -1291,6 +1371,7 @@ export const resetPassword = async (
     if (!resetToken) {
       return res.status(400).json({
         success: false,
+
         message:
           "Password reset token is required.",
       });
@@ -1299,6 +1380,7 @@ export const resetPassword = async (
     if (!newPassword) {
       return res.status(400).json({
         success: false,
+
         message:
           "New password is required.",
       });
@@ -1310,6 +1392,7 @@ export const resetPassword = async (
     ) {
       return res.status(400).json({
         success: false,
+
         message:
           "Password must be a valid string.",
       });
@@ -1322,6 +1405,7 @@ export const resetPassword = async (
     if (newPassword.length < 6) {
       return res.status(400).json({
         success: false,
+
         message:
           "Password must be at least 6 characters long.",
       });
@@ -1335,6 +1419,7 @@ export const resetPassword = async (
     ) {
       return res.status(400).json({
         success: false,
+
         message:
           "Passwords do not match.",
       });
@@ -1357,6 +1442,7 @@ export const resetPassword = async (
       ) {
         return res.status(401).json({
           success: false,
+
           message:
             "Password reset token has expired. Please request a new OTP.",
         });
@@ -1364,6 +1450,7 @@ export const resetPassword = async (
 
       return res.status(401).json({
         success: false,
+
         message:
           "Invalid password reset token. Please request a new OTP.",
       });
@@ -1380,6 +1467,7 @@ export const resetPassword = async (
     if (!user) {
       return res.status(404).json({
         success: false,
+
         message:
           "User account not found.",
       });
@@ -1394,6 +1482,7 @@ export const resetPassword = async (
     if (!accountStatus.valid) {
       return res.status(403).json({
         success: false,
+
         message:
           accountStatus.message,
       });

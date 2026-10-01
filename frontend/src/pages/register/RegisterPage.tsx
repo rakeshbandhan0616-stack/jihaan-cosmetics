@@ -42,6 +42,16 @@ type RegisterForm = {
   confirmPassword: string;
 };
 
+type RegisterUser = {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role?: string;
+  authProvider?: "local" | "google" | "facebook";
+  isPhoneVerified?: boolean;
+};
+
 type RegisterResponse = {
   success?: boolean;
   message?: string;
@@ -57,18 +67,11 @@ type RegisterResponse = {
   challengeId?: string;
   expiresIn?: number;
   resendAfter?: number;
+  retryAfter?: number;
 
   provider?: "google" | "facebook";
 
-  user?: {
-    id: string;
-    name: string;
-    email: string;
-    phone?: string;
-    role?: string;
-    authProvider?: "local" | "google" | "facebook";
-    isPhoneVerified?: boolean;
-  };
+  user?: RegisterUser;
 
   data?: {
     token?: string;
@@ -78,15 +81,7 @@ type RegisterResponse = {
 
     provider?: "google" | "facebook";
 
-    user?: {
-      id: string;
-      name: string;
-      email: string;
-      phone?: string;
-      role?: string;
-      authProvider?: "local" | "google" | "facebook";
-      isPhoneVerified?: boolean;
-    };
+    user?: RegisterUser;
   };
 };
 
@@ -328,19 +323,14 @@ const RegisterPage = () => {
 
   const storeAuthenticatedUser = (
     token: string,
-    user: NonNullable<
-      RegisterResponse["user"]
-    >,
+    user: RegisterUser,
   ) => {
     localStorage.setItem(
       AUTH_TOKEN_STORAGE_KEY,
       token,
     );
 
-    /*
-     * Keep compatibility with existing
-     * application code using these keys.
-     */
+    /* Compatibility keys */
 
     localStorage.setItem(
       "authToken",
@@ -369,13 +359,11 @@ const RegisterPage = () => {
   };
 
   /* =======================================================
-     REDIRECT AFTER LOGIN
+     REDIRECT AFTER LOGIN / REGISTRATION
   ======================================================= */
 
   const redirectAfterLogin = (
-    user: NonNullable<
-      RegisterResponse["user"]
-    >,
+    user: RegisterUser,
   ) => {
     const normalizedRole =
       String(user.role || "")
@@ -387,14 +375,10 @@ const RegisterPage = () => {
         );
 
     const isAdmin =
-      normalizedRole ===
-        "admin" ||
-      normalizedRole ===
-        "superadmin" ||
-      normalizedRole ===
-        "administrator" ||
-      normalizedRole ===
-        "superadministrator";
+      normalizedRole === "admin" ||
+      normalizedRole === "superadmin" ||
+      normalizedRole === "administrator" ||
+      normalizedRole === "superadministrator";
 
     navigate(
       isAdmin
@@ -412,7 +396,7 @@ const RegisterPage = () => {
   };
 
   /* =========================================================
-     LOCAL REGISTRATION
+     FORM CHANGE
   ========================================================= */
 
   const handleChange = (
@@ -435,6 +419,17 @@ const RegisterPage = () => {
 
   /* =========================================================
      VALIDATE REGISTRATION FORM
+
+     Manual registration requirements:
+
+     Name
+     Email
+     Phone
+     Password >= 6 characters
+     Confirm password
+
+     Manual registration always requires
+     email OTP verification.
   ========================================================= */
 
   const validateForm = () => {
@@ -508,11 +503,15 @@ const RegisterPage = () => {
       return false;
     }
 
+    /* =====================================================
+       PASSWORD MINIMUM = 6
+    ===================================================== */
+
     if (
-      password.length < 4
+      password.length < 6
     ) {
       setError(
-        "Password must contain at least 4 characters.",
+        "Password must contain at least 6 characters.",
       );
 
       return false;
@@ -533,20 +532,22 @@ const RegisterPage = () => {
   };
 
   /* =========================================================
-     SUBMIT LOCAL REGISTRATION
-     
-     Manual registration:
-     
+     MANUAL EMAIL REGISTRATION
+
      Email + password
           ↓
-     Backend sends email OTP
+     Backend creates OTP challenge
           ↓
-     OTP verification
+     Email OTP sent
           ↓
-     Account creation
+     User verifies OTP
+          ↓
+     Backend creates account
+          ↓
+     Backend returns JWT
           ↓
      Login
-     
+
      NO WhatsApp OTP.
   ========================================================= */
 
@@ -612,7 +613,7 @@ const RegisterPage = () => {
       }
 
       /* =====================================================
-         EMAIL OTP REQUIRED
+         OTP REQUIRED
       ===================================================== */
 
       if (
@@ -650,7 +651,7 @@ const RegisterPage = () => {
          BACKWARD COMPATIBILITY
 
          If backend directly returns token + user,
-         support that response as well.
+         support it.
       ===================================================== */
 
       const token =
@@ -916,9 +917,7 @@ const RegisterPage = () => {
           );
 
         const data =
-          (await response.json()) as RegisterResponse & {
-            retryAfter?: number;
-          };
+          (await response.json()) as RegisterResponse;
 
         if (!response.ok) {
           if (
@@ -967,7 +966,7 @@ const RegisterPage = () => {
     };
 
   /* =========================================================
-     CANCEL EMAIL OTP VERIFICATION
+     CANCEL OTP VERIFICATION
   ========================================================= */
 
   const cancelEmailOtpVerification =
@@ -984,6 +983,11 @@ const RegisterPage = () => {
         "",
       );
 
+      /*
+       * Clear password from memory when
+       * leaving OTP verification.
+       */
+
       setForm(
         (previous) => ({
           ...previous,
@@ -999,26 +1003,30 @@ const RegisterPage = () => {
 
   /* =========================================================
      GOOGLE LOGIN / REGISTRATION
-     
+
      IMPORTANT:
-     
-     Google verified email is sufficient.
-     
-     NO email OTP.
-     NO WhatsApp OTP.
-     NO phone verification step.
+
+     Google provides a verified identity.
+
+     Therefore:
+
+     Google
+       ↓
+     Backend verifies Google credential
+       ↓
+     Create/login account
+       ↓
+     JWT
+
+     NO EMAIL OTP
+     NO WHATSAPP OTP
+     NO PHONE VERIFICATION
   ========================================================= */
 
   const handleGoogleCredential =
     async (
       response: GoogleCredentialResponse,
     ) => {
-      /*
-       * FIX:
-       * The previous file never set Google loading
-       * to true when authentication started.
-       */
-
       setIsGoogleLoading(
         true,
       );
@@ -1085,11 +1093,6 @@ const RegisterPage = () => {
         const user =
           data.user ||
           data.data?.user;
-
-        /*
-         * Google backend should immediately return
-         * authenticated user + JWT.
-         */
 
         if (
           token &&
@@ -1355,14 +1358,12 @@ const RegisterPage = () => {
 
   /* =========================================================
      FACEBOOK LOGIN / REGISTRATION
-     
-     IMPORTANT:
-     
-     Facebook authentication is sufficient for
-     account creation/login.
-     
-     NO email OTP.
-     NO WhatsApp OTP.
+
+     Facebook authentication is sufficient
+     for account creation/login.
+
+     NO EMAIL OTP
+     NO WHATSAPP OTP
   ========================================================= */
 
   const handleFacebookLogin =
@@ -1457,11 +1458,6 @@ const RegisterPage = () => {
               const user =
                 data.user ||
                 data.data?.user;
-
-              /*
-               * Facebook backend should immediately
-               * return authenticated user + JWT.
-               */
 
               if (
                 token &&
@@ -2140,7 +2136,7 @@ const RegisterPage = () => {
                       handleChange
                     }
                     autoComplete="new-password"
-                    minLength={4}
+                    minLength={6}
                     required
                   />
 
@@ -2180,7 +2176,7 @@ const RegisterPage = () => {
                     styles.helperText
                   }
                 >
-                  Use at least 4 characters.
+                  Use at least 6 characters.
                 </span>
               </div>
 
@@ -2226,7 +2222,7 @@ const RegisterPage = () => {
                       handleChange
                     }
                     autoComplete="new-password"
-                    minLength={4}
+                    minLength={6}
                     required
                   />
 

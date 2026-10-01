@@ -19,6 +19,12 @@ const router = express.Router();
   Step 1:
   Enter email and send OTP
 
+  If this router is mounted as:
+
+  app.use("/api", forgotPasswordRoutes);
+
+  Endpoint becomes:
+
   POST /api/forgot-password
 */
 router.post(
@@ -28,9 +34,22 @@ router.post(
 
 /*
   Step 2:
-  Verify OTP
+  Verify email OTP
 
   POST /api/forgot-password/verify-otp
+
+  Body:
+  {
+    "email": "customer@example.com",
+    "otp": "123456",
+    "challengeId": "..."
+  }
+
+  Successful verification returns:
+  {
+    "success": true,
+    "resetToken": "..."
+  }
 */
 router.post(
   "/forgot-password/verify-otp",
@@ -41,6 +60,14 @@ router.post(
   Resend OTP
 
   POST /api/forgot-password/resend-otp
+
+  Body:
+  {
+    "email": "customer@example.com"
+  }
+
+  The controller applies the configured
+  60-second resend cooldown.
 */
 router.post(
   "/forgot-password/resend-otp",
@@ -49,13 +76,26 @@ router.post(
 
 /*
   Step 3:
-  Reset password
+  Reset password using resetToken
 
-  POST /api/forgot-password/reset-password
+  POST /api/reset-password
+
+  Body:
+  {
+    "resetToken": "...",
+    "newPassword": "newpassword",
+    "confirmPassword": "newpassword"
+  }
+
+  The resetToken is NOT the normal login JWT.
 */
 router.post(
-  "/forgot-password/reset-password",
+  "/reset-password",
   resetPassword
 );
+
+/* =========================================================
+   EXPORT ROUTER
+========================================================= */
 
 export default router;
