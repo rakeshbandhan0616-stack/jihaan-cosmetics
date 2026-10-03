@@ -44,6 +44,8 @@ import LogisticsDashboard from "./pages/LogisticsDashboard/LogisticsDashboard";
 import NotificationsPage from "./components/header/MainHeader/NotificationsPage/NotificationsPage";
 
 import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
+
+import VirtualMallPage from "./pages/VirtualMall/VirtualMallPage";
 /* =========================================================
    TYPES
    ========================================================= */
@@ -434,6 +436,11 @@ function App() {
             element={<AdminAccountPage />}
           />
 
+
+<Route
+  path="/virtual-mall"
+  element={<VirtualMallPage />}
+/>
           {/* =================================================
               STAFF LOGIN
              ================================================= */}

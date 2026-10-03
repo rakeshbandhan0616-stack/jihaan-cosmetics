@@ -4,6 +4,7 @@ import {
   useMemo,
   useState,
 } from "react";
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -16,7 +17,9 @@ import {
   RefreshCw,
   ShieldCheck,
 } from "lucide-react";
+
 import { Link, useNavigate } from "react-router-dom";
+
 import logo from "../../assets/images/jihaan-logo.jpeg";
 import styles from "./ForgotPassword.module.css";
 
@@ -64,11 +67,8 @@ const ForgotPassword = () => {
   const [step, setStep] =
     useState<ForgotStep>("email");
 
-  const [email, setEmail] =
-    useState("");
-
-  const [otp, setOtp] =
-    useState("");
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
 
   const [newPassword, setNewPassword] =
     useState("");
@@ -82,11 +82,8 @@ const ForgotPassword = () => {
   const [maskedEmail, setMaskedEmail] =
     useState("");
 
-  const [message, setMessage] =
-    useState("");
-
-  const [error, setError] =
-    useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const [isLoading, setIsLoading] =
     useState(false);
@@ -183,7 +180,7 @@ const ForgotPassword = () => {
 
   const passwordChecks = useMemo(() => {
     return {
-      minLength: newPassword.length >= 4,
+      minLength: newPassword.length >= 6,
       hasUppercase: /[A-Z]/.test(newPassword),
       hasNumber: /\d/.test(newPassword),
     };
@@ -202,10 +199,7 @@ const ForgotPassword = () => {
     data: ApiResponse,
     fallback: string,
   ) => {
-    return (
-      data?.message ||
-      fallback
-    );
+    return data?.message || fallback;
   };
 
   /* =========================================================
@@ -245,8 +239,7 @@ const ForgotPassword = () => {
         {
           method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
           credentials: "include",
           body: JSON.stringify({
@@ -256,9 +249,7 @@ const ForgotPassword = () => {
       );
 
       const data: ApiResponse =
-        await response.json().catch(
-          () => ({}),
-        );
+        await response.json().catch(() => ({}));
 
       if (!response.ok) {
         if (
@@ -281,13 +272,9 @@ const ForgotPassword = () => {
       setEmail(normalizedEmail);
 
       if (data.maskedEmail) {
-        setMaskedEmail(
-          data.maskedEmail,
-        );
+        setMaskedEmail(data.maskedEmail);
       } else {
-        setMaskedEmail(
-          normalizedEmail,
-        );
+        setMaskedEmail(normalizedEmail);
       }
 
       /*
@@ -295,21 +282,17 @@ const ForgotPassword = () => {
        * for the password-reset flow.
        */
 
-      if (
-        data.requiresOtp !== false
-      ) {
+      if (data.requiresOtp !== false) {
         setOtp("");
 
         setOtpExpiresIn(
-          typeof data.expiresIn ===
-            "number"
+          typeof data.expiresIn === "number"
             ? data.expiresIn
             : 300,
         );
 
         setResendCountdown(
-          typeof data.resendAfter ===
-            "number"
+          typeof data.resendAfter === "number"
             ? data.resendAfter
             : 60,
         );
@@ -356,8 +339,7 @@ const ForgotPassword = () => {
     setError("");
     setMessage("");
 
-    const normalizedOtp =
-      otp.trim();
+    const normalizedOtp = otp.trim();
 
     if (!/^\d{6}$/.test(normalizedOtp)) {
       setError(
@@ -381,22 +363,18 @@ const ForgotPassword = () => {
         {
           method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
           credentials: "include",
           body: JSON.stringify({
-            email:
-              email.trim().toLowerCase(),
+            email: email.trim().toLowerCase(),
             otp: normalizedOtp,
           }),
         },
       );
 
       const data: ApiResponse =
-        await response.json().catch(
-          () => ({}),
-        );
+        await response.json().catch(() => ({}));
 
       if (!response.ok) {
         throw new Error(
@@ -423,19 +401,13 @@ const ForgotPassword = () => {
       }
 
       /*
-       * Important:
-       *
-       * resetToken is NOT the normal
-       * login token.
+       * resetToken is NOT the normal login token.
        *
        * It is only used for resetting
        * the password.
        */
 
-      setResetToken(
-        data.resetToken,
-      );
-
+      setResetToken(data.resetToken);
       setOtp("");
 
       setMessage(
@@ -483,21 +455,17 @@ const ForgotPassword = () => {
         {
           method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
           credentials: "include",
           body: JSON.stringify({
-            email:
-              email.trim().toLowerCase(),
+            email: email.trim().toLowerCase(),
           }),
         },
       );
 
       const data: ApiResponse =
-        await response.json().catch(
-          () => ({}),
-        );
+        await response.json().catch(() => ({}));
 
       if (!response.ok) {
         if (
@@ -520,15 +488,13 @@ const ForgotPassword = () => {
       setOtp("");
 
       setOtpExpiresIn(
-        typeof data.expiresIn ===
-          "number"
+        typeof data.expiresIn === "number"
           ? data.expiresIn
           : 300,
       );
 
       setResendCountdown(
-        typeof data.resendAfter ===
-          "number"
+        typeof data.resendAfter === "number"
           ? data.resendAfter
           : 60,
       );
@@ -569,6 +535,7 @@ const ForgotPassword = () => {
       setError(
         "Your password reset session has expired. Please start again.",
       );
+
       setStep("email");
       return;
     }
@@ -580,9 +547,13 @@ const ForgotPassword = () => {
       return;
     }
 
-    if (newPassword.length < 4) {
+    /*
+     * Backend requires minimum 6 characters.
+     */
+
+    if (newPassword.length < 6) {
       setError(
-        "Password must contain at least 4 characters.",
+        "Password must contain at least 6 characters.",
       );
       return;
     }
@@ -611,8 +582,7 @@ const ForgotPassword = () => {
         {
           method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
           credentials: "include",
           body: JSON.stringify({
@@ -624,9 +594,7 @@ const ForgotPassword = () => {
       );
 
       const data: ApiResponse =
-        await response.json().catch(
-          () => ({}),
-        );
+        await response.json().catch(() => ({}));
 
       if (!response.ok) {
         throw new Error(
@@ -649,6 +617,7 @@ const ForgotPassword = () => {
       setNewPassword("");
       setConfirmPassword("");
       setResetToken("");
+
       setMessage(
         data.message ||
           "Your password has been reset successfully.",
@@ -801,6 +770,7 @@ const ForgotPassword = () => {
 
               <h1>
                 Password Reset
+                <br />
                 Successfully
               </h1>
 
@@ -822,9 +792,7 @@ const ForgotPassword = () => {
                   Continue to Login
                 </span>
 
-                <ArrowRight
-                  size={18}
-                />
+                <ArrowRight size={18} />
               </button>
             </div>
 
@@ -843,15 +811,17 @@ const ForgotPassword = () => {
     );
   }
 
+  /* =========================================================
+     MAIN
+  ========================================================= */
+
   return (
     <main className={styles.page}>
       <div className={styles.backgroundGlow} />
 
       <section className={styles.authWrapper}>
         <div className={styles.authCard}>
-          {/* =================================================
-             BRAND
-          ================================================= */}
+          {/* BRAND */}
 
           <div className={styles.brand}>
             <img
@@ -866,15 +836,14 @@ const ForgotPassword = () => {
               }
             >
               <ShieldCheck size={15} />
+
               <span>
                 Secure Account Recovery
               </span>
             </div>
           </div>
 
-          {/* =================================================
-             HEADER
-          ================================================= */}
+          {/* HEADER */}
 
           <div className={styles.header}>
             <div
@@ -913,8 +882,7 @@ const ForgotPassword = () => {
 
                 {step === "otp" &&
                   `Enter the 6-digit OTP sent to ${
-                    maskedEmail ||
-                    email
+                    maskedEmail || email
                   }.`}
 
                 {step === "password" &&
@@ -923,15 +891,11 @@ const ForgotPassword = () => {
             </div>
           </div>
 
-          {/* =================================================
-             STEP INDICATOR
-          ================================================= */}
+          {/* STEP INDICATOR */}
 
           {renderStepIndicator()}
 
-          {/* =================================================
-             SUCCESS / ERROR MESSAGE
-          ================================================= */}
+          {/* SUCCESS MESSAGE */}
 
           {message && (
             <div
@@ -939,13 +903,13 @@ const ForgotPassword = () => {
                 styles.successMessage
               }
             >
-              <CheckCircle2
-                size={18}
-              />
+              <CheckCircle2 size={18} />
 
               <span>{message}</span>
             </div>
           )}
+
+          {/* ERROR MESSAGE */}
 
           {error && (
             <div
@@ -958,7 +922,7 @@ const ForgotPassword = () => {
           )}
 
           {/* =================================================
-             STEP 1 - EMAIL
+              STEP 1 - EMAIL
           ================================================= */}
 
           {step === "email" && (
@@ -1019,6 +983,7 @@ const ForgotPassword = () => {
                         styles.spinner
                       }
                     />
+
                     Sending OTP...
                   </>
                 ) : (
@@ -1027,9 +992,7 @@ const ForgotPassword = () => {
                       Send OTP
                     </span>
 
-                    <ArrowRight
-                      size={18}
-                    />
+                    <ArrowRight size={18} />
                   </>
                 )}
               </button>
@@ -1040,9 +1003,7 @@ const ForgotPassword = () => {
                 }
               >
                 <Link to="/login">
-                  <ArrowLeft
-                    size={16}
-                  />
+                  <ArrowLeft size={16} />
                   Back to Login
                 </Link>
               </div>
@@ -1050,7 +1011,7 @@ const ForgotPassword = () => {
           )}
 
           {/* =================================================
-             STEP 2 - OTP
+              STEP 2 - OTP
           ================================================= */}
 
           {step === "otp" && (
@@ -1072,8 +1033,7 @@ const ForgotPassword = () => {
                   </span>
 
                   <strong>
-                    {maskedEmail ||
-                      email}
+                    {maskedEmail || email}
                   </strong>
                 </div>
 
@@ -1106,10 +1066,7 @@ const ForgotPassword = () => {
                   onChange={(event) => {
                     const value =
                       event.target.value
-                        .replace(
-                          /\D/g,
-                          "",
-                        )
+                        .replace(/\D/g, "")
                         .slice(0, 6);
 
                     setOtp(value);
@@ -1159,8 +1116,7 @@ const ForgotPassword = () => {
                     }
                   />
 
-                  {resendCountdown >
-                  0
+                  {resendCountdown > 0
                     ? `Resend in ${resendCountdown}s`
                     : isResending
                     ? "Sending..."
@@ -1185,6 +1141,7 @@ const ForgotPassword = () => {
                         styles.spinner
                       }
                     />
+
                     Verifying...
                   </>
                 ) : (
@@ -1193,9 +1150,7 @@ const ForgotPassword = () => {
                       Verify OTP
                     </span>
 
-                    <ArrowRight
-                      size={18}
-                    />
+                    <ArrowRight size={18} />
                   </>
                 )}
               </button>
@@ -1210,16 +1165,15 @@ const ForgotPassword = () => {
                 }
                 disabled={isLoading}
               >
-                <ArrowLeft
-                  size={16}
-                />
+                <ArrowLeft size={16} />
+
                 Use another email
               </button>
             </form>
           )}
 
           {/* =================================================
-             STEP 3 - NEW PASSWORD
+              STEP 3 - NEW PASSWORD
           ================================================= */}
 
           {step === "password" && (
@@ -1240,9 +1194,7 @@ const ForgotPassword = () => {
                     styles.verifiedIcon
                   }
                 >
-                  <CheckCircle2
-                    size={18}
-                  />
+                  <CheckCircle2 size={18} />
                 </div>
 
                 <div>
@@ -1251,8 +1203,7 @@ const ForgotPassword = () => {
                   </span>
 
                   <strong>
-                    {maskedEmail ||
-                      email}
+                    {maskedEmail || email}
                   </strong>
                 </div>
               </div>
@@ -1318,13 +1269,9 @@ const ForgotPassword = () => {
                     }
                   >
                     {showNewPassword ? (
-                      <EyeOff
-                        size={18}
-                      />
+                      <EyeOff size={18} />
                     ) : (
-                      <Eye
-                        size={18}
-                      />
+                      <Eye size={18} />
                     )}
                   </button>
                 </div>
@@ -1344,10 +1291,9 @@ const ForgotPassword = () => {
                       : ""
                   }
                 >
-                  <CheckCircle2
-                    size={14}
-                  />
-                  Minimum 4 characters
+                  <CheckCircle2 size={14} />
+
+                  Minimum 6 characters
                 </span>
 
                 <span
@@ -1357,9 +1303,8 @@ const ForgotPassword = () => {
                       : ""
                   }
                 >
-                  <CheckCircle2
-                    size={14}
-                  />
+                  <CheckCircle2 size={14} />
+
                   Uppercase letter
                 </span>
 
@@ -1370,9 +1315,8 @@ const ForgotPassword = () => {
                       : ""
                   }
                 >
-                  <CheckCircle2
-                    size={14}
-                  />
+                  <CheckCircle2 size={14} />
+
                   Number
                 </span>
               </div>
@@ -1407,9 +1351,7 @@ const ForgotPassword = () => {
                         ? "text"
                         : "password"
                     }
-                    value={
-                      confirmPassword
-                    }
+                    value={confirmPassword}
                     onChange={(event) =>
                       setConfirmPassword(
                         event.target.value,
@@ -1439,13 +1381,9 @@ const ForgotPassword = () => {
                     }
                   >
                     {showConfirmPassword ? (
-                      <EyeOff
-                        size={18}
-                      />
+                      <EyeOff size={18} />
                     ) : (
-                      <Eye
-                        size={18}
-                      />
+                      <Eye size={18} />
                     )}
                   </button>
                 </div>
@@ -1472,6 +1410,7 @@ const ForgotPassword = () => {
                     <CheckCircle2
                       size={14}
                     />
+
                     Passwords match
                   </span>
                 )}
@@ -1484,8 +1423,7 @@ const ForgotPassword = () => {
                 }
                 disabled={
                   isLoading ||
-                  newPassword.length <
-                    4 ||
+                  newPassword.length < 6 ||
                   newPassword !==
                     confirmPassword
                 }
@@ -1497,6 +1435,7 @@ const ForgotPassword = () => {
                         styles.spinner
                       }
                     />
+
                     Updating Password...
                   </>
                 ) : (
@@ -1505,9 +1444,7 @@ const ForgotPassword = () => {
                       Reset Password
                     </span>
 
-                    <ArrowRight
-                      size={18}
-                    />
+                    <ArrowRight size={18} />
                   </>
                 )}
               </button>
@@ -1522,19 +1459,18 @@ const ForgotPassword = () => {
                 }
                 disabled={isLoading}
               >
-                <ArrowLeft
-                  size={16}
-                />
+                <ArrowLeft size={16} />
+
                 Back to OTP
               </button>
             </form>
           )}
 
-          {/* =================================================
-             FOOTER
-          ================================================= */}
+          {/* FOOTER */}
 
-          <div className={styles.cardFooter}>
+          <div
+            className={styles.cardFooter}
+          >
             <span>
               Remember your password?
             </span>

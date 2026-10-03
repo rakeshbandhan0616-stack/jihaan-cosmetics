@@ -6,6 +6,7 @@ import {
   ShieldCheck,
   Truck,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import styles from "./TrustFeatures.module.css";
 
@@ -49,6 +50,8 @@ const features: TrustFeature[] = [
 ];
 
 function TrustFeatures() {
+  const navigate = useNavigate();
+
   return (
     <section
       className={styles.section}
@@ -92,6 +95,24 @@ function TrustFeatures() {
               </div>
             );
           })}
+        </div>
+
+        {/* Virtual Mall CTA */}
+        <div className={styles.virtualMallWrapper}>
+          <button
+            type="button"
+            className={styles.virtualMallButton}
+            onClick={() => navigate("/virtual-mall")}
+          >
+            <span className={styles.virtualMallIcon}>🏬</span>
+
+            <span className={styles.virtualMallText}>
+              <strong>Explore Virtual Mall</strong>
+              <small>Walk through our 3D beauty store</small>
+            </span>
+
+            <span className={styles.virtualMallArrow}>→</span>
+          </button>
         </div>
       </div>
     </section>

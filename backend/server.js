@@ -80,6 +80,9 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 //accounts admin 
 import adminAccountRoutes from "./routes/adminAccountRoutes.js";
 
+//virtuall mall backend 
+import virtualMallRoutes from "./routes/virtualMallRoutes.js";
+
 // --------------------------------------------------
 // DNS configuration
 // --------------------------------------------------
@@ -394,6 +397,12 @@ app.use(
   cartRoutes,
 );
 
+// virtual mall backed
+
+app.use(
+  "/api/virtual-mall",
+  virtualMallRoutes,
+);
 // ==================================================
 // Admin order management
 // ==================================================
