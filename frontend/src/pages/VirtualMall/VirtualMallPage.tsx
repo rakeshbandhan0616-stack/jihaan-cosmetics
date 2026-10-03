@@ -1,4 +1,4 @@
-import {
+import React, {
   Suspense,
   useCallback,
   useEffect,
@@ -7,32 +7,23 @@ import {
   useState,
 } from "react";
 
-import {
-  Canvas,
-  useFrame,
-  useThree,
-} from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 
-import {
-  Html,
-  KeyboardControls,
-  PointerLockControls,
-  Text,
-  useKeyboardControls,
-} from "@react-three/drei";
+import { Html, Text } from "@react-three/drei";
 
 import * as THREE from "three";
 
 import {
   ArrowLeft,
   Camera,
-  ChevronDown,
   ChevronUp,
   Eye,
   Gamepad2,
   Info,
   Map,
+  Maximize2,
   Mouse,
+  RotateCcw,
   ShoppingCart,
   Sparkles,
   X,
@@ -43,7 +34,7 @@ import { useNavigate } from "react-router-dom";
 import "./VirtualMallPage.css";
 
 /* =========================================================
-   API
+   API CONFIG
 ========================================================= */
 
 const API_BASE_URL = String(
@@ -57,42 +48,19 @@ const MALL_SLUG = "jini-cosmetics-virtual-mall";
    TYPES
 ========================================================= */
 
-type Vector3Value = {
+type Vec3 = {
   x: number;
   y: number;
   z: number;
 };
 
-type MallStore = {
-  storeId: string;
-  name: string;
-  slug?: string;
-  description?: string;
-  category?: string;
-  subcategory?: string;
-
-  position?: Vector3Value;
-  rotation?: Vector3Value;
-  scale?: Vector3Value;
-
-  size?: {
-    width?: number;
-    height?: number;
-    depth?: number;
-  };
-
-  floorNumber?: number;
-
-  colors?: {
-    primary?: string;
-    secondary?: string;
-    accent?: string;
-    interior?: string;
-  };
-
-  isActive?: boolean;
-  isFeatured?: boolean;
-};
+type ProductImage =
+  | string
+  | {
+      url?: string;
+      src?: string;
+      secure_url?: string;
+    };
 
 type Product = {
   _id?: string;
@@ -100,6 +68,7 @@ type Product = {
 
   name: string;
   slug?: string;
+
   brand?: string;
 
   category?: string;
@@ -113,13 +82,16 @@ type Product = {
   rating?: number;
   reviews?: number;
 
-  images?: string[];
+  images?: ProductImage[];
+
   hoverImage?: string;
 
   badge?: string;
 
   stock?: number;
+
   active?: boolean;
+
   isOutOfStock?: boolean;
 };
 
@@ -132,15 +104,20 @@ type ProductLocation = {
 
   floorNumber?: number;
 
-  position: Vector3Value;
-  rotation?: Vector3Value;
-  scale?: Vector3Value;
+  position: Vec3;
+
+  rotation?: Vec3;
+
+  scale?: Vec3;
 
   displayType?: string;
 
   isInteractive?: boolean;
+
   showProductPopup?: boolean;
+
   allowAddToCart?: boolean;
+
   allowViewDetails?: boolean;
 
   isActive?: boolean;
@@ -148,13 +125,93 @@ type ProductLocation = {
   sortOrder?: number;
 };
 
+type MallStore = {
+  storeId: string;
+
+  name: string;
+
+  slug?: string;
+
+  description?: string;
+
+  category?: string;
+
+  subcategory?: string;
+
+  position?: Vec3;
+
+  rotation?: Vec3;
+
+  scale?: Vec3;
+
+  size?: {
+    width?: number;
+    height?: number;
+    depth?: number;
+  };
+
+  floorNumber?: number;
+
+  primaryColor?: string;
+
+  secondaryColor?: string;
+
+  colors?: {
+    primary?: string;
+    secondary?: string;
+    accent?: string;
+    interior?: string;
+  };
+
+  isActive?: boolean;
+
+  isFeatured?: boolean;
+};
+
+type MallSettings = {
+  playerHeight?: number;
+
+  movementSpeed?: number;
+
+  runningSpeed?: number;
+
+  cameraFov?: number;
+
+  cameraNear?: number;
+
+  cameraFar?: number;
+
+  productInteractionDistance?: number;
+
+  mobileJoystickEnabled?: boolean;
+
+  mobileSwipeEnabled?: boolean;
+
+  forceLandscapeOnMobile?: boolean;
+
+  maxPixelRatio?: number;
+};
+
 type MallData = {
   _id: string;
 
   name: string;
+
   slug: string;
 
   description?: string;
+
+  logo?: string;
+
+  coverImage?: string;
+
+  thumbnailImage?: string;
+
+  modelUrl?: string;
+
+  modelType?: string;
+
+  backgroundColor?: string;
 
   stores: MallStore[];
 
@@ -163,47 +220,287 @@ type MallData = {
   floors?: unknown[];
 
   spawnPoint?: {
-    position?: Vector3Value;
-    rotation?: Vector3Value;
+    position?: Vec3;
+    rotation?: Vec3;
   };
 
-  settings?: {
-    playerHeight?: number;
-
-    movementSpeed?: number;
-    runningSpeed?: number;
-
-    cameraFov?: number;
-
-    productInteractionDistance?: number;
-
-    mobile?: {
-      joystick?: boolean;
-      swipe?: boolean;
-      forceLandscape?: boolean;
-    };
-  };
+  settings?: MallSettings;
 
   isPublished?: boolean;
+
   isActive?: boolean;
 
   maintenanceMode?: boolean;
+
   maintenanceMessage?: string;
 };
 
-type MallApiResponse = {
+type ApiResponse<T> = {
   success?: boolean;
-  mall?: MallData;
-  data?: MallData;
+
+  mall?: T;
+
+  product?: T;
+
+  data?: T;
+
   message?: string;
 };
 
-type ProductApiResponse = {
-  success?: boolean;
-  product?: Product;
-  data?: Product;
-  message?: string;
-};
+/* =========================================================
+   FALLBACK DEMO DATA
+   Used ONLY when:
+   VITE_VIRTUAL_MALL_DEMO_MODE=true
+========================================================= */
+
+const FALLBACK_STORES: MallStore[] = [
+  {
+    storeId: "makeup",
+    name: "MAKEUP",
+    category: "Makeup",
+    description:
+      "Lipsticks, foundations, eye makeup and beauty essentials.",
+    position: {
+      x: -15,
+      y: 0,
+      z: -9,
+    },
+    size: {
+      width: 13,
+      height: 4.8,
+      depth: 11,
+    },
+    colors: {
+      primary: "#e72d82",
+      secondary: "#24151d",
+      accent: "#ff8ab9",
+      interior: "#35151f",
+    },
+    isActive: true,
+  },
+
+  {
+    storeId: "skin-care",
+    name: "SKIN CARE",
+    category: "Skin Care",
+    description:
+      "Daily skincare, serums, cleansers and moisturizers.",
+    position: {
+      x: 15,
+      y: 0,
+      z: -9,
+    },
+    size: {
+      width: 13,
+      height: 4.8,
+      depth: 11,
+    },
+    colors: {
+      primary: "#2b9c86",
+      secondary: "#102b29",
+      accent: "#74d7bf",
+      interior: "#173d38",
+    },
+    isActive: true,
+  },
+
+  {
+    storeId: "hair-care",
+    name: "HAIR CARE",
+    category: "Hair Care",
+    description:
+      "Hair care products, masks, oils and styling essentials.",
+    position: {
+      x: -15,
+      y: 0,
+      z: 8,
+    },
+    size: {
+      width: 13,
+      height: 4.8,
+      depth: 11,
+    },
+    colors: {
+      primary: "#c58b48",
+      secondary: "#251d16",
+      accent: "#f0c58b",
+      interior: "#3b2a1b",
+    },
+    isActive: true,
+  },
+
+  {
+    storeId: "fragrance",
+    name: "FRAGRANCE",
+    category: "Fragrance",
+    description:
+      "Perfumes, mists and fragrance collections.",
+    position: {
+      x: 15,
+      y: 0,
+      z: 8,
+    },
+    size: {
+      width: 13,
+      height: 4.8,
+      depth: 11,
+    },
+    colors: {
+      primary: "#8366d6",
+      secondary: "#211a31",
+      accent: "#bba8ff",
+      interior: "#2e2444",
+    },
+    isActive: true,
+  },
+];
+
+const FALLBACK_PRODUCTS: ProductLocation[] = [
+  {
+    _id: "demo-1",
+
+    storeId: "makeup",
+
+    position: {
+      x: -18,
+      y: 1.35,
+      z: -12,
+    },
+
+    product: {
+      id: "demo-1",
+      name: "Velvet Matte Lipstick",
+      brand: "JINI Cosmetics",
+      category: "Makeup",
+      price: 699,
+      rating: 4.6,
+      reviews: 128,
+      description:
+        "Long-lasting matte lipstick for a smooth beauty finish.",
+      images: [],
+    },
+
+    isInteractive: true,
+    allowAddToCart: true,
+    allowViewDetails: true,
+  },
+
+  {
+    _id: "demo-2",
+
+    storeId: "makeup",
+
+    position: {
+      x: -13,
+      y: 1.35,
+      z: -12,
+    },
+
+    product: {
+      id: "demo-2",
+      name: "Silk Glow Foundation",
+      brand: "JINI Cosmetics",
+      category: "Makeup",
+      price: 899,
+      rating: 4.5,
+      reviews: 86,
+      description:
+        "Buildable coverage with a natural glow.",
+      images: [],
+    },
+
+    isInteractive: true,
+    allowAddToCart: true,
+    allowViewDetails: true,
+  },
+
+  {
+    _id: "demo-3",
+
+    storeId: "skin-care",
+
+    position: {
+      x: 12,
+      y: 1.35,
+      z: -12,
+    },
+
+    product: {
+      id: "demo-3",
+      name: "Hydra Glow Serum",
+      brand: "JINI Cosmetics",
+      category: "Skin Care",
+      price: 799,
+      rating: 4.7,
+      reviews: 94,
+      description:
+        "A lightweight daily serum for a fresh hydrated look.",
+      images: [],
+    },
+
+    isInteractive: true,
+    allowAddToCart: true,
+    allowViewDetails: true,
+  },
+
+  {
+    _id: "demo-4",
+
+    storeId: "hair-care",
+
+    position: {
+      x: -18,
+      y: 1.35,
+      z: 11,
+    },
+
+    product: {
+      id: "demo-4",
+      name: "Repair Hair Mask",
+      brand: "JINI Cosmetics",
+      category: "Hair Care",
+      price: 749,
+      rating: 4.4,
+      reviews: 61,
+      description:
+        "Nourishing care for dry and damaged hair.",
+      images: [],
+    },
+
+    isInteractive: true,
+    allowAddToCart: true,
+    allowViewDetails: true,
+  },
+
+  {
+    _id: "demo-5",
+
+    storeId: "fragrance",
+
+    position: {
+      x: 12,
+      y: 1.35,
+      z: 11,
+    },
+
+    product: {
+      id: "demo-5",
+      name: "Bloom Eau de Parfum",
+      brand: "JINI Cosmetics",
+      category: "Fragrance",
+      price: 1199,
+      rating: 4.8,
+      reviews: 143,
+      description:
+        "A modern floral fragrance for everyday elegance.",
+      images: [],
+    },
+
+    isInteractive: true,
+    allowAddToCart: true,
+    allowViewDetails: true,
+  },
+];
 
 /* =========================================================
    HELPERS
@@ -219,7 +516,9 @@ function getToken(): string {
   );
 }
 
-function getProductId(product?: Product | string): string {
+function getProductId(
+  product?: Product | string,
+): string {
   if (!product) {
     return "";
   }
@@ -228,34 +527,50 @@ function getProductId(product?: Product | string): string {
     return product;
   }
 
-  return String(product._id || product.id || "");
-}
-
-function getImage(product?: Product): string {
-  if (!product) {
-    return "";
-  }
-
-  return (
-    product.images?.[0] ||
-    product.hoverImage ||
-    ""
+  return String(
+    product._id ||
+      product.id ||
+      "",
   );
 }
 
-function getPrice(product?: Product): number {
-  return Number(product?.price || 0);
+function getProductImage(
+  product?: Product,
+): string {
+  const first = product?.images?.[0];
+
+  if (typeof first === "string") {
+    return first;
+  }
+
+  if (
+    first &&
+    typeof first === "object"
+  ) {
+    return String(
+      first.url ||
+        first.secure_url ||
+        first.src ||
+        "",
+    );
+  }
+
+  return product?.hoverImage || "";
 }
 
-function formatPrice(value: number): string {
-  return `₹${value.toLocaleString("en-IN", {
+function formatPrice(
+  value?: number,
+): string {
+  return `₹${Number(
+    value || 0,
+  ).toLocaleString("en-IN", {
     maximumFractionDigits: 2,
   })}`;
 }
 
-function vector(
-  value?: Vector3Value,
-  fallback: Vector3Value = {
+function vec(
+  value?: Vec3,
+  fallback: Vec3 = {
     x: 0,
     y: 0,
     z: 0,
@@ -272,19 +587,166 @@ function vector(
    KEYBOARD
 ========================================================= */
 
-type Controls = {
-  forward: boolean;
-  backward: boolean;
-  left: boolean;
-  right: boolean;
-  run: boolean;
-};
+function useKeyboard() {
+  const keys =
+    useRef<Record<string, boolean>>(
+      {},
+    );
+
+  useEffect(() => {
+    const down = (
+      event: KeyboardEvent,
+    ) => {
+      keys.current[
+        event.key.toLowerCase()
+      ] = true;
+
+      if (
+        [
+          "arrowup",
+          "arrowdown",
+          "arrowleft",
+          "arrowright",
+          " ",
+        ].includes(
+          event.key.toLowerCase(),
+        )
+      ) {
+        event.preventDefault();
+      }
+    };
+
+    const up = (
+      event: KeyboardEvent,
+    ) => {
+      keys.current[
+        event.key.toLowerCase()
+      ] = false;
+    };
+
+    window.addEventListener(
+      "keydown",
+      down,
+      {
+        passive: false,
+      },
+    );
+
+    window.addEventListener(
+      "keyup",
+      up,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "keydown",
+        down,
+      );
+
+      window.removeEventListener(
+        "keyup",
+        up,
+      );
+    };
+  }, []);
+
+  return keys;
+}
+
+/* =========================================================
+   COLLISION
+========================================================= */
+
+function isBlockedByStore(
+  x: number,
+  z: number,
+  stores: MallStore[],
+): boolean {
+  const radius = 0.38;
+
+  return stores.some(
+    (store) => {
+      if (
+        store.isActive === false
+      ) {
+        return false;
+      }
+
+      const p =
+        store.position || {
+          x: 0,
+          y: 0,
+          z: 0,
+        };
+
+      const width =
+        store.size?.width || 10;
+
+      const depth =
+        store.size?.depth || 10;
+
+      const halfW =
+        width / 2;
+
+      const halfD =
+        depth / 2;
+
+      const leftWall =
+        Math.abs(
+          x -
+            (p.x - halfW),
+        ) < radius &&
+        z >
+          p.z -
+            halfD -
+            radius &&
+        z <
+          p.z +
+            halfD +
+            radius;
+
+      const rightWall =
+        Math.abs(
+          x -
+            (p.x + halfW),
+        ) < radius &&
+        z >
+          p.z -
+            halfD -
+            radius &&
+        z <
+          p.z +
+            halfD +
+            radius;
+
+      const backWall =
+        Math.abs(
+          z -
+            (p.z - halfD),
+        ) < radius &&
+        x >
+          p.x -
+            halfW -
+            radius &&
+        x <
+          p.x +
+            halfW +
+            radius;
+
+      return (
+        leftWall ||
+        rightWall ||
+        backWall
+      );
+    },
+  );
+}
 
 /* =========================================================
    PLAYER
 ========================================================= */
 
-type PlayerProps = {
+type PlayerControllerProps = {
   mall: MallData;
 
   joystick: {
@@ -292,216 +754,368 @@ type PlayerProps = {
     y: number;
   };
 
+  look: {
+    x: number;
+    y: number;
+  };
+
   onNearbyProduct: (
-    productLocation: ProductLocation | null,
+    product: ProductLocation | null,
+  ) => void;
+
+  onPosition: (
+    position: {
+      x: number;
+      z: number;
+    },
   ) => void;
 };
 
-function Player({
+function PlayerController({
   mall,
   joystick,
+  look,
   onNearbyProduct,
-}: PlayerProps) {
-  const { camera } = useThree();
+  onPosition,
+}: PlayerControllerProps) {
+  const { camera } =
+    useThree();
 
-  const [, getKeys] =
-    useKeyboardControls<Controls>();
+  const keys =
+    useKeyboard();
 
-  const velocity = useRef(
-    new THREE.Vector3(),
-  );
+  const yaw =
+    useRef(0);
 
-  const direction = useRef(
-    new THREE.Vector3(),
-  );
+  const pitch =
+    useRef(-0.02);
 
-  const lastNearbyProduct =
-    useRef<string | null>(null);
+  const forward =
+    useRef(
+      new THREE.Vector3(),
+    );
+
+  const right =
+    useRef(
+      new THREE.Vector3(),
+    );
+
+  const move =
+    useRef(
+      new THREE.Vector3(),
+    );
+
+  const lastNearby =
+    useRef<string | null>(
+      null,
+    );
+
+  const height =
+    mall.settings
+      ?.playerHeight ||
+    1.72;
 
   const speed =
-    mall.settings?.movementSpeed || 4.5;
+    mall.settings
+      ?.movementSpeed ||
+    4.6;
 
   const runSpeed =
-    mall.settings?.runningSpeed || 7.5;
+    mall.settings
+      ?.runningSpeed ||
+    7.5;
 
   const interactionDistance =
     mall.settings
-      ?.productInteractionDistance || 3;
+      ?.productInteractionDistance ||
+    3.2;
 
   useEffect(() => {
     const spawn =
-      mall.spawnPoint?.position || {
+      mall.spawnPoint
+        ?.position || {
         x: 0,
-        y: 1.7,
-        z: 16,
+        y: height,
+        z: 22,
       };
 
     camera.position.set(
       spawn.x,
-      spawn.y || 1.7,
+      height,
       spawn.z,
     );
 
-    camera.rotation.set(
-      0,
-      mall.spawnPoint?.rotation?.y || Math.PI,
-      0,
-    );
-  }, [camera, mall]);
+    yaw.current =
+      mall.spawnPoint
+        ?.rotation?.y ??
+      Math.PI;
 
-  useFrame((_, delta) => {
-    const keys = getKeys();
+    pitch.current =
+      -0.03;
+  }, [
+    camera,
+    height,
+    mall,
+  ]);
 
-    const inputX =
-      Number(keys.right) -
-      Number(keys.left) +
-      joystick.x;
-
-    const inputZ =
-      Number(keys.backward) -
-      Number(keys.forward) +
-      joystick.y;
-
-    direction.current.set(
-      inputX,
-      0,
-      inputZ,
-    );
-
-    if (
-      direction.current.lengthSq() > 1
-    ) {
-      direction.current.normalize();
-    }
-
-    const activeSpeed =
-      keys.run ? runSpeed : speed;
-
-    const movement =
-      activeSpeed * delta;
-
-    const forward =
-      new THREE.Vector3();
-
-    camera.getWorldDirection(forward);
-
-    forward.y = 0;
-    forward.normalize();
-
-    const right =
-      new THREE.Vector3();
-
-    right.crossVectors(
-      forward,
-      camera.up,
-    );
-
-    right.normalize();
-
-    velocity.current.set(
-      0,
-      0,
-      0,
-    );
-
-    velocity.current.addScaledVector(
-      forward,
-      -direction.current.z *
-        movement,
-    );
-
-    velocity.current.addScaledVector(
-      right,
-      direction.current.x *
-        movement,
-    );
-
-    const nextX =
-      camera.position.x +
-      velocity.current.x;
-
-    const nextZ =
-      camera.position.z +
-      velocity.current.z;
-
-    const boundary = 27;
-
-    camera.position.x =
-      THREE.MathUtils.clamp(
-        nextX,
-        -boundary,
-        boundary,
-      );
-
-    camera.position.z =
-      THREE.MathUtils.clamp(
-        nextZ,
-        -boundary,
-        boundary,
-      );
-
-    camera.position.y =
-      mall.settings?.playerHeight || 1.7;
-
-    let closest:
-      | ProductLocation
-      | null = null;
-
-    let closestDistance =
-      interactionDistance;
-
-    for (
-      const location of
-      mall.productLocations || []
-    ) {
-      if (
-        location.isActive === false ||
-        location.isInteractive === false
-      ) {
-        continue;
-      }
-
-      const dx =
-        location.position.x -
-        camera.position.x;
-
-      const dz =
-        location.position.z -
-        camera.position.z;
-
-      const distance =
-        Math.sqrt(
-          dx * dx +
-          dz * dz,
+  useFrame(
+    (_, delta) => {
+      const dt =
+        Math.min(
+          delta,
+          0.05,
         );
 
-      if (
-        distance <
-        closestDistance
-      ) {
-        closestDistance =
-          distance;
+      /* Camera look */
 
-        closest =
-          location;
-      }
-    }
+      yaw.current -=
+        look.x * 0.0028;
 
-    const currentId =
-      closest?._id || null;
+      pitch.current =
+        THREE.MathUtils.clamp(
+          pitch.current -
+            look.y * 0.0022,
+          -1.05,
+          1.05,
+        );
 
-    if (
-      currentId !==
-      lastNearbyProduct.current
-    ) {
-      lastNearbyProduct.current =
-        currentId;
+      camera.rotation.order =
+        "YXZ";
 
-      onNearbyProduct(
-        closest,
+      camera.rotation.y =
+        yaw.current;
+
+      camera.rotation.x =
+        pitch.current;
+
+      /* Keyboard */
+
+      const k =
+        keys.current;
+
+      const keyboardX =
+        Number(
+          Boolean(
+            k.d ||
+              k.arrowright,
+          ),
+        ) -
+        Number(
+          Boolean(
+            k.a ||
+              k.arrowleft,
+          ),
+        );
+
+      const keyboardY =
+        Number(
+          Boolean(
+            k.s ||
+              k.arrowdown,
+          ),
+        ) -
+        Number(
+          Boolean(
+            k.w ||
+              k.arrowup,
+          ),
+        );
+
+      const inputX =
+        THREE.MathUtils.clamp(
+          keyboardX +
+            joystick.x,
+          -1,
+          1,
+        );
+
+      const inputY =
+        THREE.MathUtils.clamp(
+          keyboardY +
+            joystick.y,
+          -1,
+          1,
+        );
+
+      const inputLength =
+        Math.hypot(
+          inputX,
+          inputY,
+        );
+
+      const ix =
+        inputLength > 1
+          ? inputX /
+            inputLength
+          : inputX;
+
+      const iy =
+        inputLength > 1
+          ? inputY /
+            inputLength
+          : inputY;
+
+      /* Direction */
+
+      camera.getWorldDirection(
+        forward.current,
       );
-    }
-  });
+
+      forward.current.y =
+        0;
+
+      forward.current.normalize();
+
+      right.current
+        .crossVectors(
+          forward.current,
+          camera.up,
+        )
+        .normalize();
+
+      move.current.set(
+        0,
+        0,
+        0,
+      );
+
+      move.current.addScaledVector(
+        forward.current,
+        -iy,
+      );
+
+      move.current.addScaledVector(
+        right.current,
+        ix,
+      );
+
+      if (
+        move.current.lengthSq() >
+        0
+      ) {
+        move.current.normalize();
+
+        const currentSpeed =
+          k.shift
+            ? runSpeed
+            : speed;
+
+        const nextX =
+          camera.position.x +
+          move.current.x *
+            currentSpeed *
+            dt;
+
+        const nextZ =
+          camera.position.z +
+          move.current.z *
+            currentSpeed *
+            dt;
+
+        const x =
+          THREE.MathUtils.clamp(
+            nextX,
+            -26.5,
+            26.5,
+          );
+
+        const z =
+          THREE.MathUtils.clamp(
+            nextZ,
+            -25.5,
+            25.5,
+          );
+
+        if (
+          !isBlockedByStore(
+            x,
+            z,
+            mall.stores,
+          )
+        ) {
+          camera.position.x =
+            x;
+
+          camera.position.z =
+            z;
+        }
+      }
+
+      camera.position.y =
+        height;
+
+      /* Nearby product */
+
+      let closest:
+        | ProductLocation
+        | null = null;
+
+      let closestDistance =
+        interactionDistance;
+
+      for (
+        const location of
+          mall.productLocations ||
+        []
+      ) {
+        if (
+          location.isActive ===
+            false ||
+          location.isInteractive ===
+            false
+        ) {
+          continue;
+        }
+
+        const dx =
+          location.position.x -
+          camera.position.x;
+
+        const dz =
+          location.position.z -
+          camera.position.z;
+
+        const distance =
+          Math.hypot(
+            dx,
+            dz,
+          );
+
+        if (
+          distance <
+          closestDistance
+        ) {
+          closestDistance =
+            distance;
+
+          closest =
+            location;
+        }
+      }
+
+      const currentId =
+        closest?._id || null;
+
+      if (
+        currentId !==
+        lastNearby.current
+      ) {
+        lastNearby.current =
+          currentId;
+
+        onNearbyProduct(
+          closest,
+        );
+      }
+
+      onPosition({
+        x:
+          camera.position.x,
+        z:
+          camera.position.z,
+      });
+    },
+  );
 
   return null;
 }
@@ -514,90 +1128,438 @@ function MallFloor() {
   return (
     <group>
       <mesh
-        position={[0, -0.05, 0]}
+        position={[
+          0,
+          -0.06,
+          0,
+        ]}
         receiveShadow
       >
         <boxGeometry
-          args={[60, 0.1, 60]}
+          args={[
+            58,
+            0.12,
+            58,
+          ]}
         />
 
         <meshStandardMaterial
-          color="#f4eee9"
-          roughness={0.75}
+          color="#eee7e3"
+          roughness={0.62}
+        />
+      </mesh>
+
+      <mesh
+        position={[
+          0,
+          0.005,
+          0,
+        ]}
+        receiveShadow
+      >
+        <boxGeometry
+          args={[
+            52,
+            0.025,
+            52,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#d8ccc7"
+          roughness={0.42}
+          metalness={0.05}
         />
       </mesh>
 
       <gridHelper
         args={[
-          60,
-          60,
-          "#ddd2ca",
-          "#eee7e2",
+          52,
+          26,
+          "#bba9a4",
+          "#e6ddd8",
         ]}
-        position={[0, 0.01, 0]}
+        position={[
+          0,
+          0.025,
+          0,
+        ]}
       />
     </group>
   );
 }
 
 /* =========================================================
-   WALLS
+   ARCHITECTURE
 ========================================================= */
 
-function MallWalls() {
+function MallArchitecture() {
   return (
     <group>
       <mesh
-        position={[0, 3, -29]}
+        position={[
+          0,
+          6.1,
+          0,
+        ]}
         receiveShadow
       >
         <boxGeometry
-          args={[60, 6, 0.5]}
+          args={[
+            58,
+            0.3,
+            58,
+          ]}
         />
 
         <meshStandardMaterial
-          color="#ffffff"
+          color="#24191c"
+          roughness={0.4}
+        />
+      </mesh>
+
+      {[
+        [
+          -28.5,
+          3,
+          0,
+          0.6,
+          6,
+          58,
+        ],
+
+        [
+          28.5,
+          3,
+          0,
+          0.6,
+          6,
+          58,
+        ],
+
+        [
+          0,
+          3,
+          -28.5,
+          58,
+          6,
+          0.6,
+        ],
+
+        [
+          0,
+          3,
+          28.5,
+          58,
+          6,
+          0.6,
+        ],
+      ].map(
+        (
+          a,
+          index,
+        ) => (
+          <mesh
+            key={index}
+            position={[
+              a[0],
+              a[1],
+              a[2],
+            ]}
+            receiveShadow
+          >
+            <boxGeometry
+              args={[
+                a[3],
+                a[4],
+                a[5],
+              ]}
+            />
+
+            <meshStandardMaterial
+              color="#fffaf8"
+              roughness={0.68}
+            />
+          </mesh>
+        ),
+      )}
+
+      <mesh
+        position={[
+          0,
+          2.8,
+          -22.5,
+        ]}
+        castShadow
+      >
+        <boxGeometry
+          args={[
+            18,
+            5.4,
+            0.8,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#171114"
+          roughness={0.35}
+          metalness={0.2}
+        />
+      </mesh>
+
+      <Text
+        position={[
+          0,
+          3.2,
+          -23,
+        ]}
+        fontSize={1.25}
+        color="#fff8f3"
+        anchorX="center"
+      >
+        JINI
+      </Text>
+
+      <Text
+        position={[
+          0,
+          2.55,
+          -23,
+        ]}
+        fontSize={0.34}
+        color="#f6a9c9"
+        anchorX="center"
+      >
+        COSMETICS • VIRTUAL MALL
+      </Text>
+
+      <CentralFeature />
+
+      <EscalatorLike
+        position={[
+          0,
+          0,
+          0,
+        ]}
+      />
+    </group>
+  );
+}
+
+/* =========================================================
+   CENTRAL FEATURE
+========================================================= */
+
+function CentralFeature() {
+  return (
+    <group
+      position={[
+        0,
+        0,
+        -1,
+      ]}
+    >
+      <mesh
+        position={[
+          0,
+          0.22,
+          0,
+        ]}
+        castShadow
+        receiveShadow
+      >
+        <cylinderGeometry
+          args={[
+            3.4,
+            3.4,
+            0.45,
+            64,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#e8d3cc"
+          roughness={0.38}
+          metalness={0.12}
         />
       </mesh>
 
       <mesh
-        position={[-29, 3, 0]}
-        receiveShadow
+        position={[
+          0,
+          1.05,
+          0,
+        ]}
+        castShadow
       >
-        <boxGeometry
-          args={[0.5, 6, 60]}
+        <cylinderGeometry
+          args={[
+            2.3,
+            1.8,
+            1.6,
+            48,
+          ]}
         />
 
         <meshStandardMaterial
-          color="#ffffff"
+          color="#d92d78"
+          roughness={0.34}
         />
       </mesh>
 
       <mesh
-        position={[29, 3, 0]}
-        receiveShadow
+        position={[
+          0,
+          1.95,
+          0,
+        ]}
+        castShadow
       >
-        <boxGeometry
-          args={[0.5, 6, 60]}
+        <sphereGeometry
+          args={[
+            0.65,
+            32,
+            24,
+          ]}
         />
 
         <meshStandardMaterial
-          color="#ffffff"
+          color="#fff0f5"
+          emissive="#f18ab6"
+          emissiveIntensity={0.45}
+        />
+      </mesh>
+
+      {Array.from({
+        length: 12,
+      }).map(
+        (_, index) => {
+          const angle =
+            (index / 12) *
+            Math.PI *
+            2;
+
+          return (
+            <mesh
+              key={index}
+              position={[
+                Math.cos(
+                  angle,
+                ) * 2.8,
+
+                0.5,
+
+                Math.sin(
+                  angle,
+                ) * 2.8,
+              ]}
+            >
+              <sphereGeometry
+                args={[
+                  0.08,
+                  16,
+                  12,
+                ]}
+              />
+
+              <meshStandardMaterial
+                color="#ff5e9f"
+                emissive="#ff5e9f"
+                emissiveIntensity={2}
+              />
+            </mesh>
+          );
+        },
+      )}
+    </group>
+  );
+}
+
+/* =========================================================
+   ESCALATOR
+========================================================= */
+
+function EscalatorLike({
+  position,
+}: {
+  position: [
+    number,
+    number,
+    number,
+  ];
+}) {
+  return (
+    <group
+      position={
+        position
+      }
+    >
+      <mesh
+        position={[
+          -4.7,
+          0.45,
+          0,
+        ]}
+        rotation={[
+          0,
+          0,
+          0.08,
+        ]}
+      >
+        <boxGeometry
+          args={[
+            5.4,
+            0.18,
+            3.2,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#242024"
+          metalness={0.45}
+          roughness={0.3}
         />
       </mesh>
 
       <mesh
-        position={[0, 3, 29]}
-        receiveShadow
+        position={[
+          4.7,
+          0.45,
+          0,
+        ]}
+        rotation={[
+          0,
+          0,
+          -0.08,
+        ]}
       >
         <boxGeometry
-          args={[60, 6, 0.5]}
+          args={[
+            5.4,
+            0.18,
+            3.2,
+          ]}
         />
 
         <meshStandardMaterial
-          color="#ffffff"
+          color="#242024"
+          metalness={0.45}
+          roughness={0.3}
         />
       </mesh>
+
+      <Text
+        position={[
+          0,
+          2.1,
+          0,
+        ]}
+        fontSize={0.45}
+        color="#ffffff"
+        anchorX="center"
+      >
+        MORE BEAUTY AHEAD
+      </Text>
     </group>
   );
 }
@@ -607,45 +1569,73 @@ function MallWalls() {
 ========================================================= */
 
 function CeilingLights() {
-  const positions = [
-    [-18, 5.5, -18],
-    [-6, 5.5, -18],
-    [6, 5.5, -18],
-    [18, 5.5, -18],
+  const positions =
+    useMemo(() => {
+      const list: [
+        number,
+        number,
+        number,
+      ][] = [];
 
-    [-18, 5.5, -6],
-    [-6, 5.5, -6],
-    [6, 5.5, -6],
-    [18, 5.5, -6],
+      for (
+        let x = -20;
+        x <= 20;
+        x += 10
+      ) {
+        for (
+          let z = -20;
+          z <= 20;
+          z += 10
+        ) {
+          list.push([
+            x,
+            5.3,
+            z,
+          ]);
+        }
+      }
 
-    [-18, 5.5, 6],
-    [-6, 5.5, 6],
-    [6, 5.5, 6],
-    [18, 5.5, 6],
-
-    [-18, 5.5, 18],
-    [-6, 5.5, 18],
-    [6, 5.5, 18],
-    [18, 5.5, 18],
-  ];
+      return list;
+    }, []);
 
   return (
     <group>
       {positions.map(
-        (position, index) => (
-          <pointLight
+        (
+          position,
+          index,
+        ) => (
+          <group
             key={index}
             position={
-              position as [
-                number,
-                number,
-                number,
-              ]
+              position
             }
-            intensity={18}
-            distance={13}
-            decay={2}
-          />
+          >
+            <mesh>
+              <boxGeometry
+                args={[
+                  3.2,
+                  0.06,
+                  0.35,
+                ]}
+              />
+
+              <meshStandardMaterial
+                color="#fff5ef"
+                emissive="#ffd9e8"
+                emissiveIntensity={
+                  1.5
+                }
+              />
+            </mesh>
+
+            <pointLight
+              color="#ffd7e6"
+              intensity={9}
+              distance={11}
+              decay={2}
+            />
+          </group>
         ),
       )}
     </group>
@@ -656,64 +1646,57 @@ function CeilingLights() {
    STORE
 ========================================================= */
 
-type StoreProps = {
-  store: MallStore;
-  onSelect: (store: MallStore) => void;
-};
-
 function Store({
   store,
   onSelect,
-}: StoreProps) {
-  const position = vector(
-    store.position,
-  );
+}: {
+  store: MallStore;
 
-  const rotation = vector(
-    store.rotation,
-  );
-
-  const scale = vector(
-    store.scale,
-    {
-      x: 1,
-      y: 1,
-      z: 1,
-    },
-  );
+  onSelect: (
+    store: MallStore,
+  ) => void;
+}) {
+  const position =
+    vec(store.position);
 
   const width =
-    store.size?.width || 10;
+    store.size?.width ||
+    11;
 
   const height =
-    store.size?.height || 4;
+    store.size?.height ||
+    4.6;
 
   const depth =
-    store.size?.depth || 10;
+    store.size?.depth ||
+    10;
 
   const primary =
+    store.primaryColor ||
     store.colors?.primary ||
-    "#d9a6a6";
+    "#e72d82";
 
   const secondary =
+    store.secondaryColor ||
     store.colors?.secondary ||
-    "#fff8f6";
+    "#251a1d";
 
   return (
     <group
       position={position}
-      rotation={rotation}
-      scale={scale}
       onClick={(event) => {
         event.stopPropagation();
+
         onSelect(store);
       }}
     >
+      {/* Back wall */}
+
       <mesh
         position={[
           0,
           height / 2,
-          0,
+          -depth / 2,
         ]}
         castShadow
         receiveShadow
@@ -722,154 +1705,237 @@ function Store({
           args={[
             width,
             height,
+            0.35,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color={secondary}
+          roughness={0.52}
+        />
+      </mesh>
+
+      {/* Left wall */}
+
+      <mesh
+        position={[
+          -width / 2,
+          height / 2,
+          0,
+        ]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry
+          args={[
+            0.35,
+            height,
             depth,
           ]}
         />
 
         <meshStandardMaterial
           color={secondary}
-          roughness={0.7}
+          roughness={0.52}
         />
       </mesh>
+
+      {/* Right wall */}
+
+      <mesh
+        position={[
+          width / 2,
+          height / 2,
+          0,
+        ]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry
+          args={[
+            0.35,
+            height,
+            depth,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color={secondary}
+          roughness={0.52}
+        />
+      </mesh>
+
+      {/* Header */}
 
       <mesh
         position={[
           0,
-          height * 0.7,
+          height * 0.83,
           depth / 2 + 0.05,
         ]}
       >
         <boxGeometry
           args={[
-            width * 0.95,
-            height * 0.45,
-            0.1,
+            width * 0.96,
+            0.8,
+            0.12,
           ]}
         />
 
         <meshStandardMaterial
           color={primary}
-        />
-      </mesh>
-
-      <mesh
-        position={[
-          0,
-          1.5,
-          depth / 2 + 0.12,
-        ]}
-      >
-        <boxGeometry
-          args={[2.5, 3, 0.15]}
-        />
-
-        <meshStandardMaterial
-          color="#29201f"
-          transparent
-          opacity={0.7}
+          emissive={primary}
+          emissiveIntensity={0.18}
         />
       </mesh>
 
       <Text
         position={[
           0,
-          height * 0.9,
-          depth / 2 + 0.25,
+          height * 0.85,
+          depth / 2 + 0.13,
         ]}
-        fontSize={0.65}
-        color="#241b1b"
+        fontSize={0.64}
+        color="#fff"
         anchorX="center"
-        anchorY="middle"
-        maxWidth={width - 1}
       >
         {store.name}
       </Text>
 
+      {/* Glass displays */}
+
+      {[
+        -width / 2 + 2.4,
+        width / 2 - 2.4,
+      ].map((x) => (
+        <mesh
+          key={x}
+          position={[
+            x,
+            1.7,
+            depth / 2 + 0.12,
+          ]}
+        >
+          <boxGeometry
+            args={[
+              2.5,
+              3.3,
+              0.12,
+            ]}
+          />
+
+          <meshStandardMaterial
+            color="#130f12"
+            transparent
+            opacity={0.48}
+            metalness={0.15}
+            roughness={0.2}
+          />
+        </mesh>
+      ))}
+
       <Text
         position={[
           0,
-          height * 0.55,
-          depth / 2 + 0.25,
+          0.92,
+          depth / 2 + 0.24,
         ]}
-        fontSize={0.25}
-        color="#ffffff"
+        fontSize={0.22}
+        color="#fff"
         anchorX="center"
-        anchorY="middle"
       >
-        ENTER STORE
+        CLICK TO EXPLORE
       </Text>
 
-      <Shelf
-        position={[
-          -width / 2 + 1.4,
-          1.2,
-          -depth / 2 + 2,
-        ]}
-      />
-
-      <Shelf
-        position={[
-          width / 2 - 1.4,
-          1.2,
-          -depth / 2 + 2,
-        ]}
-      />
-
-      <Shelf
-        position={[
-          -width / 2 + 1.4,
-          1.2,
-          -depth / 2 + 5,
-        ]}
-      />
-
-      <Shelf
-        position={[
-          width / 2 - 1.4,
-          1.2,
-          -depth / 2 + 5,
-        ]}
+      <StoreShelves
+        width={width}
+        depth={depth}
+        color={primary}
       />
     </group>
   );
 }
 
 /* =========================================================
-   SHELF
+   STORE SHELVES
 ========================================================= */
 
-function Shelf({
-  position,
+function StoreShelves({
+  width,
+  depth,
+  color,
 }: {
-  position: [
-    number,
-    number,
-    number,
-  ];
+  width: number;
+
+  depth: number;
+
+  color: string;
 }) {
+  const shelfXs = [
+    -width / 2 + 1.2,
+    0,
+    width / 2 - 1.2,
+  ];
+
   return (
-    <group position={position}>
-      <mesh castShadow>
-        <boxGeometry
-          args={[1.2, 2.2, 3]}
-        />
+    <group>
+      {shelfXs.map(
+        (x) => (
+          <group
+            key={x}
+            position={[
+              x,
+              1.25,
+              -depth / 2 +
+                1.7,
+            ]}
+          >
+            <mesh castShadow>
+              <boxGeometry
+                args={[
+                  1.55,
+                  2.4,
+                  0.75,
+                ]}
+              />
 
-        <meshStandardMaterial
-          color="#c9b2a7"
-        />
-      </mesh>
+              <meshStandardMaterial
+                color="#a98278"
+                roughness={0.55}
+              />
+            </mesh>
 
-      <mesh
-        position={[0, 1.1, 0]}
-      >
-        <boxGeometry
-          args={[1.4, 0.1, 3.2]}
-        />
+            {[
+              0.6,
+              1.15,
+              1.7,
+            ].map(
+              (y) => (
+                <mesh
+                  key={y}
+                  position={[
+                    0,
+                    y,
+                    0.45,
+                  ]}
+                >
+                  <boxGeometry
+                    args={[
+                      1.8,
+                      0.06,
+                      0.95,
+                    ]}
+                  />
 
-        <meshStandardMaterial
-          color="#8d6f63"
-        />
-      </mesh>
+                  <meshStandardMaterial
+                    color={color}
+                  />
+                </mesh>
+              ),
+            )}
+          </group>
+        ),
+      )}
     </group>
   );
 }
@@ -878,20 +1944,20 @@ function Shelf({
    PRODUCT DISPLAY
 ========================================================= */
 
-type ProductDisplayProps = {
+function ProductDisplay({
+  location,
+  onSelect,
+}: {
   location: ProductLocation;
 
   onSelect: (
     location: ProductLocation,
   ) => void;
-};
-
-function ProductDisplay({
-  location,
-  onSelect,
-}: ProductDisplayProps) {
-  const [hovered, setHovered] =
-    useState(false);
+}) {
+  const [
+    hovered,
+    setHovered,
+  ] = useState(false);
 
   const product =
     typeof location.product ===
@@ -900,150 +1966,138 @@ function ProductDisplay({
       : undefined;
 
   if (
-    location.isActive === false
+    location.isActive ===
+    false
   ) {
     return null;
   }
 
-  const position = vector(
-    location.position,
-  );
-
-  const rotation = vector(
-    location.rotation,
-  );
-
-  const scale = vector(
-    location.scale,
-    {
-      x: 1,
-      y: 1,
-      z: 1,
-    },
-  );
+  const color =
+    location.storeId ===
+    "skin-care"
+      ? "#e8b892"
+      : location.storeId ===
+          "fragrance"
+        ? "#b49af2"
+        : location.storeId ===
+            "hair-care"
+          ? "#d1a26c"
+          : "#e85b8e";
 
   return (
     <group
-      position={position}
-      rotation={rotation}
-      scale={scale}
-      onPointerOver={(event) => {
+      position={vec(
+        location.position,
+      )}
+      rotation={vec(
+        location.rotation,
+      )}
+      scale={vec(
+        location.scale,
+        {
+          x: 1,
+          y: 1,
+          z: 1,
+        },
+      )}
+      onPointerOver={(
+        event,
+      ) => {
         event.stopPropagation();
+
         setHovered(true);
       }}
-      onPointerOut={() => {
-        setHovered(false);
-      }}
+      onPointerOut={() =>
+        setHovered(false)
+      }
       onClick={(event) => {
         event.stopPropagation();
 
-        if (
-          location.isInteractive !==
-          false
-        ) {
-          onSelect(location);
-        }
+        onSelect(location);
       }}
     >
       <mesh
-        position={[0, -0.6, 0]}
+        position={[
+          0,
+          -0.7,
+          0,
+        ]}
         castShadow
       >
         <cylinderGeometry
           args={[
-            0.65,
-            0.75,
-            0.35,
+            0.72,
+            0.82,
+            0.32,
             32,
           ]}
         />
 
         <meshStandardMaterial
-          color={
-            hovered
-              ? "#e8b5b5"
-              : "#d5c0b8"
-          }
+          color="#d8c0b8"
+          roughness={0.36}
+          metalness={0.1}
         />
       </mesh>
 
       <mesh
-        castShadow
         position={[
           0,
-          0.25,
+          0.15,
           0,
         ]}
+        castShadow
       >
         <cylinderGeometry
           args={[
-            0.27,
-            0.32,
-            1.2,
+            0.3,
+            0.34,
+            1.35,
             24,
           ]}
         />
 
         <meshStandardMaterial
-          color={
-            location.storeId ===
-            "skin-care"
-              ? "#f0c6a8"
-              : location.storeId ===
-                  "makeup"
-                ? "#9e4c63"
-                : "#c7a36a"
-          }
-          metalness={0.05}
-          roughness={0.4}
+          color={color}
+          roughness={0.32}
+          metalness={0.08}
         />
       </mesh>
 
       <mesh
         position={[
           0,
-          0.9,
+          0.88,
           0,
         ]}
       >
         <cylinderGeometry
           args={[
-            0.29,
-            0.29,
+            0.31,
+            0.31,
             0.12,
             24,
           ]}
         />
 
         <meshStandardMaterial
-          color="#252020"
+          color="#252025"
+          metalness={0.35}
+          roughness={0.24}
         />
       </mesh>
-
-      {hovered && (
-        <pointLight
-          position={[
-            0,
-            1,
-            0,
-          ]}
-          intensity={7}
-          distance={4}
-        />
-      )}
 
       {product?.name && (
         <Text
           position={[
             0,
-            1.45,
+            1.42,
             0,
           ]}
-          fontSize={0.22}
-          color="#332626"
+          fontSize={0.2}
+          maxWidth={2.2}
+          color="#fff"
           anchorX="center"
-          anchorY="middle"
-          maxWidth={2.5}
         >
           {product.name}
         </Text>
@@ -1051,16 +2105,50 @@ function ProductDisplay({
 
       {hovered && (
         <Html
+          center
           position={[
             0,
-            2,
+            2.05,
             0,
           ]}
-          center
         >
-          <div className="mall-world-label">
-            <Sparkles size={13} />
-            Click to view
+          <div className="mall-product-world-card">
+            {getProductImage(
+              product,
+            ) ? (
+              <img
+                src={getProductImage(
+                  product,
+                )}
+                alt={
+                  product?.name ||
+                  "Product"
+                }
+              />
+            ) : (
+              <div className="mall-product-world-placeholder">
+                <Sparkles
+                  size={18}
+                />
+              </div>
+            )}
+
+            <div>
+              <strong>
+                {product?.name ||
+                  "Beauty Product"}
+              </strong>
+
+              <span>
+                {formatPrice(
+                  product?.price,
+                )}
+              </span>
+
+              <small>
+                Click to view
+              </small>
+            </div>
           </div>
         </Html>
       )}
@@ -1069,70 +2157,26 @@ function ProductDisplay({
 }
 
 /* =========================================================
-   ENTRANCE
-========================================================= */
-
-function MallEntrance() {
-  return (
-    <group
-      position={[0, 0, 23]}
-    >
-      <mesh
-        position={[
-          0,
-          2.5,
-          -0.5,
-        ]}
-        castShadow
-      >
-        <boxGeometry
-          args={[14, 5, 1]}
-        />
-
-        <meshStandardMaterial
-          color="#21191a"
-        />
-      </mesh>
-
-      <Text
-        position={[
-          0,
-          3,
-          0.1,
-        ]}
-        fontSize={1}
-        color="#ffffff"
-        anchorX="center"
-        anchorY="middle"
-      >
-        JINI COSMETICS
-      </Text>
-
-      <Text
-        position={[
-          0,
-          2,
-          0.1,
-        ]}
-        fontSize={0.45}
-        color="#f0c6c6"
-        anchorX="center"
-        anchorY="middle"
-      >
-        VIRTUAL BEAUTY MALL
-      </Text>
-    </group>
-  );
-}
-
-/* =========================================================
    MALL SCENE
 ========================================================= */
 
-type MallSceneProps = {
+function MallScene({
+  mall,
+  joystick,
+  look,
+  onProductSelect,
+  onStoreSelect,
+  onNearbyProduct,
+  onPosition,
+}: {
   mall: MallData;
 
   joystick: {
+    x: number;
+    y: number;
+  };
+
+  look: {
     x: number;
     y: number;
   };
@@ -1148,42 +2192,47 @@ type MallSceneProps = {
   onNearbyProduct: (
     location: ProductLocation | null,
   ) => void;
-};
 
-function MallScene({
-  mall,
-  joystick,
-  onProductSelect,
-  onStoreSelect,
-  onNearbyProduct,
-}: MallSceneProps) {
+  onPosition: (
+    position: {
+      x: number;
+      z: number;
+    },
+  ) => void;
+}) {
   return (
     <>
       <color
         attach="background"
-        args={["#f6efec"]}
+        args={[
+          mall.backgroundColor ||
+            "#171116",
+        ]}
       />
 
       <fog
         attach="fog"
         args={[
-          "#f6efec",
-          18,
-          55,
+          mall.backgroundColor ||
+            "#171116",
+          30,
+          62,
         ]}
       />
 
       <ambientLight
-        intensity={1.2}
+        intensity={1.5}
+        color="#fff0f5"
       />
 
       <directionalLight
         position={[
-          10,
+          8,
           18,
-          10,
+          12,
         ]}
         intensity={2.5}
+        color="#fff3e9"
         castShadow
         shadow-mapSize-width={
           2048
@@ -1197,19 +2246,19 @@ function MallScene({
 
       <MallFloor />
 
-      <MallWalls />
-
-      <MallEntrance />
+      <MallArchitecture />
 
       {mall.stores
-        ?.filter(
+        .filter(
           (store) =>
             store.isActive !==
             false,
         )
         .map((store) => (
           <Store
-            key={store.storeId}
+            key={
+              store.storeId
+            }
             store={store}
             onSelect={
               onStoreSelect
@@ -1218,159 +2267,40 @@ function MallScene({
         ))}
 
       {mall.productLocations
-        ?.filter(
+        .filter(
           (location) =>
             location.isActive !==
             false,
         )
-        .map((location) => (
-          <ProductDisplay
-            key={
-              location._id ||
-              `${location.storeId}-${location.position.x}-${location.position.z}`
-            }
-            location={location}
-            onSelect={
-              onProductSelect
-            }
-          />
-        ))}
+        .map(
+          (location) => (
+            <ProductDisplay
+              key={
+                location._id ||
+                `${location.storeId}-${location.position.x}-${location.position.z}`
+              }
+              location={
+                location
+              }
+              onSelect={
+                onProductSelect
+              }
+            />
+          ),
+        )}
 
-      <Player
+      <PlayerController
         mall={mall}
         joystick={joystick}
+        look={look}
         onNearbyProduct={
           onNearbyProduct
         }
-      />
-
-      <PointerLockControls />
-    </>
-  );
-}
-
-/* =========================================================
-   JOYSTICK
-========================================================= */
-
-type JoystickProps = {
-  onMove: (
-    x: number,
-    y: number,
-  ) => void;
-};
-
-function Joystick({
-  onMove,
-}: JoystickProps) {
-  const active = useRef(false);
-
-  const center = useRef({
-    x: 0,
-    y: 0,
-  });
-
-  const update = (
-    event:
-      | React.PointerEvent
-      | PointerEvent,
-  ) => {
-    if (!active.current) {
-      return;
-    }
-
-    const rect = (
-      event.currentTarget as HTMLElement
-    ).getBoundingClientRect();
-
-    const centerX =
-      rect.left +
-      rect.width / 2;
-
-    const centerY =
-      rect.top +
-      rect.height / 2;
-
-    const dx =
-      event.clientX -
-      centerX;
-
-    const dy =
-      event.clientY -
-      centerY;
-
-    const max =
-      rect.width / 2;
-
-    const distance =
-      Math.sqrt(
-        dx * dx +
-        dy * dy,
-      );
-
-    const factor =
-      distance > max
-        ? max / distance
-        : 1;
-
-    const x =
-      (dx * factor) /
-      max;
-
-    const y =
-      (dy * factor) /
-      max;
-
-    center.current = {
-      x,
-      y,
-    };
-
-    onMove(x, y);
-  };
-
-  const reset = () => {
-    active.current = false;
-
-    center.current = {
-      x: 0,
-      y: 0,
-    };
-
-    onMove(0, 0);
-  };
-
-  return (
-    <div
-      className="mall-joystick"
-      onPointerDown={(event) => {
-        active.current = true;
-
-        event.currentTarget.setPointerCapture(
-          event.pointerId,
-        );
-
-        update(event);
-      }}
-      onPointerMove={update}
-      onPointerUp={reset}
-      onPointerCancel={reset}
-      onPointerLeave={() => {
-        if (active.current) {
-          reset();
+        onPosition={
+          onPosition
         }
-      }}
-    >
-      <div
-        className="mall-joystick-knob"
-        style={{
-          transform: `translate(
-            ${center.current.x * 25}px,
-            ${center.current.y * 25}px
-          )`,
-        }}
       />
-    </div>
+    </>
   );
 }
 
@@ -1378,15 +2308,14 @@ function Joystick({
    PRODUCT MODAL
 ========================================================= */
 
-type ProductModalProps = {
-  location: ProductLocation;
-  onClose: () => void;
-};
-
 function ProductModal({
   location,
   onClose,
-}: ProductModalProps) {
+}: {
+  location: ProductLocation;
+
+  onClose: () => void;
+}) {
   const navigate =
     useNavigate();
 
@@ -1396,31 +2325,34 @@ function ProductModal({
       ? location.product
       : undefined;
 
-  const [adding, setAdding] =
-    useState(false);
+  const [
+    adding,
+    setAdding,
+  ] = useState(false);
 
-  const [message, setMessage] =
-    useState("");
+  const [
+    message,
+    setMessage,
+  ] = useState("");
 
-  const productId =
+  const id =
     getProductId(product);
 
   const image =
-    getImage(product);
-
-  const price =
-    getPrice(product);
-
-  const oldPrice =
-    Number(
-      product?.oldPrice || 0,
+    getProductImage(
+      product,
     );
 
   const addToCart =
     async () => {
-      if (!productId) {
+      if (
+        !id ||
+        id.startsWith(
+          "demo-",
+        )
+      ) {
         setMessage(
-          "Product ID is missing.",
+          "This is a demo product. Connect it to a real product ID before adding it to cart.",
         );
 
         return;
@@ -1430,19 +2362,34 @@ function ProductModal({
         getToken();
 
       if (!token) {
-        navigate("/login", {
-          state: {
-            redirectTo:
-              "/virtual-mall",
+        navigate(
+          "/login",
+          {
+            state: {
+              redirectTo:
+                "/virtual-mall",
+            },
           },
-        });
+        );
 
         return;
       }
 
       if (
-        Number(product?.stock || 0) <=
-          0 ||
+        location.allowAddToCart ===
+        false
+      ) {
+        setMessage(
+          "Add to cart is disabled for this product.",
+        );
+
+        return;
+      }
+
+      if (
+        Number(
+          product?.stock || 0,
+        ) <= 0 ||
         product?.isOutOfStock
       ) {
         setMessage(
@@ -1454,30 +2401,72 @@ function ProductModal({
 
       try {
         setAdding(true);
+
         setMessage("");
+
+        /* Check Virtual Mall availability */
+
+        const availabilityResponse =
+          await fetch(
+            `${API_BASE_URL}/virtual-mall/products/${encodeURIComponent(
+              id,
+            )}/availability`,
+            {
+              headers: {
+                Accept:
+                  "application/json",
+              },
+            },
+          );
+
+        const availabilityData =
+          await availabilityResponse
+            .json()
+            .catch(
+              () => ({}),
+            );
+
+        if (
+          !availabilityResponse.ok ||
+          availabilityData?.data
+            ?.available !==
+            true
+        ) {
+          throw new Error(
+            availabilityData?.message ||
+              "This product is currently unavailable.",
+          );
+        }
+
+        /* Add to actual cart */
 
         const response =
           await fetch(
             `${API_BASE_URL}/cart/items`,
             {
-              method: "POST",
+              method:
+                "POST",
+
+              credentials:
+                "include",
 
               headers: {
                 "Content-Type":
                   "application/json",
 
-                Authorization:
-                  `Bearer ${token}`,
+                Authorization: `Bearer ${token}`,
               },
 
-              credentials:
-                "include",
+              body: JSON.stringify(
+                {
+                  productId:
+                    id,
 
-              body: JSON.stringify({
-                productId,
-                quantity: 1,
-                size: "Standard",
-              }),
+                  quantity: 1,
+
+                  size: "Standard",
+                },
+              ),
             },
           );
 
@@ -1490,7 +2479,8 @@ function ProductModal({
 
         if (
           !response.ok ||
-          data.success === false
+          data.success ===
+            false
         ) {
           throw new Error(
             data.message ||
@@ -1509,7 +2499,8 @@ function ProductModal({
         );
       } catch (error) {
         setMessage(
-          error instanceof Error
+          error instanceof
+            Error
             ? error.message
             : "Unable to add product to cart.",
         );
@@ -1531,9 +2522,11 @@ function ProductModal({
       >
         <button
           className="mall-modal-close"
-          onClick={onClose}
           type="button"
-          aria-label="Close"
+          onClick={
+            onClose
+          }
+          aria-label="Close product"
         >
           <X size={20} />
         </button>
@@ -1550,8 +2543,12 @@ function ProductModal({
           ) : (
             <div className="mall-product-placeholder">
               <Sparkles
-                size={50}
+                size={48}
               />
+
+              <span>
+                JINI BEAUTY
+              </span>
             </div>
           )}
         </div>
@@ -1564,7 +2561,7 @@ function ProductModal({
 
           <h2>
             {product?.name ||
-              "Product"}
+              "Beauty Product"}
           </h2>
 
           <p className="mall-product-brand">
@@ -1574,21 +2571,30 @@ function ProductModal({
 
           <p className="mall-product-description">
             {product?.description ||
-              "Discover this product from the Jini Cosmetics virtual mall."}
+              "Discover this product inside the JINI Cosmetics Virtual Mall."}
           </p>
 
           <div className="mall-price-row">
             <strong>
-              {formatPrice(price)}
+              {formatPrice(
+                product?.price,
+              )}
             </strong>
 
-            {oldPrice > price && (
-              <del>
-                {formatPrice(
-                  oldPrice,
-                )}
-              </del>
-            )}
+            {!!product?.oldPrice &&
+              Number(
+                product.oldPrice,
+              ) >
+                Number(
+                  product.price ||
+                    0,
+                ) && (
+                <del>
+                  {formatPrice(
+                    product.oldPrice,
+                  )}
+                </del>
+              )}
           </div>
 
           {product?.rating !==
@@ -1623,10 +2629,14 @@ function ProductModal({
             <button
               type="button"
               className="mall-add-cart"
+              disabled={
+                adding ||
+                location.allowAddToCart ===
+                  false
+              }
               onClick={
                 addToCart
               }
-              disabled={adding}
             >
               <ShoppingCart
                 size={18}
@@ -1640,14 +2650,19 @@ function ProductModal({
             <button
               type="button"
               className="mall-view-product"
+              disabled={
+                !id ||
+                location.allowViewDetails ===
+                  false
+              }
               onClick={() => {
-                if (!productId) {
+                if (!id) {
                   return;
                 }
 
                 navigate(
                   `/products/${encodeURIComponent(
-                    productId,
+                    id,
                   )}`,
                 );
               }}
@@ -1662,6 +2677,135 @@ function ProductModal({
 }
 
 /* =========================================================
+   MOBILE JOYSTICK
+========================================================= */
+
+function Joystick({
+  onMove,
+}: {
+  onMove: (
+    x: number,
+    y: number,
+  ) => void;
+}) {
+  const active =
+    useRef(false);
+
+  const [
+    value,
+    setValue,
+  ] = useState({
+    x: 0,
+    y: 0,
+  });
+
+  const update = (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => {
+    if (
+      !active.current
+    ) {
+      return;
+    }
+
+    const rect =
+      event.currentTarget.getBoundingClientRect();
+
+    const dx =
+      event.clientX -
+      (rect.left +
+        rect.width / 2);
+
+    const dy =
+      event.clientY -
+      (rect.top +
+        rect.height / 2);
+
+    const max =
+      rect.width / 2;
+
+    const distance =
+      Math.hypot(
+        dx,
+        dy,
+      );
+
+    const factor =
+      distance > max
+        ? max / distance
+        : 1;
+
+    const x =
+      (dx * factor) /
+      max;
+
+    const y =
+      (dy * factor) /
+      max;
+
+    setValue({
+      x,
+      y,
+    });
+
+    onMove(x, y);
+  };
+
+  const reset = () => {
+    active.current =
+      false;
+
+    setValue({
+      x: 0,
+      y: 0,
+    });
+
+    onMove(0, 0);
+  };
+
+  return (
+    <div
+      className="mall-joystick"
+      onPointerDown={(
+        event,
+      ) => {
+        active.current =
+          true;
+
+        event.currentTarget.setPointerCapture(
+          event.pointerId,
+        );
+
+        update(event);
+      }}
+      onPointerMove={
+        update
+      }
+      onPointerUp={
+        reset
+      }
+      onPointerCancel={
+        reset
+      }
+      onPointerLeave={() => {
+        if (
+          active.current
+        ) {
+          reset();
+        }
+      }}
+    >
+      <div
+        className="mall-joystick-knob"
+        style={{
+          transform: `translate(${value.x * 28}px, ${value.y * 28}px)`,
+        }}
+      />
+    </div>
+  );
+}
+
+/* =========================================================
    MAIN PAGE
 ========================================================= */
 
@@ -1669,28 +2813,33 @@ export default function VirtualMallPage() {
   const navigate =
     useNavigate();
 
-  const [mall, setMall] =
-    useState<MallData | null>(
-      null,
-    );
+  const [
+    mall,
+    setMall,
+  ] = useState<
+    MallData | null
+  >(null);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
-  const [error, setError] =
-    useState("");
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  const demoMode =
+    String(
+      import.meta.env
+        .VITE_VIRTUAL_MALL_DEMO_MODE ||
+        "false",
+    ) === "true";
 
   const [
     selectedProduct,
     setSelectedProduct,
-  ] =
-    useState<ProductLocation | null>(
-      null,
-    );
-
-  const [
-    nearbyProduct,
-    setNearbyProduct,
   ] =
     useState<ProductLocation | null>(
       null,
@@ -1705,14 +2854,27 @@ export default function VirtualMallPage() {
     );
 
   const [
+    nearbyProduct,
+    setNearbyProduct,
+  ] =
+    useState<ProductLocation | null>(
+      null,
+    );
+
+  const [
     showMap,
     setShowMap,
   ] = useState(false);
 
   const [
-    showInstructions,
-    setShowInstructions,
+    showControls,
+    setShowControls,
   ] = useState(true);
+
+  const [
+    isMobile,
+    setIsMobile,
+  ] = useState(false);
 
   const [
     joystick,
@@ -1723,65 +2885,54 @@ export default function VirtualMallPage() {
   });
 
   const [
-    isMobile,
-    setIsMobile,
-  ] = useState(false);
+    look,
+    setLook,
+  ] = useState({
+    x: 0,
+    y: 0,
+  });
 
   const [
-    touchStart,
-    setTouchStart,
-  ] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
+    position,
+    setPosition,
+  ] = useState({
+    x: 0,
+    z: 22,
+  });
 
-  /* =======================================================
-     DEVICE
-  ======================================================= */
-
-  useEffect(() => {
-    const checkMobile =
-      () => {
-        setIsMobile(
-          window.innerWidth <=
-            900 ||
-            "ontouchstart" in
-              window,
-        );
-      };
-
-    checkMobile();
-
-    window.addEventListener(
-      "resize",
-      checkMobile,
-    );
-
-    return () =>
-      window.removeEventListener(
-        "resize",
-        checkMobile,
-      );
-  }, []);
-
-  /* =======================================================
-     FETCH MALL
-  ======================================================= */
+  /* =====================================================
+     LOAD MALL
+  ===================================================== */
 
   const loadMall =
     useCallback(
       async () => {
+        setLoading(true);
+
+        setError("");
+
         try {
-          setLoading(true);
-          setError("");
+          /*
+            IMPORTANT:
+
+            This matches the backend route:
+
+            router.get("/:slug", getVirtualMallBySlug);
+
+            mounted as:
+
+            app.use(
+              "/api/virtual-mall",
+              virtualMallRoutes
+            );
+          */
 
           const response =
             await fetch(
-              `${API_BASE_URL}/virtual-mall/slug/${encodeURIComponent(
+              `${API_BASE_URL}/virtual-mall/${encodeURIComponent(
                 MALL_SLUG,
               )}`,
               {
-                method: "GET",
                 headers: {
                   Accept:
                     "application/json",
@@ -1794,9 +2945,11 @@ export default function VirtualMallPage() {
               .json()
               .catch(
                 () => ({}),
-              )) as MallApiResponse;
+              )) as ApiResponse<MallData>;
 
-          if (!response.ok) {
+          if (
+            !response.ok
+          ) {
             throw new Error(
               data.message ||
                 `Virtual Mall request failed (${response.status}).`,
@@ -1807,7 +2960,9 @@ export default function VirtualMallPage() {
             data.mall ||
             data.data;
 
-          if (!mallData) {
+          if (
+            !mallData
+          ) {
             throw new Error(
               "Virtual Mall data was not returned by the server.",
             );
@@ -1822,224 +2977,312 @@ export default function VirtualMallPage() {
             );
           }
 
-          setMall(
-            mallData,
-          );
-        } catch (fetchError) {
+          /*
+            Use REAL MongoDB data.
+
+            We do NOT replace real products
+            with demo products here.
+          */
+
+          setMall({
+            ...mallData,
+
+            stores:
+              mallData.stores ||
+              [],
+
+            productLocations:
+              mallData.productLocations ||
+              [],
+          });
+        } catch (
+          loadError
+        ) {
           console.error(
-            "Virtual Mall loading error:",
-            fetchError,
+            "Virtual Mall API load failed:",
+            loadError,
           );
 
-          setError(
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Unable to load Virtual Mall.",
-          );
+          /*
+            Demo mode is explicitly opt-in.
+          */
+
+          if (
+            demoMode
+          ) {
+            setMall({
+              _id:
+                "local-demo",
+
+              name:
+                "JINI Cosmetics Virtual Mall",
+
+              slug:
+                MALL_SLUG,
+
+              stores:
+                FALLBACK_STORES,
+
+              productLocations:
+                FALLBACK_PRODUCTS,
+
+              spawnPoint: {
+                position: {
+                  x: 0,
+                  y: 1.72,
+                  z: 22,
+                },
+
+                rotation: {
+                  x: 0,
+                  y: Math.PI,
+                  z: 0,
+                },
+              },
+
+              settings: {
+                playerHeight:
+                  1.72,
+
+                movementSpeed:
+                  4.6,
+
+                runningSpeed:
+                  7.5,
+
+                cameraFov:
+                  68,
+
+                productInteractionDistance:
+                  3.2,
+              },
+            });
+          } else {
+            setMall(null);
+
+            setError(
+              loadError instanceof
+                Error
+                ? loadError.message
+                : "Unable to load the published Virtual Mall.",
+            );
+          }
         } finally {
-          setLoading(false);
+          setLoading(
+            false,
+          );
         }
       },
-      [],
+      [demoMode],
     );
 
   useEffect(() => {
     loadMall();
   }, [loadMall]);
 
-  /* =======================================================
-     TOUCH SWIPE
-  ======================================================= */
+  /* =====================================================
+     DEVICE
+  ===================================================== */
 
-  const handleTouchStart =
+  useEffect(() => {
+    const updateDevice =
+      () => {
+        setIsMobile(
+          window.innerWidth <=
+            900 ||
+            "ontouchstart" in
+              window,
+        );
+      };
+
+    updateDevice();
+
+    window.addEventListener(
+      "resize",
+      updateDevice,
+    );
+
+    return () =>
+      window.removeEventListener(
+        "resize",
+        updateDevice,
+      );
+  }, []);
+
+  /* =====================================================
+     LOOK CONTROLS
+  ===================================================== */
+
+  const lookActive =
+    useRef(false);
+
+  const lastPointer =
+    useRef({
+      x: 0,
+      y: 0,
+    });
+
+  const handlePointerDown =
     (
-      event: React.TouchEvent,
+      event: React.PointerEvent<HTMLDivElement>,
     ) => {
       if (
-        event.touches.length !==
-        1
+        event.pointerType ===
+          "mouse" &&
+        event.button !== 0
       ) {
         return;
       }
 
-      setTouchStart({
-        x: event.touches[0].clientX,
-        y: event.touches[0].clientY,
-      });
+      lookActive.current =
+        true;
+
+      lastPointer.current =
+        {
+          x: event.clientX,
+          y: event.clientY,
+        };
+
+      event.currentTarget.setPointerCapture(
+        event.pointerId,
+      );
     };
 
-  const handleTouchMove =
+  const handlePointerMove =
     (
-      event: React.TouchEvent,
+      event: React.PointerEvent<HTMLDivElement>,
     ) => {
       if (
-        !touchStart ||
-        event.touches.length !==
-          1
+        !lookActive.current
       ) {
         return;
       }
-
-      const currentX =
-        event.touches[0].clientX;
-
-      const currentY =
-        event.touches[0].clientY;
 
       const dx =
-        currentX -
-        touchStart.x;
+        event.clientX -
+        lastPointer.current
+          .x;
 
       const dy =
-        currentY -
-        touchStart.y;
+        event.clientY -
+        lastPointer.current
+          .y;
 
-      if (
-        Math.abs(dx) > 35 ||
-        Math.abs(dy) > 35
-      ) {
-        setTouchStart({
-          x: currentX,
-          y: currentY,
-        });
-      }
+      lastPointer.current =
+        {
+          x: event.clientX,
+          y: event.clientY,
+        };
+
+      setLook({
+        x: dx,
+        y: dy,
+      });
+
+      requestAnimationFrame(
+        () => {
+          setLook({
+            x: 0,
+            y: 0,
+          });
+        },
+      );
     };
 
-  const handleTouchEnd =
-    () => {
-      setTouchStart(null);
-    };
+  const stopLook = () => {
+    lookActive.current =
+      false;
 
-  /* =======================================================
-     STORE SELECTION
-  ======================================================= */
+    setLook({
+      x: 0,
+      y: 0,
+    });
+  };
 
-  const handleStoreSelect =
-    (store: MallStore) => {
-      setSelectedStore(store);
-    };
+  /* =====================================================
+     MAP STORES
+  ===================================================== */
 
-  /* =======================================================
-     PRODUCT SELECTION
-  ======================================================= */
+  const mapStores =
+    useMemo(
+      () =>
+        mall?.stores?.filter(
+          (store) =>
+            store.isActive !==
+            false,
+        ) || [],
+      [mall],
+    );
 
-  const handleProductSelect =
-    async (
-      location: ProductLocation,
-    ) => {
-      if (
-        location.isInteractive ===
-        false
-      ) {
-        return;
-      }
+  /* =====================================================
+     SELECTED STORE PRODUCTS
+  ===================================================== */
 
-      if (
-        typeof location.product ===
-        "object"
-      ) {
-        setSelectedProduct(
-          location,
-        );
-
-        return;
-      }
-
-      const productId =
-        getProductId(
-          location.product,
-        );
-
-      if (!productId) {
-        return;
-      }
-
-      try {
-        const response =
-          await fetch(
-            `${API_BASE_URL}/products/${encodeURIComponent(
-              productId,
-            )}`,
-          );
-
-        const data =
-          (await response
-            .json()
-            .catch(
-              () => ({}),
-            )) as ProductApiResponse;
-
-        if (!response.ok) {
-          throw new Error(
-            data.message ||
-              "Unable to load product.",
-          );
-        }
-
-        const product =
-          data.product ||
-          data.data;
-
-        if (!product) {
-          throw new Error(
-            "Product data was not returned.",
-          );
-        }
-
-        setSelectedProduct({
-          ...location,
-          product,
-        });
-      } catch (productError) {
-        console.error(
-          "Virtual Mall product loading error:",
-          productError,
-        );
-
-        alert(
-          productError instanceof
-            Error
-            ? productError.message
-            : "Unable to load product.",
-        );
-      }
-    };
-
-  /* =======================================================
-     STORE MAP
-  ======================================================= */
-
-  const storeMarkers =
+  const selectedStoreProducts =
     useMemo(() => {
-      if (!mall) {
+      if (
+        !selectedStore ||
+        !mall
+      ) {
         return [];
       }
 
-      return mall.stores.filter(
-        (store) =>
-          store.isActive !==
-          false,
-      );
-    }, [mall]);
+      return [
+        ...mall.productLocations,
+      ]
+        .filter(
+          (location) =>
+            location.storeId?.toLowerCase() ===
+              selectedStore.storeId?.toLowerCase() &&
+            location.isActive !==
+              false &&
+            typeof location.product ===
+              "object" &&
+            location.product
+              ?.active !==
+              false,
+        )
+        .sort(
+          (a, b) =>
+            Number(
+              a.sortOrder ||
+                0,
+            ) -
+            Number(
+              b.sortOrder ||
+                0,
+            ),
+        );
+    }, [
+      mall,
+      selectedStore,
+    ]);
 
-  /* =======================================================
+  /* =====================================================
      LOADING
-  ======================================================= */
+  ===================================================== */
 
   if (loading) {
     return (
       <div className="virtual-mall-page mall-loading">
         <div className="mall-loading-card">
+          <div className="mall-loading-logo">
+            JINI
+          </div>
+
           <div className="mall-loading-spinner" />
 
-          <Sparkles size={26} />
+          <Sparkles
+            size={24}
+          />
 
           <h2>
-            Entering JINI Virtual Mall
+            Entering Virtual Mall
           </h2>
 
           <p>
-            Preparing the 3D beauty
+            Preparing your
+            immersive beauty
             experience...
           </p>
         </div>
@@ -2047,11 +3290,11 @@ export default function VirtualMallPage() {
     );
   }
 
-  /* =======================================================
+  /* =====================================================
      ERROR
-  ======================================================= */
+  ===================================================== */
 
-  if (error || !mall) {
+  if (!mall) {
     return (
       <div className="virtual-mall-page mall-error-page">
         <div className="mall-error-card">
@@ -2063,55 +3306,43 @@ export default function VirtualMallPage() {
 
           <p>
             {error ||
-              "Virtual Mall could not be loaded."}
+              "Unable to load the Virtual Mall."}
           </p>
 
-          <div className="mall-error-actions">
-            <button
-              type="button"
-              onClick={
-                loadMall
-              }
-            >
-              Try Again
-            </button>
+          <button
+            type="button"
+            onClick={
+              loadMall
+            }
+          >
+            Try Again
+          </button>
 
-            <button
-              type="button"
-              onClick={() =>
-                navigate("/")
-              }
-            >
-              Back to JINI Cosmetics
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() =>
+              navigate("/")
+            }
+          >
+            Back to JINI
+            Cosmetics
+          </button>
         </div>
       </div>
     );
   }
 
-  /* =======================================================
-     PAGE
-  ======================================================= */
+  /* =====================================================
+     MAIN
+  ===================================================== */
 
   return (
-    <div
-      className="virtual-mall-page"
-      onTouchStart={
-        handleTouchStart
-      }
-      onTouchMove={
-        handleTouchMove
-      }
-      onTouchEnd={
-        handleTouchEnd
-      }
-    >
-      {/* ===================================================
+    <div className="virtual-mall-page">
+      {/* =================================================
           TOP BAR
-      =================================================== */}
+      ================================================= */}
 
-      <div className="mall-topbar">
+      <header className="mall-topbar">
         <div className="mall-brand">
           <button
             type="button"
@@ -2126,13 +3357,24 @@ export default function VirtualMallPage() {
             />
           </button>
 
-          <div>
+          <div className="mall-brand-mark">
             <strong>
-              JINI COSMETICS
+              JINI
             </strong>
 
             <span>
+              COSMETICS
+            </span>
+          </div>
+
+          <div className="mall-brand-copy">
+            <strong>
               Virtual Mall
+            </strong>
+
+            <span>
+              Walk • Explore •
+              Shop
             </span>
           </div>
         </div>
@@ -2141,7 +3383,7 @@ export default function VirtualMallPage() {
           <button
             type="button"
             onClick={() =>
-              setShowInstructions(
+              setShowControls(
                 (value) =>
                   !value,
               )
@@ -2172,8 +3414,11 @@ export default function VirtualMallPage() {
 
           <button
             type="button"
+            className="mall-cart-action"
             onClick={() =>
-              navigate("/cart")
+              navigate(
+                "/cart",
+              )
             }
           >
             <ShoppingCart
@@ -2184,264 +3429,333 @@ export default function VirtualMallPage() {
               Cart
             </span>
           </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              document.documentElement.requestFullscreen?.()
+            }
+          >
+            <Maximize2
+              size={17}
+            />
+
+            <span>
+              Full Screen
+            </span>
+          </button>
         </div>
-      </div>
+      </header>
 
-      {/* ===================================================
+      {/* =================================================
           3D CANVAS
-      =================================================== */}
+      ================================================= */}
 
-      <div className="mall-canvas">
+      <main
+        className="mall-canvas"
+        onPointerDown={
+          handlePointerDown
+        }
+        onPointerMove={
+          handlePointerMove
+        }
+        onPointerUp={
+          stopLook
+        }
+        onPointerCancel={
+          stopLook
+        }
+        onPointerLeave={
+          stopLook
+        }
+      >
         <Canvas
           shadows
+          dpr={[
+            1,
+            Math.min(
+              mall.settings
+                ?.maxPixelRatio ||
+                (isMobile
+                  ? 1.25
+                  : 1.7),
+              isMobile
+                ? 1.5
+                : 2,
+            ),
+          ]}
           camera={{
             fov:
               mall.settings
                 ?.cameraFov ||
-              70,
+              68,
 
-            near: 0.1,
+            near:
+              mall.settings
+                ?.cameraNear ||
+              0.1,
 
-            far: 100,
+            far:
+              mall.settings
+                ?.cameraFar ||
+              100,
 
             position: [
               0,
-              1.7,
-              20,
+              1.72,
+              22,
             ],
           }}
-          dpr={[
-            1,
-            mall.settings
-              ?.cameraFov
-              ? 1.5
-              : 1.75,
-          ]}
+          gl={{
+            antialias:
+              true,
+
+            powerPreference:
+              "high-performance",
+          }}
         >
-          <KeyboardControls
-            map={[
-              {
-                name: "forward",
-                keys: [
-                  "ArrowUp",
-                  "w",
-                  "W",
-                ],
-              },
-              {
-                name: "backward",
-                keys: [
-                  "ArrowDown",
-                  "s",
-                  "S",
-                ],
-              },
-              {
-                name: "left",
-                keys: [
-                  "ArrowLeft",
-                  "a",
-                  "A",
-                ],
-              },
-              {
-                name: "right",
-                keys: [
-                  "ArrowRight",
-                  "d",
-                  "D",
-                ],
-              },
-              {
-                name: "run",
-                keys: [
-                  "Shift",
-                ],
-              },
-            ]}
+          <Suspense
+            fallback={null}
           >
-            <Suspense
-              fallback={null}
-            >
-              <MallScene
-                mall={mall}
-                joystick={
-                  joystick
-                }
-                onProductSelect={
-                  handleProductSelect
-                }
-                onStoreSelect={
-                  handleStoreSelect
-                }
-                onNearbyProduct={
-                  setNearbyProduct
-                }
-              />
-            </Suspense>
-          </KeyboardControls>
-        </Canvas>
-      </div>
-
-      {/* ===================================================
-          CONTROL PANEL
-      =================================================== */}
-
-      {showInstructions && (
-        <div className="mall-instructions">
-          <div className="mall-instructions-header">
-            <div>
-              <strong>
-                Explore JINI Mall
-              </strong>
-
-              <span>
-                Walk around and discover products
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                setShowInstructions(
-                  false,
-                )
+            <MallScene
+              mall={mall}
+              joystick={
+                joystick
               }
-            >
-              <X size={17} />
-            </button>
+              look={look}
+              onProductSelect={
+                setSelectedProduct
+              }
+              onStoreSelect={
+                setSelectedStore
+              }
+              onNearbyProduct={
+                setNearbyProduct
+              }
+              onPosition={
+                setPosition
+              }
+            />
+          </Suspense>
+        </Canvas>
+
+        {/* =================================================
+            HUD
+        ================================================= */}
+
+        <div className="mall-hud">
+          <div className="mall-status-pill">
+            <span className="status-dot" />
+
+            LIVE 3D
           </div>
 
-          {!isMobile ? (
-            <div className="mall-controls-grid">
+          <div className="mall-position">
+            X{" "}
+            {position.x.toFixed(
+              1,
+            )}
+
+            {" · "}
+
+            Z{" "}
+            {position.z.toFixed(
+              1,
+            )}
+          </div>
+        </div>
+
+        {/* =================================================
+            CONTROLS
+        ================================================= */}
+
+        {showControls && (
+          <div className="mall-instructions">
+            <div className="mall-instructions-header">
               <div>
+                <strong>
+                  Explore JINI
+                  Mall
+                </strong>
+
+                <span>
+                  Walk around
+                  and discover
+                  real products
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowControls(
+                    false,
+                  )
+                }
+                aria-label="Close controls"
+              >
+                <X size={17} />
+              </button>
+            </div>
+
+            {!isMobile ? (
+              <div className="mall-controls-grid">
+                <div>
+                  <Gamepad2
+                    size={18}
+                  />
+
+                  <b>
+                    W A S D
+                  </b>
+
+                  <small>
+                    Move
+                  </small>
+                </div>
+
+                <div>
+                  <Mouse
+                    size={18}
+                  />
+
+                  <b>
+                    Drag
+                  </b>
+
+                  <small>
+                    Look around
+                  </small>
+                </div>
+
+                <div>
+                  <Camera
+                    size={18}
+                  />
+
+                  <b>
+                    Click
+                  </b>
+
+                  <small>
+                    Open product
+                  </small>
+                </div>
+
+                <div>
+                  <Eye
+                    size={18}
+                  />
+
+                  <b>
+                    Shift
+                  </b>
+
+                  <small>
+                    Run faster
+                  </small>
+                </div>
+              </div>
+            ) : (
+              <div className="mall-mobile-controls">
                 <Gamepad2
                   size={18}
                 />
 
                 <span>
-                  W A S D
+                  Joystick =
+                  walk · Swipe
+                  the mall =
+                  look around
                 </span>
-
-                <small>
-                  Move
-                </small>
               </div>
+            )}
+          </div>
+        )}
 
-              <div>
-                <Mouse
-                  size={18}
-                />
+        {/* =================================================
+            MOBILE JOYSTICK
+        ================================================= */}
 
-                <span>
-                  Mouse
-                </span>
-
-                <small>
-                  Look around
-                </small>
-              </div>
-
-              <div>
-                <Camera
-                  size={18}
-                />
-
-                <span>
-                  Click
-                </span>
-
-                <small>
-                  Enter 3D view
-                </small>
-              </div>
-
-              <div>
-                <Eye
-                  size={18}
-                />
-
-                <span>
-                  Shift
-                </span>
-
-                <small>
-                  Run
-                </small>
-              </div>
-            </div>
-          ) : (
-            <div className="mall-mobile-controls">
-              <Gamepad2
-                size={18}
-              />
-
-              <span>
-                Use the joystick to walk
-                around the mall.
-              </span>
-            </div>
+        {isMobile &&
+          mall.settings
+            ?.mobileJoystickEnabled !==
+            false && (
+            <Joystick
+              onMove={(
+                x,
+                y,
+              ) =>
+                setJoystick({
+                  x,
+                  y,
+                })
+              }
+            />
           )}
-        </div>
-      )}
 
-      {/* ===================================================
-          MOBILE JOYSTICK
-      =================================================== */}
+        {/* =================================================
+            NEARBY PRODUCT
+        ================================================= */}
 
-      {isMobile && (
-        <Joystick
-          onMove={(
-            x,
-            y,
-          ) =>
-            setJoystick({
-              x,
-              y,
-            })
-          }
-        />
-      )}
+        {nearbyProduct && (
+          <button
+            type="button"
+            className="mall-nearby-product"
+            onClick={() =>
+              setSelectedProduct(
+                nearbyProduct,
+              )
+            }
+          >
+            <Sparkles
+              size={17}
+            />
 
-      {/* ===================================================
-          NEARBY PRODUCT
-      =================================================== */}
+            <span>
+              {typeof nearbyProduct.product ===
+              "object"
+                ? nearbyProduct
+                    .product
+                    ?.name
+                : "View nearby product"}
+            </span>
 
-      {nearbyProduct && (
-        <button
-          type="button"
-          className="mall-nearby-product"
-          onClick={() =>
-            handleProductSelect(
-              nearbyProduct,
-            )
-          }
-        >
-          <Sparkles
-            size={18}
-          />
+            <ChevronUp
+              size={17}
+            />
+          </button>
+        )}
 
+        <div className="mall-bottom-brand">
           <span>
-            {typeof nearbyProduct.product ===
-            "object"
-              ? nearbyProduct
-                  .product?.name
-              : "View Product"}
+            JINI COSMETICS
           </span>
 
-          <ChevronUp
-            size={17}
-          />
-        </button>
-      )}
+          <small>
+            Beauty beyond
+            borders
+          </small>
+        </div>
+      </main>
 
-      {/* ===================================================
+      {/* =================================================
           MAP
-      =================================================== */}
+      ================================================= */}
 
       {showMap && (
-        <div className="mall-map-overlay">
-          <div className="mall-map-card">
+        <div
+          className="mall-map-overlay"
+          onClick={() =>
+            setShowMap(false)
+          }
+        >
+          <div
+            className="mall-map-card"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
             <div className="mall-map-header">
               <div>
                 <strong>
@@ -2450,28 +3764,59 @@ export default function VirtualMallPage() {
 
                 <span>
                   Select a store
+                  to explore
                 </span>
               </div>
 
               <button
                 type="button"
                 onClick={() =>
-                  setShowMap(false)
+                  setShowMap(
+                    false,
+                  )
                 }
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="mall-map-grid">
-              {storeMarkers.map(
+            <div className="mall-map-visual">
+              <div className="map-lobby">
+                LOBBY
+              </div>
+
+              <div className="map-store map-makeup">
+                MAKEUP
+              </div>
+
+              <div className="map-store map-skin">
+                SKIN CARE
+              </div>
+
+              <div className="map-store map-hair">
+                HAIR CARE
+              </div>
+
+              <div className="map-store map-fragrance">
+                FRAGRANCE
+              </div>
+
+              <span
+                className="map-player"
+                title="Your position"
+              >
+                ●
+              </span>
+            </div>
+
+            <div className="mall-map-list">
+              {mapStores.map(
                 (store) => (
                   <button
                     key={
                       store.storeId
                     }
                     type="button"
-                    className="mall-map-store"
                     onClick={() => {
                       setSelectedStore(
                         store,
@@ -2483,12 +3828,14 @@ export default function VirtualMallPage() {
                     }}
                   >
                     <span>
-                      {store.name}
+                      {
+                        store.name
+                      }
                     </span>
 
                     <small>
                       {store.category ||
-                        "Store"}
+                        "Beauty store"}
                     </small>
                   </button>
                 ),
@@ -2498,9 +3845,9 @@ export default function VirtualMallPage() {
         </div>
       )}
 
-      {/* ===================================================
-          SELECTED STORE
-      =================================================== */}
+      {/* =================================================
+          STORE PANEL
+      ================================================= */}
 
       {selectedStore && (
         <div
@@ -2535,32 +3882,137 @@ export default function VirtualMallPage() {
             </span>
 
             <h2>
-              {selectedStore.name}
+              {
+                selectedStore.name
+              }
             </h2>
 
             <p>
               {selectedStore.description ||
-                "Explore products in this JINI Cosmetics store."}
+                "Explore real JINI products inside this store."}
             </p>
+
+            <div className="mall-store-products-heading">
+              <strong>
+                Products in this
+                store
+              </strong>
+
+              <small>
+                {
+                  selectedStoreProducts.length
+                }{" "}
+                available
+              </small>
+            </div>
+
+            {selectedStoreProducts.length >
+            0 ? (
+              <div className="mall-store-products-grid">
+                {selectedStoreProducts.map(
+                  (
+                    location,
+                  ) => {
+                    const product =
+                      typeof location.product ===
+                      "object"
+                        ? location.product
+                        : undefined;
+
+                    const image =
+                      getProductImage(
+                        product,
+                      );
+
+                    return (
+                      <button
+                        key={
+                          location._id ||
+                          getProductId(
+                            product,
+                          )
+                        }
+                        type="button"
+                        className="mall-store-product-card"
+                        onClick={() => {
+                          setSelectedStore(
+                            null,
+                          );
+
+                          setSelectedProduct(
+                            location,
+                          );
+                        }}
+                      >
+                        <div className="mall-store-product-image">
+                          {image ? (
+                            <img
+                              src={
+                                image
+                              }
+                              alt={
+                                product?.name ||
+                                "Product"
+                              }
+                            />
+                          ) : (
+                            <Sparkles
+                              size={
+                                22
+                              }
+                            />
+                          )}
+                        </div>
+
+                        <div className="mall-store-product-copy">
+                          <strong>
+                            {product?.name ||
+                              "Beauty Product"}
+                          </strong>
+
+                          <span>
+                            {formatPrice(
+                              product?.price,
+                            )}
+                          </span>
+
+                          <small>
+                            Open product
+                          </small>
+                        </div>
+                      </button>
+                    );
+                  },
+                )}
+              </div>
+            ) : (
+              <div className="mall-store-empty-products">
+                No products have
+                been placed in
+                this store yet.
+              </div>
+            )}
 
             <button
               type="button"
-              onClick={() => {
+              onClick={() =>
                 setSelectedStore(
                   null,
-                );
-              }}
+                )
+              }
             >
               <Eye size={17} />
-              Explore Store
+
+              Continue
+              Exploring
             </button>
           </div>
         </div>
       )}
 
-      {/* ===================================================
+      {/* =================================================
           PRODUCT MODAL
-      =================================================== */}
+      ================================================= */}
 
       {selectedProduct && (
         <ProductModal
@@ -2575,29 +4027,34 @@ export default function VirtualMallPage() {
         />
       )}
 
-      {/* ===================================================
-          MOBILE LANDSCAPE MESSAGE
-      =================================================== */}
+      {/* =================================================
+          MOBILE LANDSCAPE
+      ================================================= */}
 
-      {isMobile && (
-        <div className="mall-landscape-message">
-          <div>
-            <ChevronDown
-              size={32}
-            />
+      {isMobile &&
+        mall.settings
+          ?.forceLandscapeOnMobile !==
+          false && (
+          <div className="mall-landscape-message">
+            <div>
+              <RotateCcw
+                size={28}
+              />
 
-            <strong>
-              Rotate your device
-            </strong>
+              <strong>
+                Use landscape
+                mode
+              </strong>
 
-            <span>
-              For the best virtual mall
-              experience, use landscape
-              mode.
-            </span>
+              <span>
+                Rotate your
+                phone for the
+                best 3D mall
+                experience.
+              </span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }

@@ -44,24 +44,33 @@ const router = express.Router();
 ========================================================= */
 
 // Get currently published/active mall
+// GET /api/virtual-mall
 router.get("/", getVirtualMall);
 
-// Get mall by slug
-router.get("/slug/:slug", getVirtualMallBySlug);
-
 // Get all active stores
+// GET /api/virtual-mall/stores
 router.get("/stores", getMallStores);
 
 // Get single store
+// GET /api/virtual-mall/stores/:storeId
 router.get("/stores/:storeId", getMallStore);
 
 // Get products displayed inside a store
-router.get("/stores/:storeId/products", getStoreProducts);
+// GET /api/virtual-mall/stores/:storeId/products
+router.get(
+  "/stores/:storeId/products",
+  getStoreProducts
+);
 
 // Get product location inside mall
-router.get("/products/:productId", getProductLocation);
+// GET /api/virtual-mall/products/:productId
+router.get(
+  "/products/:productId",
+  getProductLocation
+);
 
 // Check whether product is available in mall
+// GET /api/virtual-mall/products/:productId/availability
 router.get(
   "/products/:productId/availability",
   checkProductAvailability
@@ -72,7 +81,8 @@ router.get(
    ADMIN / SUPERADMIN VIRTUAL MALL ROUTES
 ========================================================= */
 
-// All Virtual Malls
+// Get all Virtual Malls
+// GET /api/virtual-mall/admin/all
 router.get(
   "/admin/all",
   protect,
@@ -80,7 +90,8 @@ router.get(
   getAllVirtualMalls
 );
 
-// Get mall by MongoDB ID
+// Get Virtual Mall by MongoDB ID
+// GET /api/virtual-mall/admin/:mallId
 router.get(
   "/admin/:mallId",
   protect,
@@ -89,6 +100,7 @@ router.get(
 );
 
 // Create Virtual Mall
+// POST /api/virtual-mall/admin
 router.post(
   "/admin",
   protect,
@@ -97,6 +109,7 @@ router.post(
 );
 
 // Update Virtual Mall
+// PUT /api/virtual-mall/admin/:mallId
 router.put(
   "/admin/:mallId",
   protect,
@@ -105,6 +118,7 @@ router.put(
 );
 
 // Delete Virtual Mall
+// DELETE /api/virtual-mall/admin/:mallId
 router.delete(
   "/admin/:mallId",
   protect,
@@ -118,6 +132,7 @@ router.delete(
 ========================================================= */
 
 // Add store
+// POST /api/virtual-mall/admin/:mallId/stores
 router.post(
   "/admin/:mallId/stores",
   protect,
@@ -126,6 +141,7 @@ router.post(
 );
 
 // Update store
+// PUT /api/virtual-mall/admin/:mallId/stores/:storeId
 router.put(
   "/admin/:mallId/stores/:storeId",
   protect,
@@ -134,6 +150,7 @@ router.put(
 );
 
 // Delete store
+// DELETE /api/virtual-mall/admin/:mallId/stores/:storeId
 router.delete(
   "/admin/:mallId/stores/:storeId",
   protect,
@@ -147,6 +164,7 @@ router.delete(
 ========================================================= */
 
 // Add product to mall
+// POST /api/virtual-mall/admin/:mallId/product-location
 router.post(
   "/admin/:mallId/product-location",
   protect,
@@ -155,6 +173,7 @@ router.post(
 );
 
 // Update product location
+// PUT /api/virtual-mall/admin/:mallId/product-location/:locationId
 router.put(
   "/admin/:mallId/product-location/:locationId",
   protect,
@@ -163,6 +182,7 @@ router.put(
 );
 
 // Delete product from mall
+// DELETE /api/virtual-mall/admin/:mallId/product-location/:locationId
 router.delete(
   "/admin/:mallId/product-location/:locationId",
   protect,
@@ -171,6 +191,7 @@ router.delete(
 );
 
 // Move product in 3D mall
+// PATCH /api/virtual-mall/admin/:mallId/product-location/:locationId/position
 router.patch(
   "/admin/:mallId/product-location/:locationId/position",
   protect,
@@ -184,6 +205,7 @@ router.patch(
 ========================================================= */
 
 // Update player spawn point
+// PUT /api/virtual-mall/admin/:mallId/spawn-point
 router.put(
   "/admin/:mallId/spawn-point",
   protect,
@@ -192,6 +214,7 @@ router.put(
 );
 
 // Update mall settings
+// PUT /api/virtual-mall/admin/:mallId/settings
 router.put(
   "/admin/:mallId/settings",
   protect,
@@ -205,6 +228,7 @@ router.put(
 ========================================================= */
 
 // Publish mall
+// PATCH /api/virtual-mall/admin/:mallId/publish
 router.patch(
   "/admin/:mallId/publish",
   protect,
@@ -213,6 +237,7 @@ router.patch(
 );
 
 // Unpublish mall
+// PATCH /api/virtual-mall/admin/:mallId/unpublish
 router.patch(
   "/admin/:mallId/unpublish",
   protect,
@@ -225,11 +250,32 @@ router.patch(
    MAINTENANCE MODE
 ========================================================= */
 
+// Update maintenance mode
+// PATCH /api/virtual-mall/admin/:mallId/maintenance
 router.patch(
   "/admin/:mallId/maintenance",
   protect,
   managementOnly,
   updateMaintenanceMode
+);
+
+
+/* =========================================================
+   GET VIRTUAL MALL BY SLUG
+========================================================= */
+
+// IMPORTANT:
+// This route must remain AFTER the specific routes above.
+//
+// Frontend request:
+// GET /api/virtual-mall/jini-cosmetics-virtual-mall
+//
+// This becomes:
+// req.params.slug = "jini-cosmetics-virtual-mall"
+
+router.get(
+  "/:slug",
+  getVirtualMallBySlug
 );
 
 
