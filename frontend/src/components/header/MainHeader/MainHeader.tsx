@@ -1,14 +1,14 @@
 import {
+  Bell,
   ChevronDown,
   ChevronRight,
   LoaderCircle,
+  LogOut,
+  Package,
   Search,
   ShoppingBag,
-  Bell,
-  UserRound,
-  LogOut,
   User,
-  Package,
+  UserRound,
   X,
 } from "lucide-react";
 
@@ -123,8 +123,10 @@ const API_BASE_URL = String(
     "https://jihaan-cosmetics.onrender.com/api",
 ).replace(/\/+$/, "");
 
-const SERVER_URL =
-  API_BASE_URL.replace(/\/api\/?$/, "");
+const SERVER_URL = API_BASE_URL.replace(
+  /\/api\/?$/,
+  "",
+);
 
 const AUTH_TOKEN_STORAGE_KEY =
   "jihaan_auth_token";
@@ -136,9 +138,7 @@ const CURRENT_USER_STORAGE_KEY =
    HELPERS
 ========================================================= */
 
-function getImageUrl(
-  image?: string,
-): string {
+function getImageUrl(image?: string): string {
   if (!image) {
     return jihaanLogo;
   }
@@ -203,130 +203,89 @@ function MainHeader() {
   const navigate = useNavigate();
 
   const searchRef =
-    useRef<HTMLDivElement | null>(
-      null,
-    );
+    useRef<HTMLDivElement | null>(null);
 
   const accountRef =
-    useRef<HTMLDivElement | null>(
-      null,
-    );
+    useRef<HTMLDivElement | null>(null);
 
   const notificationRef =
-    useRef<HTMLDivElement | null>(
-      null,
-    );
+    useRef<HTMLDivElement | null>(null);
 
   const searchRequestRef =
-    useRef<AbortController | null>(
-      null,
-    );
+    useRef<AbortController | null>(null);
 
   const searchTimerRef =
     useRef<number | null>(null);
 
   /* =======================================================
-     CATEGORY STATE
+     STATES
   ======================================================= */
 
-  const [
-    categories,
-    setCategories,
-  ] = useState<Category[]>([]);
+  const [categories, setCategories] =
+    useState<Category[]>([]);
 
-  const [
-    categoriesLoading,
-    setCategoriesLoading,
-  ] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] =
+    useState(true);
+
+  const [searchValue, setSearchValue] =
+    useState("");
+
+  const [searchResults, setSearchResults] =
+    useState<Product[]>([]);
+
+  const [isSearchOpen, setIsSearchOpen] =
+    useState(false);
+
+  const [isSearching, setIsSearching] =
+    useState(false);
+
+  const [currentUser, setCurrentUser] =
+    useState<CurrentUser | null>(null);
+
+  const [isAccountOpen, setIsAccountOpen] =
+    useState(false);
+
+  const [notifications, setNotifications] =
+    useState<NotificationItem[]>([]);
+
+  const [notificationCount, setNotificationCount] =
+    useState(0);
+
+  const [isNotificationOpen, setIsNotificationOpen] =
+    useState(false);
+
+  const [notificationsLoading, setNotificationsLoading] =
+    useState(false);
+
+  const [isMobileMenuOpen, setIsMobileMenuOpen] =
+    useState(false);
+
+  const [isCategoryMenuOpen, setIsCategoryMenuOpen] =
+    useState(false);
+
+  const [cartCount, setCartCount] =
+    useState(0);
 
   /* =======================================================
-     SEARCH STATE
+     MOBILE BODY SCROLL LOCK
   ======================================================= */
 
-  const [
-    searchValue,
-    setSearchValue,
-  ] = useState("");
+  useEffect(() => {
+    if (!isMobileMenuOpen) {
+      document.body.style.overflow = "";
+      return;
+    }
 
-  const [
-    searchResults,
-    setSearchResults,
-  ] = useState<Product[]>([]);
+    const previousOverflow =
+      document.body.style.overflow;
 
-  const [
-    isSearchOpen,
-    setIsSearchOpen,
-  ] = useState(false);
+    document.body.style.overflow = "hidden";
 
-  const [
-    isSearching,
-    setIsSearching,
-  ] = useState(false);
-
-  /* =======================================================
-     ACCOUNT STATE
-  ======================================================= */
-
-  const [
-    currentUser,
-    setCurrentUser,
-  ] = useState<CurrentUser | null>(
-    null,
-  );
-
-  const [
-    isAccountOpen,
-    setIsAccountOpen,
-  ] = useState(false);
-
-  /* =======================================================
-     NOTIFICATION STATE
-  ======================================================= */
-
-  const [
-    notifications,
-    setNotifications,
-  ] = useState<NotificationItem[]>(
-    [],
-  );
-
-  const [
-    notificationCount,
-    setNotificationCount,
-  ] = useState(0);
-
-  const [
-    isNotificationOpen,
-    setIsNotificationOpen,
-  ] = useState(false);
-
-  const [
-    notificationsLoading,
-    setNotificationsLoading,
-  ] = useState(false);
-
-  /* =======================================================
-     MOBILE MENU
-  ======================================================= */
-
-  const [
-    isMobileMenuOpen,
-    setIsMobileMenuOpen,
-  ] = useState(false);
-
-  const [
-    isCategoryMenuOpen,
-    setIsCategoryMenuOpen,
-  ] = useState(false);
-
-  /* =======================================================
-     CART
-  ======================================================= */
-
-  const [
-    cartCount,
-    setCartCount,
-  ] = useState(0);
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+    };
+  }, [isMobileMenuOpen]);
 
   /* =======================================================
      FETCH CATEGORIES
@@ -335,85 +294,69 @@ function MainHeader() {
   useEffect(() => {
     let mounted = true;
 
-    const fetchCategories =
-      async () => {
-        try {
-          setCategoriesLoading(
-            true,
+    const fetchCategories = async () => {
+      try {
+        setCategoriesLoading(true);
+
+        const response = await fetch(
+          `${API_BASE_URL}/categories`,
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+            },
+          },
+        );
+
+        const data =
+          (await response
+            .json()
+            .catch(() => ({}))) as CategoryResponse;
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              "Unable to load categories.",
           );
-
-          const response =
-            await fetch(
-              `${API_BASE_URL}/categories`,
-              {
-                method: "GET",
-                headers: {
-                  Accept:
-                    "application/json",
-                },
-              },
-            );
-
-          const data =
-            (await response
-              .json()
-              .catch(() => ({}))) as CategoryResponse;
-
-          if (!response.ok) {
-            throw new Error(
-              data.message ||
-                "Unable to load categories.",
-            );
-          }
-
-          const receivedCategories =
-            Array.isArray(data.data)
-              ? data.data
-              : Array.isArray(
-                    data.categories,
-                  )
-                ? data.categories
-                : [];
-
-          const activeCategories =
-            receivedCategories
-              .filter(
-                (category) =>
-                  category.isActive !==
-                  false,
-              )
-              .sort(
-                (a, b) =>
-                  Number(
-                    a.sortOrder || 0,
-                  ) -
-                  Number(
-                    b.sortOrder || 0,
-                  ),
-              );
-
-          if (mounted) {
-            setCategories(
-              activeCategories,
-            );
-          }
-        } catch (error) {
-          console.error(
-            "Header category error:",
-            error,
-          );
-
-          if (mounted) {
-            setCategories([]);
-          }
-        } finally {
-          if (mounted) {
-            setCategoriesLoading(
-              false,
-            );
-          }
         }
-      };
+
+        const receivedCategories =
+          Array.isArray(data.data)
+            ? data.data
+            : Array.isArray(data.categories)
+              ? data.categories
+              : [];
+
+        const activeCategories =
+          receivedCategories
+            .filter(
+              (category) =>
+                category.isActive !== false,
+            )
+            .sort(
+              (a, b) =>
+                Number(a.sortOrder || 0) -
+                Number(b.sortOrder || 0),
+            );
+
+        if (mounted) {
+          setCategories(activeCategories);
+        }
+      } catch (error) {
+        console.error(
+          "Header category error:",
+          error,
+        );
+
+        if (mounted) {
+          setCategories([]);
+        }
+      } finally {
+        if (mounted) {
+          setCategoriesLoading(false);
+        }
+      }
+    };
 
     void fetchCategories();
 
@@ -430,22 +373,18 @@ function MainHeader() {
     category: Category,
   ) => {
     const slug =
-      getCategorySlug(
-        category,
-      );
+      getCategorySlug(category);
 
     setIsMobileMenuOpen(false);
     setIsCategoryMenuOpen(false);
 
     navigate(
-      `/category/${encodeURIComponent(
-        slug,
-      )}`,
+      `/category/${encodeURIComponent(slug)}`,
     );
   };
 
   /* =======================================================
-     OPEN SEARCH
+     SEARCH
   ======================================================= */
 
   const openSearch = () => {
@@ -464,33 +403,23 @@ function MainHeader() {
     }, 50);
   };
 
-  /* =======================================================
-     CLOSE SEARCH
-  ======================================================= */
-
   const closeSearch = () => {
     searchRequestRef.current?.abort();
 
     if (
-      searchTimerRef.current !==
-      null
+      searchTimerRef.current !== null
     ) {
       window.clearTimeout(
         searchTimerRef.current,
       );
 
-      searchTimerRef.current =
-        null;
+      searchTimerRef.current = null;
     }
 
     setIsSearchOpen(false);
     setSearchResults([]);
     setIsSearching(false);
   };
-
-  /* =======================================================
-     SEARCH SUBMIT
-  ======================================================= */
 
   const handleSearch = (
     event: FormEvent<HTMLFormElement>,
@@ -505,127 +434,98 @@ function MainHeader() {
     }
 
     closeSearch();
-
     setSearchValue("");
 
     navigate(
-      `/search?q=${encodeURIComponent(
-        query,
-      )}`,
+      `/search?q=${encodeURIComponent(query)}`,
     );
   };
 
-  /* =======================================================
-     LIVE PRODUCT SEARCH
-  ======================================================= */
+  const searchProducts = async (
+    query: string,
+  ) => {
+    const trimmedQuery =
+      query.trim();
 
-  const searchProducts =
-    async (
-      query: string,
-    ) => {
-      const trimmedQuery =
-        query.trim();
+    if (!trimmedQuery) {
+      searchRequestRef.current?.abort();
 
-      if (!trimmedQuery) {
-        searchRequestRef.current?.abort();
+      setSearchResults([]);
+      setIsSearching(false);
 
-        setSearchResults([]);
-        setIsSearching(false);
+      return;
+    }
 
+    searchRequestRef.current?.abort();
+
+    const controller =
+      new AbortController();
+
+    searchRequestRef.current =
+      controller;
+
+    setIsSearching(true);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/products?search=${encodeURIComponent(
+          trimmedQuery,
+        )}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+          signal: controller.signal,
+        },
+      );
+
+      const data =
+        (await response
+          .json()
+          .catch(() => ({}))) as ProductResponse;
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Unable to search products.",
+        );
+      }
+
+      const products =
+        Array.isArray(data.products)
+          ? data.products
+          : Array.isArray(data.data)
+            ? data.data
+            : [];
+
+      if (!controller.signal.aborted) {
+        setSearchResults(
+          products.slice(0, 8),
+        );
+      }
+    } catch (error) {
+      if (
+        error instanceof DOMException &&
+        error.name === "AbortError"
+      ) {
         return;
       }
 
-      searchRequestRef.current?.abort();
+      console.error(
+        "Product search error:",
+        error,
+      );
 
-      const controller =
-        new AbortController();
-
-      searchRequestRef.current =
-        controller;
-
-      setIsSearching(true);
-
-      try {
-        const response =
-          await fetch(
-            `${API_BASE_URL}/products?search=${encodeURIComponent(
-              trimmedQuery,
-            )}`,
-            {
-              method: "GET",
-
-              headers: {
-                Accept:
-                  "application/json",
-              },
-
-              signal:
-                controller.signal,
-            },
-          );
-
-        const data =
-          (await response
-            .json()
-            .catch(() => ({}))) as ProductResponse;
-
-        if (!response.ok) {
-          throw new Error(
-            data.message ||
-              "Unable to search products.",
-          );
-        }
-
-        const products =
-          Array.isArray(
-            data.products,
-          )
-            ? data.products
-            : Array.isArray(
-                  data.data,
-                )
-              ? data.data
-              : [];
-
-        if (
-          !controller.signal.aborted
-        ) {
-          setSearchResults(
-            products.slice(0, 8),
-          );
-        }
-      } catch (error) {
-        if (
-          error instanceof
-            DOMException &&
-          error.name ===
-            "AbortError"
-        ) {
-          return;
-        }
-
-        console.error(
-          "Product search error:",
-          error,
-        );
-
-        if (
-          !controller.signal.aborted
-        ) {
-          setSearchResults([]);
-        }
-      } finally {
-        if (
-          !controller.signal.aborted
-        ) {
-          setIsSearching(false);
-        }
+      if (!controller.signal.aborted) {
+        setSearchResults([]);
       }
-    };
-
-  /* =======================================================
-     SEARCH INPUT
-  ======================================================= */
+    } finally {
+      if (!controller.signal.aborted) {
+        setIsSearching(false);
+      }
+    }
+  };
 
   const handleSearchChange = (
     event: ChangeEvent<HTMLInputElement>,
@@ -636,15 +536,13 @@ function MainHeader() {
     setSearchValue(value);
 
     if (
-      searchTimerRef.current !==
-      null
+      searchTimerRef.current !== null
     ) {
       window.clearTimeout(
         searchTimerRef.current,
       );
 
-      searchTimerRef.current =
-        null;
+      searchTimerRef.current = null;
     }
 
     const trimmedValue =
@@ -670,25 +568,19 @@ function MainHeader() {
       }, 280);
   };
 
-  /* =======================================================
-     CLICK SEARCH RESULT
-  ======================================================= */
-
   const handleProductClick = (
     product: Product,
   ) => {
     searchRequestRef.current?.abort();
 
     if (
-      searchTimerRef.current !==
-      null
+      searchTimerRef.current !== null
     ) {
       window.clearTimeout(
         searchTimerRef.current,
       );
 
-      searchTimerRef.current =
-        null;
+      searchTimerRef.current = null;
     }
 
     setIsSearchOpen(false);
@@ -703,7 +595,7 @@ function MainHeader() {
   };
 
   /* =======================================================
-     LOAD USER
+     USER
   ======================================================= */
 
   const loadCurrentUser = () => {
@@ -723,9 +615,7 @@ function MainHeader() {
           savedUser,
         ) as CurrentUser;
 
-      setCurrentUser(
-        parsedUser,
-      );
+      setCurrentUser(parsedUser);
     } catch {
       localStorage.removeItem(
         CURRENT_USER_STORAGE_KEY,
@@ -736,7 +626,7 @@ function MainHeader() {
   };
 
   /* =======================================================
-     CART COUNT
+     CART
   ======================================================= */
 
   const updateCartCount =
@@ -752,24 +642,18 @@ function MainHeader() {
       }
 
       try {
-        const response =
-          await fetch(
-            `${API_BASE_URL}/cart`,
-            {
-              method: "GET",
-
-              headers: {
-                Accept:
-                  "application/json",
-
-                Authorization:
-                  `Bearer ${token}`,
-              },
-
-              credentials:
-                "include",
+        const response = await fetch(
+          `${API_BASE_URL}/cart`,
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              Authorization:
+                `Bearer ${token}`,
             },
-          );
+            credentials: "include",
+          },
+        );
 
         const data =
           (await response
@@ -783,13 +667,11 @@ function MainHeader() {
           );
         }
 
-        const total =
+        setCartCount(
           Number(
-            data.cart
-              ?.totalItems || 0,
-          );
-
-        setCartCount(total);
+            data.cart?.totalItems || 0,
+          ),
+        );
       } catch (error) {
         console.error(
           "Cart count error:",
@@ -804,122 +686,112 @@ function MainHeader() {
      NOTIFICATIONS
   ======================================================= */
 
-  const fetchNotifications =
-    async (
-      showList = false,
-    ) => {
-      const token =
-        localStorage.getItem(
-          AUTH_TOKEN_STORAGE_KEY,
-        );
+  const fetchNotifications = async (
+    showList = false,
+  ) => {
+    const token =
+      localStorage.getItem(
+        AUTH_TOKEN_STORAGE_KEY,
+      );
 
-      if (!token) {
-        setNotifications([]);
-        setNotificationCount(0);
-        return;
+    if (!token) {
+      setNotifications([]);
+      setNotificationCount(0);
+      return;
+    }
+
+    try {
+      if (showList) {
+        setNotificationsLoading(true);
       }
 
-      try {
-        if (showList) {
-          setNotificationsLoading(
-            true,
-          );
-        }
-
-        const [
-          countResponse,
-          listResponse,
-        ] = await Promise.all([
-          fetch(
-            `${API_BASE_URL}/notifications/unread-count`,
-            {
-              method: "GET",
-              headers: {
-                Accept:
-                  "application/json",
-                Authorization:
-                  `Bearer ${token}`,
-              },
-              credentials:
-                "include",
+      const [
+        countResponse,
+        listResponse,
+      ] = await Promise.all([
+        fetch(
+          `${API_BASE_URL}/notifications/unread-count`,
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              Authorization:
+                `Bearer ${token}`,
             },
-          ),
+            credentials: "include",
+          },
+        ),
 
-          showList
-            ? fetch(
-                `${API_BASE_URL}/notifications`,
-                {
-                  method: "GET",
-                  headers: {
-                    Accept:
-                      "application/json",
-                    Authorization:
-                      `Bearer ${token}`,
-                  },
-                  credentials:
-                    "include",
+        showList
+          ? fetch(
+              `${API_BASE_URL}/notifications`,
+              {
+                method: "GET",
+                headers: {
+                  Accept:
+                    "application/json",
+                  Authorization:
+                    `Bearer ${token}`,
                 },
-              )
-            : Promise.resolve(
-                null,
-              ),
-        ]);
+                credentials: "include",
+              },
+            )
+          : Promise.resolve(null),
+      ]);
 
-        const countData =
-          (await countResponse
+      const countData =
+        (await countResponse
+          .json()
+          .catch(() => ({}))) as NotificationResponse;
+
+      if (countResponse.ok) {
+        setNotificationCount(
+          Number(
+            countData.unreadCount ??
+              countData.count ??
+              0,
+          ),
+        );
+      }
+
+      if (listResponse) {
+        const listData =
+          (await listResponse
             .json()
             .catch(() => ({}))) as NotificationResponse;
 
-        if (countResponse.ok) {
-          setNotificationCount(
-            Number(
-              countData.unreadCount ??
-                countData.count ??
-                0,
+        if (listResponse.ok) {
+          const received =
+            Array.isArray(
+              listData.notifications,
+            )
+              ? listData.notifications
+              : Array.isArray(
+                    listData.data,
+                  )
+                ? listData.data
+                : [];
+
+          setNotifications(
+            received.filter(
+              (notification) =>
+                notification.isActive !==
+                false,
             ),
           );
         }
-
-        if (listResponse) {
-          const listData =
-            (await listResponse
-              .json()
-              .catch(() => ({}))) as NotificationResponse;
-
-          if (listResponse.ok) {
-            const received =
-              Array.isArray(
-                listData.notifications,
-              )
-                ? listData.notifications
-                : Array.isArray(
-                      listData.data,
-                    )
-                  ? listData.data
-                  : [];
-
-            setNotifications(
-              received.filter(
-                (notification) =>
-                  notification.isActive !==
-                  false,
-              ),
-            );
-          }
-        }
-      } catch (error) {
-        console.error(
-          "Notification fetch error:",
-          error,
-        );
-      } finally {
-        if (showList) {
-          setNotificationsLoading(
-            false,
-          );
-        }
       }
-    };
+    } catch (error) {
+      console.error(
+        "Notification fetch error:",
+        error,
+      );
+    } finally {
+      if (showList) {
+        setNotificationsLoading(false);
+      }
+    }
+  };
 
   const toggleNotifications =
     async () => {
@@ -969,8 +841,7 @@ function MainHeader() {
                 Authorization:
                   `Bearer ${token}`,
               },
-              credentials:
-                "include",
+              credentials: "include",
             },
           );
 
@@ -997,9 +868,7 @@ function MainHeader() {
           );
         }
 
-        setIsNotificationOpen(
-          false,
-        );
+        setIsNotificationOpen(false);
 
         if (
           notification.link?.trim()
@@ -1052,8 +921,7 @@ function MainHeader() {
                 Authorization:
                   `Bearer ${token}`,
               },
-              credentials:
-                "include",
+              credentials: "include",
             },
           );
 
@@ -1065,10 +933,12 @@ function MainHeader() {
 
         setNotifications(
           (previous) =>
-            previous.map((item) => ({
-              ...item,
-              isRead: true,
-            })),
+            previous.map(
+              (item) => ({
+                ...item,
+                isRead: true,
+              }),
+            ),
         );
 
         setNotificationCount(0);
@@ -1080,106 +950,97 @@ function MainHeader() {
       }
     };
 
-  const formatNotificationDate =
-    (value: string) => {
-      const date =
-        new Date(value);
+  const formatNotificationDate = (
+    value: string,
+  ) => {
+    const date = new Date(value);
 
-      if (
-        Number.isNaN(
-          date.getTime(),
-        )
-      ) {
-        return "";
-      }
+    if (
+      Number.isNaN(date.getTime())
+    ) {
+      return "";
+    }
 
-      return date.toLocaleDateString(
-        "en-IN",
-        {
-          day: "2-digit",
-          month: "short",
-        },
-      );
-    };
+    return date.toLocaleDateString(
+      "en-IN",
+      {
+        day: "2-digit",
+        month: "short",
+      },
+    );
+  };
 
   /* =======================================================
      LOGOUT
   ======================================================= */
 
-  const handleLogout =
-    async () => {
-      const token =
-        localStorage.getItem(
-          AUTH_TOKEN_STORAGE_KEY,
-        );
+  const handleLogout = async () => {
+    const token =
+      localStorage.getItem(
+        AUTH_TOKEN_STORAGE_KEY,
+      );
 
-      try {
-        await fetch(
-          `${API_BASE_URL}/auth/logout`,
-          {
-            method: "POST",
+    try {
+      await fetch(
+        `${API_BASE_URL}/auth/logout`,
+        {
+          method: "POST",
+          headers: token
+            ? {
+                Authorization:
+                  `Bearer ${token}`,
+              }
+            : undefined,
+          credentials: "include",
+        },
+      );
+    } catch (error) {
+      console.error(
+        "Logout error:",
+        error,
+      );
+    } finally {
+      localStorage.removeItem(
+        AUTH_TOKEN_STORAGE_KEY,
+      );
 
-            headers: token
-              ? {
-                  Authorization:
-                    `Bearer ${token}`,
-                }
-              : undefined,
+      localStorage.removeItem(
+        CURRENT_USER_STORAGE_KEY,
+      );
 
-            credentials:
-              "include",
-          },
-        );
-      } catch (error) {
-        console.error(
-          "Logout error:",
-          error,
-        );
-      } finally {
-        localStorage.removeItem(
-          AUTH_TOKEN_STORAGE_KEY,
-        );
+      setCurrentUser(null);
+      setCartCount(0);
+      setNotifications([]);
+      setNotificationCount(0);
 
-        localStorage.removeItem(
-          CURRENT_USER_STORAGE_KEY,
-        );
+      setIsAccountOpen(false);
+      setIsNotificationOpen(false);
+      setIsMobileMenuOpen(false);
 
-        setCurrentUser(null);
-        setCartCount(0);
-        setNotifications([]);
-        setNotificationCount(0);
-        setIsAccountOpen(false);
-        setIsNotificationOpen(
-          false,
-        );
-
-        navigate("/login", {
-          replace: true,
-        });
-      }
-    };
+      navigate("/login", {
+        replace: true,
+      });
+    }
+  };
 
   /* =======================================================
-     INITIAL EVENTS
+     EFFECTS
   ======================================================= */
 
   useEffect(() => {
     loadCurrentUser();
-
     void updateCartCount();
     void fetchNotifications();
 
     const handleStorage = () => {
       loadCurrentUser();
-
       void updateCartCount();
       void fetchNotifications();
     };
 
-    const handleCartUpdated =
-      () => {
-        void updateCartCount();
-      };
+    const handleCartUpdated = () => {
+      void updateCartCount();
+    };
 
     window.addEventListener(
       "storage",
@@ -1204,45 +1065,40 @@ function MainHeader() {
     };
   }, []);
 
-  /* =======================================================
-     CLICK OUTSIDE
-  ======================================================= */
-
   useEffect(() => {
-    const handleDocumentClick =
-      (event: MouseEvent) => {
-        const target =
-          event.target as Node;
+    const handleDocumentClick = (
+      event: MouseEvent,
+    ) => {
+      const target =
+        event.target as Node;
 
-        if (
-          searchRef.current &&
-          !searchRef.current.contains(
-            target,
-          )
-        ) {
-          closeSearch();
-        }
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(
+          target,
+        )
+      ) {
+        closeSearch();
+      }
 
-        if (
-          accountRef.current &&
-          !accountRef.current.contains(
-            target,
-          )
-        ) {
-          setIsAccountOpen(false);
-        }
+      if (
+        accountRef.current &&
+        !accountRef.current.contains(
+          target,
+        )
+      ) {
+        setIsAccountOpen(false);
+      }
 
-        if (
-          notificationRef.current &&
-          !notificationRef.current.contains(
-            target,
-          )
-        ) {
-          setIsNotificationOpen(
-            false,
-          );
-        }
-      };
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(
+          target,
+        )
+      ) {
+        setIsNotificationOpen(false);
+      }
+    };
 
     document.addEventListener(
       "mousedown",
@@ -1257,17 +1113,12 @@ function MainHeader() {
     };
   }, []);
 
-  /* =======================================================
-     CLEANUP
-  ======================================================= */
-
   useEffect(() => {
     return () => {
       searchRequestRef.current?.abort();
 
       if (
-        searchTimerRef.current !==
-        null
+        searchTimerRef.current !== null
       ) {
         window.clearTimeout(
           searchTimerRef.current,
@@ -1281,54 +1132,98 @@ function MainHeader() {
   ======================================================= */
 
   return (
-    <header
-      className={styles.header}
-    >
-      {/* =================================================
-          TOP HEADER
-      ================================================= */}
+    <header className={styles.header}>
+
+      {/* ===================================================
+          ANNOUNCEMENT BAR
+      =================================================== */}
+
+      <div
+        className={
+          styles.announcementBar
+        }
+      >
+        <div
+          className={
+            styles.announcementInner
+          }
+        >
+          <span>
+            Free Shipping on orders
+            above ₹499
+          </span>
+
+          <span
+            className={
+              styles.announcementDot
+            }
+          >
+            •
+          </span>
+
+          <span>
+            100% Authentic Products
+          </span>
+
+          <span
+            className={
+              styles.announcementDot
+            }
+          >
+            •
+          </span>
+
+          <span>
+            Easy Returns &amp; Refunds
+          </span>
+
+          <span
+            className={
+              styles.announcementOffer
+            }
+          >
+            Get 10% OFF on your first
+            order · Use Code: JINI10
+          </span>
+        </div>
+      </div>
+
+      {/* ===================================================
+          MAIN HEADER
+      =================================================== */}
 
       <div
         className={
           styles.headerInner
         }
       >
-        {/* =================================================
-            LOGO
-        ================================================= */}
+
+        {/* LOGO */}
 
         <Link
           to="/"
-          className={
-            styles.logo
-          }
-          aria-label="Jihaan Cosmetics home"
+          className={styles.logo}
+          aria-label="Jini Cosmetics home"
         >
           <img
             src={jihaanLogo}
-            alt="Jihaan Cosmetics"
+            alt="Jini Cosmetics"
             className={
               styles.logoImage
             }
           />
 
           <span
-            className={
-              styles.logoText
-            }
+            className={styles.logoText}
           >
             <span
-              className={
-                styles.logoMain
-              }
+              className={styles.logoMain}
             >
               JINI
             </span>
 
             <span
-              className={
-                styles.logoSub
-              }
+              className={styles.logoSub}
             >
               COSMETICS
             </span>
@@ -1336,7 +1231,7 @@ function MainHeader() {
         </Link>
 
         {/* =================================================
-            DESKTOP CATEGORY NAVIGATION
+            DESKTOP NAVIGATION
         ================================================= */}
 
         <nav
@@ -1364,6 +1259,16 @@ function MainHeader() {
                 styles.categoryScroller
               }
             >
+              <button
+                type="button"
+                className={`${styles.navLink} ${styles.navHomeLink}`}
+                onClick={() =>
+                  navigate("/")
+                }
+              >
+                Home
+              </button>
+
               {categories.map(
                 (category) => (
                   <button
@@ -1380,12 +1285,20 @@ function MainHeader() {
                       )
                     }
                   >
-                    {
-                      category.name
-                    }
+                    {category.name}
                   </button>
                 ),
               )}
+
+              <button
+                type="button"
+                className={`${styles.navLink} ${styles.offerNavLink}`}
+                onClick={() =>
+                  navigate("/offers")
+                }
+              >
+                Offers
+              </button>
             </div>
           )}
         </nav>
@@ -1408,15 +1321,13 @@ function MainHeader() {
               className={
                 styles.searchIconButton
               }
-              onClick={
-                openSearch
-              }
+              onClick={openSearch}
               aria-label="Search products"
               title="Search"
             >
               <Search
-                size={23}
-                strokeWidth={1.7}
+                size={22}
+                strokeWidth={1.6}
               />
             </button>
           ) : (
@@ -1424,13 +1335,11 @@ function MainHeader() {
               className={
                 styles.searchForm
               }
-              onSubmit={
-                handleSearch
-              }
+              onSubmit={handleSearch}
               role="search"
             >
               <Search
-                size={19}
+                size={18}
                 className={
                   styles.searchInputIcon
                 }
@@ -1441,9 +1350,7 @@ function MainHeader() {
                 className={
                   styles.searchInput
                 }
-                value={
-                  searchValue
-                }
+                value={searchValue}
                 onChange={
                   handleSearchChange
                 }
@@ -1463,14 +1370,10 @@ function MainHeader() {
                 }}
                 aria-label="Close search"
               >
-                <X size={18} />
+                <X size={17} />
               </button>
             </form>
           )}
-
-          {/* =================================================
-              DESKTOP SEARCH RESULTS
-          ================================================= */}
 
           {isSearchOpen && (
             <div
@@ -1490,6 +1393,7 @@ function MainHeader() {
                       styles.loadingIcon
                     }
                   />
+
                   Searching products...
                 </div>
               )}
@@ -1629,10 +1533,46 @@ function MainHeader() {
         ================================================= */}
 
         <div
-          className={
-            styles.actions
-          }
+          className={styles.actions}
         >
+
+          {/* CART - REPLACED WISHLIST */}
+
+          <button
+            type="button"
+            className={
+              styles.iconButton
+            }
+            onClick={() =>
+              navigate("/cart")
+            }
+            aria-label={`Cart with ${cartCount} items`}
+            title="Cart"
+          >
+            <span
+              className={
+                styles.cartIconWrapper
+              }
+            >
+              <ShoppingBag
+                size={22}
+                strokeWidth={1.6}
+              />
+
+              {cartCount > 0 && (
+                <span
+                  className={
+                    styles.cartBadge
+                  }
+                >
+                  {cartCount > 99
+                    ? "99+"
+                    : cartCount}
+                </span>
+              )}
+            </span>
+          </button>
+
           {/* =================================================
               NOTIFICATIONS
           ================================================= */}
@@ -1641,9 +1581,7 @@ function MainHeader() {
             className={
               styles.notificationContainer
             }
-            ref={
-              notificationRef
-            }
+            ref={notificationRef}
           >
             <button
               type="button"
@@ -1678,8 +1616,8 @@ function MainHeader() {
                 }
               >
                 <Bell
-                  size={22}
-                  strokeWidth={1.7}
+                  size={21}
+                  strokeWidth={1.6}
                 />
 
                 {currentUser &&
@@ -1757,6 +1695,7 @@ function MainHeader() {
                             styles.loadingIcon
                           }
                         />
+
                         Loading notifications...
                       </div>
                     ) : notifications.length ===
@@ -1767,6 +1706,7 @@ function MainHeader() {
                         }
                       >
                         <Bell size={24} />
+
                         <span>
                           No notifications
                         </span>
@@ -1850,7 +1790,6 @@ function MainHeader() {
                         setIsNotificationOpen(
                           false,
                         );
-
                         navigate(
                           "/notifications",
                         );
@@ -1871,9 +1810,7 @@ function MainHeader() {
             className={
               styles.accountContainer
             }
-            ref={
-              accountRef
-            }
+            ref={accountRef}
           >
             <button
               type="button"
@@ -1909,8 +1846,8 @@ function MainHeader() {
                 />
               ) : (
                 <UserRound
-                  size={22}
-                  strokeWidth={1.7}
+                  size={21}
+                  strokeWidth={1.6}
                 />
               )}
             </button>
@@ -1972,9 +1909,7 @@ function MainHeader() {
                         )
                       }
                     >
-                      <User
-                        size={17}
-                      />
+                      <User size={17} />
                       My account
                     </Link>
 
@@ -1989,9 +1924,7 @@ function MainHeader() {
                         )
                       }
                     >
-                      <Package
-                        size={17}
-                      />
+                      <Package size={17} />
                       My orders
                     </Link>
 
@@ -2027,13 +1960,11 @@ function MainHeader() {
 
                       <div>
                         <strong>
-                          Welcome to
-                          Jini-Cosmetics
+                          Welcome to Jini Cosmetics
                         </strong>
 
                         <span>
-                          Login to manage
-                          your account
+                          Login to manage your account
                         </span>
                       </div>
                     </div>
@@ -2078,43 +2009,6 @@ function MainHeader() {
           </div>
 
           {/* =================================================
-              CART
-          ================================================= */}
-
-          <button
-            type="button"
-            className={`${styles.iconButton} ${styles.mobileCartButton}`}
-            onClick={() =>
-              navigate("/cart")
-            }
-            aria-label={`Cart with ${cartCount} items`}
-            title="Cart"
-          >
-            <span
-              className={
-                styles.cartIconWrapper
-              }
-            >
-              <ShoppingBag
-                size={23}
-                strokeWidth={1.7}
-              />
-
-              {cartCount > 0 && (
-                <span
-                  className={
-                    styles.cartBadge
-                  }
-                >
-                  {cartCount > 99
-                    ? "99+"
-                    : cartCount}
-                </span>
-              )}
-            </span>
-          </button>
-
-          {/* =================================================
               MOBILE MENU BUTTON
           ================================================= */}
 
@@ -2149,7 +2043,6 @@ function MainHeader() {
 
       {/* ===================================================
           MOBILE SEARCH BAR
-          Visible only on mobile
       =================================================== */}
 
       <div
@@ -2161,14 +2054,12 @@ function MainHeader() {
           className={
             styles.mobileSearchForm
           }
-          onSubmit={
-            handleSearch
-          }
+          onSubmit={handleSearch}
           role="search"
         >
           <Search
-            size={18}
-            strokeWidth={1.8}
+            size={17}
+            strokeWidth={1.7}
             className={
               styles.mobileSearchIcon
             }
@@ -2179,9 +2070,7 @@ function MainHeader() {
             className={
               styles.mobileSearchInput
             }
-            value={
-              searchValue
-            }
+            value={searchValue}
             onChange={
               handleSearchChange
             }
@@ -2192,7 +2081,7 @@ function MainHeader() {
                 setIsSearchOpen(true);
               }
             }}
-            placeholder="Explore our Beauty Collection"
+            placeholder="Search beauty essentials..."
             aria-label="Search products"
             autoComplete="off"
           />
@@ -2209,14 +2098,10 @@ function MainHeader() {
               }}
               aria-label="Clear search"
             >
-              <X size={16} />
+              <X size={15} />
             </button>
           )}
         </form>
-
-        {/* =================================================
-            MOBILE SEARCH RESULTS
-        ================================================= */}
 
         {isSearchOpen &&
           searchValue.trim() && (
@@ -2354,7 +2239,6 @@ function MainHeader() {
                     }}
                   >
                     View all results
-
                     <ChevronRight
                       size={16}
                     />
@@ -2366,131 +2250,425 @@ function MainHeader() {
       </div>
 
       {/* ===================================================
-          MOBILE MENU
+          MOBILE SIDEBAR / DRAWER
       =================================================== */}
 
       {isMobileMenuOpen && (
         <div
           className={
-            styles.mobileMenu
+            styles.mobileMenuOverlay
           }
+          onClick={() =>
+            setIsMobileMenuOpen(false)
+          }
+          role="presentation"
         >
-          <div
+          <aside
             className={
-              styles.mobileMenuInner
+              styles.mobileMenu
             }
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+            aria-label="Mobile navigation"
           >
-            <button
-              type="button"
-              className={
-                styles.mobileHomeLink
-              }
-              onClick={() => {
-                navigate("/");
-                setIsMobileMenuOpen(
-                  false,
-                );
-              }}
-            >
-              HOME
-            </button>
+
+            {/* SIDEBAR HEADER */}
 
             <div
               className={
-                styles.mobileCategoryHeader
+                styles.mobileMenuHeader
               }
             >
-              <span>
-                CATEGORIES
-              </span>
+              <Link
+                to="/"
+                className={
+                  styles.mobileMenuBrand
+                }
+                onClick={() =>
+                  setIsMobileMenuOpen(
+                    false,
+                  )
+                }
+              >
+                <img
+                  src={jihaanLogo}
+                  alt="Jini Cosmetics"
+                  className={
+                    styles.mobileMenuBrandImage
+                  }
+                />
+
+                <span>
+                  <strong>
+                    JINI
+                  </strong>
+
+                  <small>
+                    COSMETICS
+                  </small>
+                </span>
+              </Link>
 
               <button
                 type="button"
+                className={
+                  styles.mobileCloseButton
+                }
                 onClick={() =>
-                  setIsCategoryMenuOpen(
-                    (previous) =>
-                      !previous,
+                  setIsMobileMenuOpen(
+                    false,
                   )
                 }
-                aria-label="Toggle categories"
+                aria-label="Close menu"
               >
-                <ChevronDown
-                  size={18}
-                  className={
-                    isCategoryMenuOpen
-                      ? styles.rotateChevron
-                      : ""
-                  }
+                <X
+                  size={21}
+                  strokeWidth={1.8}
                 />
               </button>
             </div>
 
-            {isCategoryMenuOpen && (
+            {/* USER SECTION */}
+
+            {currentUser ? (
               <div
                 className={
-                  styles.mobileCategoryList
+                  styles.mobileUserCard
                 }
               >
-                {categories.map(
-                  (category) => (
-                    <button
-                      type="button"
-                      key={getCategoryId(
-                        category,
+                <div
+                  className={
+                    styles.mobileUserAvatar
+                  }
+                >
+                  {currentUser.profileImage ? (
+                    <img
+                      src={getImageUrl(
+                        currentUser.profileImage,
                       )}
-                      onClick={() =>
-                        handleCategoryClick(
-                          category,
-                        )
+                      alt={
+                        currentUser.name
                       }
-                    >
-                      {
-                        category.name
-                      }
+                    />
+                  ) : (
+                    <UserRound
+                      size={20}
+                    />
+                  )}
+                </div>
 
-                      <ChevronRight
-                        size={15}
-                      />
-                    </button>
-                  ),
-                )}
+                <div>
+                  <strong>
+                    {
+                      currentUser.name
+                    }
+                  </strong>
+
+                  <span>
+                    {
+                      currentUser.email
+                    }
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div
+                className={
+                  styles.mobileLoginCard
+                }
+              >
+                <div>
+                  <strong>
+                    Welcome to Jini Cosmetics
+                  </strong>
+
+                  <span>
+                    Login to manage your account
+                  </span>
+                </div>
+
+                <Link
+                  to="/login"
+                  onClick={() =>
+                    setIsMobileMenuOpen(
+                      false,
+                    )
+                  }
+                >
+                  Login
+                </Link>
               </div>
             )}
 
-            <button
-              type="button"
+            {/* SIDEBAR NAVIGATION */}
+
+            <nav
               className={
-                styles.mobileHomeLink
+                styles.mobileMenuNav
               }
-              onClick={() => {
-                navigate("/offers");
-
-                setIsMobileMenuOpen(
-                  false,
-                );
-              }}
+              aria-label="Mobile navigation links"
             >
-              OFFERS
-            </button>
 
-            <button
-              type="button"
+              {/* HOME */}
+
+              <button
+                type="button"
+                className={
+                  styles.mobileMenuLink
+                }
+                onClick={() => {
+                  navigate("/");
+                  setIsMobileMenuOpen(
+                    false,
+                  );
+                }}
+              >
+                <span>
+                  Home
+                </span>
+
+                <ChevronRight
+                  size={17}
+                />
+              </button>
+
+              {/* CART */}
+
+              <button
+                type="button"
+                className={
+                  styles.mobileMenuLink
+                }
+                onClick={() => {
+                  navigate("/cart");
+                  setIsMobileMenuOpen(
+                    false,
+                  );
+                }}
+              >
+                <span>
+                  Cart
+
+                  {cartCount > 0 && (
+                    <span
+                      className={
+                        styles.mobileCartCount
+                      }
+                    >
+                      {cartCount > 99
+                        ? "99+"
+                        : cartCount}
+                    </span>
+                  )}
+                </span>
+
+                <ShoppingBag
+                  size={18}
+                />
+              </button>
+
+              {/* CATEGORIES */}
+
+              <div
+                className={
+                  styles.mobileCategorySection
+                }
+              >
+                <button
+                  type="button"
+                  className={
+                    styles.mobileMenuLink
+                  }
+                  onClick={() =>
+                    setIsCategoryMenuOpen(
+                      (previous) =>
+                        !previous,
+                    )
+                  }
+                  aria-expanded={
+                    isCategoryMenuOpen
+                  }
+                >
+                  <span>
+                    Categories
+                  </span>
+
+                  <ChevronDown
+                    size={18}
+                    className={
+                      isCategoryMenuOpen
+                        ? styles.rotateChevron
+                        : ""
+                    }
+                  />
+                </button>
+
+                {isCategoryMenuOpen && (
+                  <div
+                    className={
+                      styles.mobileCategoryList
+                    }
+                  >
+                    {categories.map(
+                      (category) => (
+                        <button
+                          type="button"
+                          key={getCategoryId(
+                            category,
+                          )}
+                          onClick={() =>
+                            handleCategoryClick(
+                              category,
+                            )
+                          }
+                        >
+                          <span>
+                            {
+                              category.name
+                            }
+                          </span>
+
+                          <ChevronRight
+                            size={15}
+                          />
+                        </button>
+                      ),
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* OFFERS */}
+
+              <button
+                type="button"
+                className={
+                  styles.mobileMenuLink
+                }
+                onClick={() => {
+                  navigate("/offers");
+                  setIsMobileMenuOpen(
+                    false,
+                  );
+                }}
+              >
+                <span>
+                  Offers
+                </span>
+
+                <ChevronRight
+                  size={17}
+                />
+              </button>
+
+              {/* UNDER ₹249 */}
+
+              <button
+                type="button"
+                className={
+                  styles.mobileMenuLink
+                }
+                onClick={() => {
+                  navigate(
+                    "/under-249",
+                  );
+                  setIsMobileMenuOpen(
+                    false,
+                  );
+                }}
+              >
+                <span>
+                  Under ₹249
+                </span>
+
+                <ChevronRight
+                  size={17}
+                />
+              </button>
+
+              {/* LOGGED-IN LINKS */}
+
+              {currentUser && (
+                <>
+                  <Link
+                    to="/account"
+                    className={
+                      styles.mobileMenuLink
+                    }
+                    onClick={() =>
+                      setIsMobileMenuOpen(
+                        false,
+                      )
+                    }
+                  >
+                    <span>
+                      My Account
+                    </span>
+
+                    <User size={17} />
+                  </Link>
+
+                  <Link
+                    to="/orders"
+                    className={
+                      styles.mobileMenuLink
+                    }
+                    onClick={() =>
+                      setIsMobileMenuOpen(
+                        false,
+                      )
+                    }
+                  >
+                    <span>
+                      My Orders
+                    </span>
+
+                    <Package
+                      size={17}
+                    />
+                  </Link>
+
+                  <button
+                    type="button"
+                    className={`${styles.mobileMenuLink} ${styles.mobileLogoutLink}`}
+                    onClick={() => {
+                      setIsMobileMenuOpen(
+                        false,
+                      );
+
+                      void handleLogout();
+                    }}
+                  >
+                    <span>
+                      Logout
+                    </span>
+
+                    <LogOut
+                      size={17}
+                    />
+                  </button>
+                </>
+              )}
+            </nav>
+
+            {/* SIDEBAR FOOTER */}
+
+            <div
               className={
-                styles.mobileHomeLink
+                styles.mobileMenuFooter
               }
-              onClick={() => {
-                navigate(
-                  "/under-249",
-                );
-
-                setIsMobileMenuOpen(
-                  false,
-                );
-              }}
             >
-              UNDER ₹249
-            </button>
-          </div>
+              <span>
+                Jini Cosmetics
+              </span>
+
+              <small>
+                Beauty essentials for
+                everyday confidence
+              </small>
+            </div>
+          </aside>
         </div>
       )}
     </header>

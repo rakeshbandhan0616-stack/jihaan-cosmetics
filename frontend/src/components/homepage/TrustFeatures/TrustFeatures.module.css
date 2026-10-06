@@ -1,421 +1,61 @@
-/* =========================================
-   SECTION
-========================================= */
+/* =========================================================
+   TRUST FEATURES - SINGLE ROW ON MOBILE (NO EXTRA SPACE)
+   ========================================================= */
 
 .section {
-  position: relative;
-
   width: 100%;
-
-  overflow: hidden;
-
-  background: #ffffff;
-
-  border-top:
-    1px
-    solid
-    #eee9e5;
-
-  border-bottom:
-    1px
-    solid
-    #eee9e5;
-
-  font-family:
-    "DM Sans",
-    sans-serif;
+  background: #fffdf9;
+  border-top: 1px solid #f0e6e0;
+  border-bottom: 1px solid #f0e6e0;
+  padding: 14px 0;
 }
-
-/* Very subtle luxury background */
-
-.section::before {
-  position: absolute;
-
-  top: -100px;
-  left: 12%;
-
-  width: 260px;
-  height: 260px;
-
-  border-radius: 50%;
-
-  background:
-    rgba(
-      236,
-      207,
-      213,
-      0.13
-    );
-
-  filter:
-    blur(70px);
-
-  pointer-events: none;
-
-  content: "";
-}
-
-.section::after {
-  position: absolute;
-
-  right: 8%;
-  bottom: -120px;
-
-  width: 280px;
-  height: 280px;
-
-  border-radius: 50%;
-
-  background:
-    rgba(
-      241,
-      226,
-      210,
-      0.12
-    );
-
-  filter:
-    blur(80px);
-
-  pointer-events: none;
-
-  content: "";
-}
-
-
-/* =========================================
-   CONTAINER
-========================================= */
 
 .container {
-  position: relative;
-
-  z-index: 1;
-
-  width: 100%;
-
-  max-width: 1600px;
-
+  width: min(100% - 40px, 1380px);
   margin: 0 auto;
-
-  padding:
-    0
-    36px;
-
-  box-sizing: border-box;
 }
 
-
-/* =========================================
-   SMALL INTRO
-========================================= */
-
-.sectionIntro {
-  display: none;
-
-  align-items: center;
-
-  justify-content: center;
-
-  gap: 10px;
-
-  padding-top: 14px;
-}
-
-.introAccent {
-  color: #8b7770;
-
-  font-family:
-    "Caveat",
-    cursive;
-
-  font-size: 17px;
-
-  font-weight: 600;
-
-  letter-spacing: 0.02em;
-}
-
-.introLine {
-  width: 28px;
-
-  height: 1px;
-
-  background:
-    #d8cdc7;
-}
-
-
-/* =========================================
-   FEATURE GRID
-========================================= */
-
+/* Desktop - 5 columns */
 .featureGrid {
   display: grid;
-
-  grid-template-columns:
-    repeat(
-      6,
-      minmax(
-        0,
-        1fr
-      )
-    );
-
-  align-items: stretch;
-
-  width: 100%;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
 }
-
-
-/* =========================================
-   FEATURE CARD
-========================================= */
 
 .feature {
-  --feature-delay: 0ms;
-
-  position: relative;
-
   display: flex;
-
   align-items: center;
-
-  justify-content: center;
-
-  gap: 13px;
-
-  min-width: 0;
-
-  min-height: 112px;
-
-  padding:
-    20px
-    18px;
-
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      0.88
-    );
-
-  isolation: isolate;
-
-  animation:
-    featureReveal
-    0.65s
-    cubic-bezier(
-      0.22,
-      1,
-      0.36,
-      1
-    )
-    var(--feature-delay)
-    both;
-
-  transition:
-    background 0.35s ease,
-    transform 0.35s ease;
+  gap: 10px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  transition: background 0.2s ease;
 }
-
-
-/* =========================================
-   VERTICAL SEPARATOR
-========================================= */
-
-.feature:not(:last-child)::after {
-  position: absolute;
-
-  top: 25%;
-
-  right: 0;
-
-  width: 1px;
-
-  height: 50%;
-
-  background:
-    #e9e3de;
-
-  content: "";
-
-  transition:
-    background 0.35s ease,
-    height 0.35s ease;
-}
-
-
-/* =========================================
-   CARD HOVER
-========================================= */
 
 .feature:hover {
-  background:
-    #fdfaf8;
-
-  transform:
-    translateY(-2px);
+  background: #faf4f1;
 }
-
-.feature:hover::after {
-  background:
-    #d9ccc5;
-
-  height: 60%;
-}
-
-
-/* =========================================
-   ICON
-========================================= */
 
 .iconWrapper {
-  position: relative;
-
-  display: grid;
-
-  flex:
-    0
-    0
-    48px;
-
-  place-items: center;
-
-  width: 48px;
-
-  height: 48px;
-
-  border:
-    1px
-    solid
-    #ded6d0;
-
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
   border-radius: 50%;
+  background: #f8efeb;
+  color: #a75e4b;
+  transition: background 0.2s ease, color 0.2s ease;
+}
 
-  background:
-    linear-gradient(
-      145deg,
-      #ffffff,
-      #faf7f5
-    );
-
-  color: #302923;
-
-  overflow: hidden;
-
-  transition:
-    background 0.35s ease,
-    color 0.35s ease,
-    border-color 0.35s ease,
-    transform 0.4s
-      cubic-bezier(
-        0.22,
-        1,
-        0.36,
-        1
-      ),
-    box-shadow 0.35s ease;
+.feature:hover .iconWrapper {
+  background: #a75e4b;
+  color: #ffffff;
 }
 
 .icon {
-  position: relative;
-
-  z-index: 2;
-
   display: block;
-
-  transition:
-    transform 0.4s
-      cubic-bezier(
-        0.22,
-        1,
-        0.36,
-        1
-      );
 }
-
-.iconGlow {
-  position: absolute;
-
-  inset: 0;
-
-  border-radius: inherit;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(
-        255,
-        255,
-        255,
-        0.8
-      ),
-      rgba(
-        221,
-        194,
-        198,
-        0.35
-      )
-    );
-
-  opacity: 0;
-
-  transform:
-    scale(0.5);
-
-  transition:
-    opacity 0.35s ease,
-    transform 0.4s ease;
-}
-
-.feature:hover
-  .iconWrapper {
-  border-color:
-    #302923;
-
-  background:
-    #302923;
-
-  color:
-    #ffffff;
-
-  transform:
-    translateY(-4px)
-    rotate(-3deg);
-
-  box-shadow:
-    0
-    10px
-    22px
-    rgba(
-      48,
-      41,
-      35,
-      0.12
-    );
-}
-
-.feature:hover
-  .icon {
-  transform:
-    scale(1.08)
-    rotate(3deg);
-}
-
-.feature:hover
-  .iconGlow {
-  opacity: 1;
-
-  transform:
-    scale(1);
-}
-
-
-/* =========================================
-   CONTENT
-========================================= */
 
 .content {
   min-width: 0;
@@ -423,792 +63,106 @@
 
 .content h3 {
   margin: 0;
-
-  color: #211c18;
-
-  font-family:
-    "Montserrat",
-    sans-serif;
-
-  font-size: 11px;
-
+  color: #2f1715;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12.5px;
   font-weight: 700;
-
-  line-height: 1.4;
-
-  letter-spacing:
-    0.055em;
-
-  text-transform:
-    uppercase;
-
+  line-height: 1.25;
   white-space: nowrap;
-
-  transition:
-    color 0.3s ease,
-    transform 0.3s ease;
 }
 
 .content p {
-  margin:
-    5px
-    0
-    0;
-
-  color: #877c75;
-
-  font-family:
-    "DM Sans",
-    sans-serif;
-
-  font-size: 11px;
-
-  font-weight: 400;
-
-  line-height: 1.45;
-
+  margin: 2px 0 0;
+  color: #7a655e;
+  font-size: 11.5px;
+  line-height: 1.3;
   white-space: nowrap;
-
-  transition:
-    color 0.3s ease;
 }
 
-.feature:hover
-  .content h3 {
-  color: #8b666c;
-
-  transform:
-    translateX(2px);
-}
-
-.feature:hover
-  .content p {
-  color: #655b55;
-}
-
-
-/* =========================================
-   LARGE DESKTOP
-========================================= */
-
-@media (max-width: 1350px) {
-  .container {
-    padding:
-      0
-      22px;
-  }
-
-  .feature {
-    gap: 10px;
-
-    padding:
-      18px
-      12px;
-  }
-
-  .iconWrapper {
-    flex-basis: 43px;
-
-    width: 43px;
-
-    height: 43px;
-  }
-
-  .content h3 {
-    font-size: 10px;
-  }
-
-  .content p {
-    font-size: 10px;
-  }
-}
-
-
-/* =========================================
+/* =========================================================
    TABLET
-========================================= */
+   ========================================================= */
 
 @media (max-width: 1050px) {
   .featureGrid {
-    grid-template-columns:
-      repeat(
-        3,
-        minmax(
-          0,
-          1fr
-        )
-      );
-  }
-
-  .feature {
-    justify-content:
-      flex-start;
-
-    min-height: 98px;
-
-    padding:
-      18px
-      22px;
-  }
-
-  .feature:nth-child(3)::after,
-  .feature:nth-child(6)::after {
-    display: none;
-  }
-
-  .feature:nth-child(-n + 3) {
-    border-bottom:
-      1px
-      solid
-      #e8e2de;
-  }
-
-  .iconWrapper {
-    flex-basis: 44px;
-
-    width: 44px;
-
-    height: 44px;
-  }
-
-  .content h3 {
-    font-size: 10.5px;
-  }
-
-  .content p {
-    font-size: 10.5px;
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
+/* =========================================================
+   MOBILE - SINGLE HORIZONTAL ROW (NO EXTRA SPACE)
+   ========================================================= */
 
-/* =========================================
-   MOBILE
-   SINGLE HORIZONTAL LINE
-========================================= */
-
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .section {
-    border-top:
-      1px
-      solid
-      #eee8e4;
-
-    border-bottom:
-      1px
-      solid
-      #eee8e4;
+    padding: 10px 0;
   }
 
   .container {
     width: 100%;
-
-    max-width: none;
-
     padding: 0;
   }
 
-  /* -------------------------------------------------------
-     INTRO
-  ------------------------------------------------------- */
-
-  .sectionIntro {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    gap: 8px;
-
-    height: 30px;
-
-    padding:
-      0
-      10px;
-
-    box-sizing: border-box;
-  }
-
-  .introAccent {
-    font-size: 15px;
-  }
-
-  .introLine {
-    width: 22px;
-  }
-
-
-  /* -------------------------------------------------------
-     SINGLE-LINE FEATURE TRACK
-     
-     All features remain on ONE row.
-     No second row.
-  ------------------------------------------------------- */
-
   .featureGrid {
     display: flex;
-
     flex-wrap: nowrap;
-
-    align-items: stretch;
-
-    justify-content:
-      flex-start;
-
-    width: 100%;
-
-    max-width: 100%;
-
     overflow-x: auto;
-
-    overflow-y: hidden;
-
-    padding:
-      3px
-      0
-      5px;
-
-    margin: 0;
-
+    gap: 0;
+    padding: 0 8px;
     scrollbar-width: none;
-
     -ms-overflow-style: none;
-
-    scroll-snap-type:
-      x proximity;
-
-    -webkit-overflow-scrolling:
-      touch;
-
-    overscroll-behavior-x:
-      contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .featureGrid::-webkit-scrollbar {
     display: none;
   }
 
-
-  /* -------------------------------------------------------
-     COMPACT MOBILE FEATURE
-  ------------------------------------------------------- */
-
   .feature {
-    flex:
-      0
-      0
-      155px;
+    flex: 0 0 auto;
+    min-width: max-content;
+    padding: 8px 14px;
+    border-right: 1px solid #f0e6e0;
+    border-radius: 0;
+  }
 
-    width: 155px;
-
-    min-width: 155px;
-
-    min-height: 72px;
-
-    height: 72px;
-
-    justify-content:
-      flex-start;
-
-    align-items: center;
-
-    gap: 9px;
-
-    padding:
-      9px
-      10px;
-
-    margin: 0;
-
-    scroll-snap-align:
-      start;
-
-    box-sizing: border-box;
-
-    background:
-      rgba(
-        255,
-        255,
-        255,
-        0.96
-      );
-
-    border-right:
-      1px
-      solid
-      #e8e2de;
-
-    border-bottom: none;
-
-    transform: none;
+  .feature:last-child {
+    border-right: none;
   }
 
   .feature:hover {
-    background:
-      #fdfaf8;
-
-    transform: none;
+    background: transparent;
   }
-
-  .feature::after,
-  .feature:not(:last-child)::after {
-    display: none;
-  }
-
-
-  /* -------------------------------------------------------
-     ICON
-  ------------------------------------------------------- */
 
   .iconWrapper {
-    flex:
-      0
-      0
-      38px;
-
-    width: 38px;
-
-    height: 38px;
-
-    border-width: 1px;
-
-    box-shadow: none;
-
-    transform: none;
-  }
-
-  .icon {
-    width: 18px;
-
-    height: 18px;
-  }
-
-  .iconGlow {
-    display: none;
-  }
-
-  .feature:hover
-    .iconWrapper {
-    border-color:
-      #ded6d0;
-
-    background:
-      linear-gradient(
-        145deg,
-        #ffffff,
-        #faf7f5
-      );
-
-    color:
-      #302923;
-
-    transform: none;
-
-    box-shadow: none;
-  }
-
-  .feature:hover
-    .icon {
-    transform:
-      scale(1.03);
-  }
-
-
-  /* -------------------------------------------------------
-     CONTENT
-  ------------------------------------------------------- */
-
-  .content {
-    min-width: 0;
-
-    overflow: hidden;
+    width: 34px;
+    height: 34px;
   }
 
   .content h3 {
-    overflow: hidden;
-
-    max-width: 92px;
-
-    font-size: 8.5px;
-
-    line-height: 1.25;
-
-    letter-spacing:
-      0.04em;
-
-    text-overflow:
-      ellipsis;
-
-    white-space: nowrap;
+    font-size: 11.5px;
   }
 
   .content p {
-    max-width: 92px;
-
-    margin-top: 3px;
-
-    overflow: hidden;
-
-    font-size: 8.5px;
-
-    line-height: 1.25;
-
-    text-overflow:
-      ellipsis;
-
-    white-space: nowrap;
+    font-size: 10.5px;
   }
 }
 
-
-/* =========================================
-   SMALL MOBILE
-========================================= */
-
-@media (max-width: 430px) {
-  .sectionIntro {
-    height: 28px;
-
-    padding:
-      0
-      8px;
-  }
-
-  .introAccent {
-    font-size: 14px;
-  }
-
-  .introLine {
-    width: 20px;
-  }
-
-  .featureGrid {
-    padding:
-      3px
-      0
-      4px;
-  }
-
+@media (max-width: 400px) {
   .feature {
-    flex-basis: 148px;
-
-    width: 148px;
-
-    min-width: 148px;
-
-    height: 68px;
-
-    min-height: 68px;
-
-    gap: 8px;
-
-    padding:
-      8px
-      9px;
+    padding: 7px 12px;
   }
 
   .iconWrapper {
-    flex:
-      0
-      0
-      35px;
-
-    width: 35px;
-
-    height: 35px;
-  }
-
-  .icon {
-    width: 17px;
-
-    height: 17px;
+    width: 32px;
+    height: 32px;
   }
 
   .content h3 {
-    max-width: 87px;
-
-    font-size: 8px;
-
-    letter-spacing:
-      0.035em;
-  }
-
-  .content p {
-    max-width: 87px;
-
-    font-size: 8px;
-  }
-}
-
-
-/* =========================================
-   VERY SMALL MOBILE
-========================================= */
-
-@media (max-width: 360px) {
-  .feature {
-    flex-basis: 140px;
-
-    width: 140px;
-
-    min-width: 140px;
-
-    height: 65px;
-
-    min-height: 65px;
-
-    gap: 7px;
-
-    padding:
-      7px
-      8px;
-  }
-
-  .iconWrapper {
-    flex:
-      0
-      0
-      33px;
-
-    width: 33px;
-
-    height: 33px;
-  }
-
-  .icon {
-    width: 16px;
-
-    height: 16px;
-  }
-
-  .content h3 {
-    max-width: 82px;
-
-    font-size: 7.7px;
-  }
-
-  .content p {
-    max-width: 82px;
-
-    font-size: 7.6px;
-  }
-}
-
-
-/* =========================================
-   DESKTOP ENTRANCE ANIMATION
-========================================= */
-
-@keyframes featureReveal {
-  from {
-    opacity: 0;
-
-    transform:
-      translateY(16px);
-  }
-
-  to {
-    opacity: 1;
-
-    transform:
-      translateY(0);
-  }
-}
-
-
-/* =========================================
-   MOBILE FEATURE ENTRANCE
-========================================= */
-
-@keyframes mobileFeatureReveal {
-  from {
-    opacity: 0;
-
-    transform:
-      translateX(14px);
-  }
-
-  to {
-    opacity: 1;
-
-    transform:
-      translateX(0);
-  }
-}
-
-
-/* =========================================
-   APPLY MOBILE ENTRANCE
-========================================= */
-
-@media (max-width: 600px) {
-  .feature {
-    animation:
-      mobileFeatureReveal
-      0.5s
-      cubic-bezier(
-        0.22,
-        1,
-        0.36,
-        1
-      )
-      var(--feature-delay)
-      both;
-  }
-
-  .feature:hover {
-    transform: none;
-  }
-}
-
-
-/* =========================================
-   ACCESSIBILITY
-========================================= */
-
-.feature:focus-within
-  .iconWrapper {
-  outline:
-    2px
-    solid
-    #302923;
-
-  outline-offset:
-    4px;
-}
-
-
-/* =========================================
-   REDUCED MOTION
-========================================= */
-
-@media (prefers-reduced-motion: reduce) {
-  .feature {
-    animation: none;
-  }
-
-  .iconWrapper,
-  .icon,
-  .iconGlow,
-  .content h3,
-  .content p {
-    transition: none;
-  }
-
-  .featureGrid {
-    scroll-behavior:
-      auto;
-  }
-}
-.virtualMallWrapper {
-  display: flex;
-  justify-content: center;
-  margin-top: 32px;
-}
-
-.virtualMallButton {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 310px;
-  padding: 14px 18px;
-  border: 1px solid rgba(180, 130, 70, 0.28);
-  border-radius: 14px;
-  background: linear-gradient(
-    135deg,
-    #fffaf3 0%,
-    #ffffff 50%,
-    #fff7ed 100%
-  );
-  color: #2d2119;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(80, 50, 25, 0.08);
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    border-color 0.25s ease;
-}
-
-.virtualMallButton:hover {
-  transform: translateY(-3px);
-  border-color: rgba(180, 130, 70, 0.5);
-  box-shadow: 0 14px 32px rgba(80, 50, 25, 0.14);
-}
-
-.virtualMallButton:active {
-  transform: translateY(-1px);
-}
-
-.virtualMallIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  flex-shrink: 0;
-  border-radius: 11px;
-  background: #f6eadc;
-  font-size: 22px;
-}
-
-.virtualMallText {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
-  text-align: left;
-}
-
-.virtualMallText strong {
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.virtualMallText small {
-  color: #806f61;
-  font-size: 12px;
-  line-height: 1.3;
-}
-
-.virtualMallArrow {
-  font-size: 22px;
-  font-weight: 500;
-  transition: transform 0.25s ease;
-}
-
-.virtualMallButton:hover .virtualMallArrow {
-  transform: translateX(4px);
-}
-
-@media (max-width: 600px) {
-  .virtualMallWrapper {
-    margin-top: 24px;
-  }
-
-  .virtualMallButton {
-    width: 100%;
-    min-width: 0;
-    padding: 13px 14px;
-  }
-
-  .virtualMallIcon {
-    width: 38px;
-    height: 38px;
-    font-size: 20px;
-  }
-
-  .virtualMallText strong {
-    font-size: 14px;
-  }
-
-  .virtualMallText small {
     font-size: 11px;
   }
 
-  .virtualMallArrow {
-    font-size: 20px;
+  .content p {
+    font-size: 10px;
   }
 }

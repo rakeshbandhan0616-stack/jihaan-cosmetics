@@ -5,8 +5,10 @@ import {
   LoaderCircle,
   Star,
 } from "lucide-react";
+
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
+
 import styles from "./Bestsellers.module.css";
 
 type Product = {
@@ -28,7 +30,6 @@ type Product = {
   isBestseller?: boolean;
   stock?: number;
 
-  // Optional fields supported by the UI
   tagline?: string;
   promoBadge?: string;
   availabilityBadge?: string;
@@ -47,6 +48,10 @@ const API_URL = String(
 ).replace(/\/+$/, "");
 
 const AUTH_TOKEN_KEY = "jihaan_auth_token";
+
+/* =========================================================
+   HELPERS
+========================================================= */
 
 const getToken = (): string => {
   if (typeof window === "undefined") {
@@ -88,20 +93,42 @@ const getSellingPrice = (product: Product): number => {
   }
 
   if (product.discountType === "percentage") {
-    return Math.max(0, oldPrice - (oldPrice * value) / 100);
+    return Math.max(
+      0,
+      oldPrice - (oldPrice * value) / 100,
+    );
   }
 
   return Number(product.price ?? oldPrice);
 };
+
+const normalizeCategory = (value = ""): string => {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+};
+
+/* =========================================================
+   COMPONENT
+========================================================= */
 
 function Bestsellers() {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [showAll, setShowAll] = useState(false);
+  const [selectedCategory, setSelectedCategory] =
+    useState("All");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [addingProductId, setAddingProductId] = useState("");
+
+  const [addingProductId, setAddingProductId] =
+    useState("");
+
+  /* =======================================================
+     CART ANIMATION
+  ======================================================= */
 
   type CartAnimationPhase =
     | "idle"
@@ -119,6 +146,23 @@ function Bestsellers() {
       phase: CartAnimationPhase;
     } | null>(null);
 
+  /* =======================================================
+     CATEGORIES
+  ======================================================= */
+
+  const categories = [
+    "All",
+    "Skincare",
+    "Makeup",
+    "Haircare",
+    "Fragrances",
+    "Bath & Body",
+  ];
+
+  /* =======================================================
+     LOAD PRODUCTS
+  ======================================================= */
+
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -129,15 +173,22 @@ function Bestsellers() {
           `${API_URL}/products/bestsellers`,
         );
 
-        const result = await response.json().catch(() => ({}));
+        const result = await response
+          .json()
+          .catch(() => ({}));
 
         if (!response.ok) {
           throw new Error(
-            result.message || "Unable to load best sellers.",
+            result.message ||
+              "Unable to load best sellers.",
           );
         }
 
-        setProducts(result.products || result.data || []);
+        setProducts(
+          result.products ||
+            result.data ||
+            [],
+        );
       } catch (err) {
         setError(
           err instanceof Error
@@ -152,15 +203,78 @@ function Bestsellers() {
     void loadProducts();
   }, []);
 
+  /* =======================================================
+     FILTER PRODUCTS
+  ======================================================= */
+
+  const filteredProducts = useMemo(() => {
+    if (selectedCategory === "All") {
+      return products;
+    }
+
+    const selected = normalizeCategory(
+      selectedCategory,
+    );
+
+    return products.filter((product) => {
+      const productCategory =
+        normalizeCategory(product.category);
+
+      if (selected === "fragrances") {
+        return (
+          productCategory === "fragrance" ||
+          productCategory === "fragrances"
+        );
+      }
+
+      if (selected === "skincare") {
+        return (
+          productCategory.includes("skincare") ||
+          productCategory.includes("skincareproducts") ||
+          productCategory.includes("skin")
+        );
+      }
+
+      if (selected === "haircare") {
+        return (
+          productCategory.includes("haircare") ||
+          productCategory.includes("hair")
+        );
+      }
+
+      if (selected === "bathbody") {
+        return (
+          productCategory.includes("bath") ||
+          productCategory.includes("body") ||
+          productCategory.includes("bathbody")
+        );
+      }
+
+      return productCategory.includes(selected);
+    });
+  }, [products, selectedCategory]);
+
+  /* =======================================================
+     VISIBLE PRODUCTS
+  ======================================================= */
+
   const visibleProducts = useMemo(
-    () => (showAll ? products : products.slice(0, 4)),
-    [products, showAll],
+    () =>
+      showAll
+        ? filteredProducts
+        : filteredProducts.slice(0, 5),
+    [filteredProducts, showAll],
   );
+
+  /* =======================================================
+     ADD TO CART
+  ======================================================= */
 
   const handleAddToCart = async (
     product: Product,
   ): Promise<void> => {
     const productId = product._id;
+
     const stock = Math.max(
       0,
       Number(product.stock ?? 0),
@@ -188,6 +302,7 @@ function Bestsellers() {
       if (!productId) {
         alert("Product ID is missing.");
       }
+
       return;
     }
 
@@ -213,18 +328,21 @@ function Bestsellers() {
         }),
       },
     ).then(async (response) => {
-      const result = (await response
-        .json()
-        .catch(() => ({}))) as CartApiResponse;
+      const result =
+        (await response
+          .json()
+          .catch(() => ({}))) as CartApiResponse;
 
-      return { response, result };
+      return {
+        response,
+        result,
+      };
     });
 
     try {
       setError("");
       setAddingProductId(productId);
 
-      // Same reference-video timing as New Arrivals.
       await wait(180);
 
       setCartAnimation({
@@ -318,17 +436,37 @@ function Bestsellers() {
     }
   };
 
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
   return (
-    <section className={styles.section} id="bestsellers">
+    <section
+      className={styles.section}
+      id="bestsellers"
+    >
       <div className={styles.container}>
-        {/* ================= HEADER ================= */}
+        {/* =================================================
+            HEADER
+        ================================================= */}
+
         <div className={styles.sectionHeader}>
-          <h2 className={styles.title}>BEST SELLER</h2>
+          <div className={styles.headingContent}>
+            <h2 className={styles.title}>
+              Best Sellers
+            </h2>
+
+            <p className={styles.subtitle}>
+              Loved by thousands, chosen for results
+            </p>
+          </div>
 
           <button
             type="button"
             className={styles.viewAllButton}
-            onClick={() => setShowAll((value) => !value)}
+            onClick={() =>
+              setShowAll((value) => !value)
+            }
             aria-expanded={showAll}
           >
             {showAll ? (
@@ -345,112 +483,147 @@ function Bestsellers() {
           </button>
         </div>
 
-        {/* ================= STATES ================= */}
+        {/* =================================================
+            CATEGORY TABS
+        ================================================= */}
+
+        <div
+          className={styles.categoryTabs}
+          role="tablist"
+          aria-label="Product categories"
+        >
+          {categories.map((category) => (
+            <button
+              key={category}
+              type="button"
+              role="tab"
+              aria-selected={
+                selectedCategory === category
+              }
+              className={`${styles.categoryTab} ${
+                selectedCategory === category
+                  ? styles.activeCategoryTab
+                  : ""
+              }`}
+              onClick={() => {
+                setSelectedCategory(category);
+                setShowAll(false);
+              }}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+
+        {/* =================================================
+            LOADING
+        ================================================= */}
+
         {loading ? (
           <div className={styles.emptyState}>
-            <LoaderCircle className={styles.spin} size={24} />
-            <span>Loading best sellers...</span>
+            <LoaderCircle
+              className={styles.spin}
+              size={24}
+            />
+
+            <span>
+              Loading best sellers...
+            </span>
           </div>
         ) : error ? (
-          <div className={styles.emptyState}>{error}</div>
-        ) : products.length === 0 ? (
+          /* =================================================
+             ERROR
+          ================================================= */
+
           <div className={styles.emptyState}>
-            No best sellers available.
+            {error}
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          /* =================================================
+             NO PRODUCTS
+          ================================================= */
+
+          <div className={styles.emptyState}>
+            No products available in this category.
           </div>
         ) : (
+          /* =================================================
+             PRODUCT GRID
+          ================================================= */
+
           <div className={styles.productGrid}>
             {visibleProducts.map((product) => {
-              const price = getSellingPrice(product);
-              const oldPrice = Number(product.oldPrice || 0);
+              const price =
+                getSellingPrice(product);
+
+              const oldPrice =
+                Number(product.oldPrice || 0);
 
               const discount =
                 oldPrice > price
                   ? Math.round(
-                      ((oldPrice - price) / oldPrice) * 100,
+                      ((oldPrice - price) /
+                        oldPrice) *
+                        100,
                     )
                   : 0;
 
-              const image = getImageUrl(product.images?.[0]);
-
-              const hoverImage = getImageUrl(
-                product.hoverImage || product.images?.[1],
+              const image = getImageUrl(
+                product.images?.[0],
               );
 
-              const rating = Number(product.rating || 0);
-              const reviews = Number(product.reviews || 0);
-              const stock = Number(product.stock ?? 0);
+              const hoverImage =
+                getImageUrl(
+                  product.hoverImage ||
+                    product.images?.[1],
+                );
+
+              const rating =
+                Number(product.rating || 0);
+
+              const reviews =
+                Number(product.reviews || 0);
+
+              const stock =
+                Number(product.stock ?? 0);
 
               const isAdding =
-                addingProductId === product._id;
+                addingProductId ===
+                product._id;
 
               const animationPhase =
-                cartAnimation?.productId === product._id
+                cartAnimation?.productId ===
+                product._id
                   ? cartAnimation.phase
                   : "idle";
 
-              /*
-               * TOP LEFT LABEL
-               * Uses your actual product data where available.
-               */
-              const topLabel =
-                product.isNew || product.badge?.toLowerCase() === "new"
-                  ? "New"
-                  : product.badge || "BestSeller";
-
-              /*
-               * Optional tagline.
-               * Falls back to category instead of hardcoded
-               * product names/data.
-               */
               const tagline =
                 product.tagline ||
                 product.category ||
                 "Beauty Essentials";
 
-              /*
-               * Back-in-stock badge.
-               * Can be controlled from backend later using
-               * availabilityBadge.
-               */
               const showBackInStock =
                 product.availabilityBadge?.toLowerCase() ===
                   "back in stock" ||
-                product.badge?.toLowerCase().includes("back in stock");
-
-              /*
-               * BUY4 can be changed later from backend using
-               * promoBadge.
-               */
-              const promoLabel = product.promoBadge || "BUY4";
+                product.badge
+                  ?.toLowerCase()
+                  .includes("back in stock");
 
               return (
                 <article
                   className={styles.productCard}
                   key={product._id}
                 >
-                  {/* ================= TOP RIBBON ================= */}
-                  <div className={styles.topRibbon}>
-                    <span
-                      className={`${styles.productType} ${
-                        topLabel.toLowerCase() === "new"
-                          ? styles.newRibbon
-                          : styles.bestRibbon
-                      }`}
-                    >
-                      {topLabel}
-                    </span>
+                  {/* =================================================
+                      IMAGE
+                  ================================================= */}
 
-                    <span className={styles.promoRibbon}>
-                      <span className={styles.promoIcon}>%</span>
-                      {promoLabel}
-                    </span>
-                  </div>
-
-                  {/* ================= IMAGE ================= */}
                   <div
                     className={styles.imageWrapper}
                     onClick={() =>
-                      navigate(`/products/${product._id}`)
+                      navigate(
+                        `/products/${product._id}`,
+                      )
                     }
                     role="button"
                     tabIndex={0}
@@ -460,6 +633,7 @@ function Bestsellers() {
                         event.key === " "
                       ) {
                         event.preventDefault();
+
                         navigate(
                           `/products/${product._id}`,
                         );
@@ -468,12 +642,26 @@ function Bestsellers() {
                     aria-label={`View ${product.name}`}
                   >
                     {showBackInStock && (
-                      <span className={styles.stockBadge}>
+                      <span
+                        className={
+                          styles.stockBadge
+                        }
+                      >
                         Back In Stock
                       </span>
                     )}
 
-                    {image && (
+                    {discount > 0 && (
+                      <span
+                        className={
+                          styles.imageDiscount
+                        }
+                      >
+                        -{discount}%
+                      </span>
+                    )}
+
+                    {image ? (
                       <img
                         src={image}
                         alt={product.name}
@@ -484,6 +672,16 @@ function Bestsellers() {
                             "none";
                         }}
                       />
+                    ) : (
+                      <div
+                        className={
+                          styles.imagePlaceholder
+                        }
+                      >
+                        <span>
+                          No image
+                        </span>
+                      </div>
                     )}
 
                     {hoverImage && (
@@ -498,85 +696,131 @@ function Bestsellers() {
                         }}
                       />
                     )}
-
-                    {/* SHADES */}
-                
                   </div>
 
-                  {/* ================= PRODUCT INFO ================= */}
-                  <div className={styles.productInfo}>
-                    {/* TAGLINE */}
-                    <div className={styles.tagline}>
-                      <span>{tagline}</span>
+                  {/* =================================================
+                      PRODUCT INFORMATION
+                  ================================================= */}
+
+                  <div
+                    className={styles.productInfo}
+                  >
+                    <div
+                      className={styles.tagline}
+                    >
+                      {tagline}
                     </div>
 
-                    {/* NAME */}
                     <button
                       type="button"
-                      className={styles.productNameButton}
+                      className={
+                        styles.productNameButton
+                      }
                       onClick={() =>
                         navigate(
                           `/products/${product._id}`,
                         )
                       }
                     >
-                      <h3 className={styles.productName}>
+                      <h3
+                        className={
+                          styles.productName
+                        }
+                      >
                         {product.name}
                       </h3>
                     </button>
 
                     {/* RATING */}
-                    <div className={styles.ratingRow}>
-                      <span className={styles.ratingValue}>
+
+                    <div
+                      className={
+                        styles.ratingRow
+                      }
+                    >
+                      <span
+                        className={
+                          styles.ratingValue
+                        }
+                      >
                         <Star
-                          size={15}
+                          size={14}
                           fill="currentColor"
                           strokeWidth={1.5}
                         />
-                        {rating.toFixed(2)}
+
+                        {rating.toFixed(1)}
                       </span>
 
-                      <span className={styles.ratingDivider}>
+                      <span
+                        className={
+                          styles.ratingDivider
+                        }
+                      >
                         |
                       </span>
 
-                      <span className={styles.verifiedReview}>
+                      <span
+                        className={
+                          styles.verifiedReview
+                        }
+                      >
                         <CheckCircle
-                          size={13}
+                          size={12}
                           fill="currentColor"
                           strokeWidth={2}
                         />
-                        {reviews} Reviews
+
+                        {reviews}
                       </span>
                     </div>
 
                     {/* PRICE */}
-                    <div className={styles.priceRow}>
-                      <strong className={styles.currentPrice}>
+
+                    <div
+                      className={
+                        styles.priceRow
+                      }
+                    >
+                      <strong
+                        className={
+                          styles.currentPrice
+                        }
+                      >
                         {formatPrice(price)}
                       </strong>
 
                       {oldPrice > price && (
-                        <del className={styles.oldPrice}>
+                        <del
+                          className={
+                            styles.oldPrice
+                          }
+                        >
                           {formatPrice(oldPrice)}
                         </del>
                       )}
 
                       {discount > 0 && (
-                        <span className={styles.discount}>
+                        <span
+                          className={
+                            styles.discount
+                          }
+                        >
                           {discount}% OFF
                         </span>
                       )}
                     </div>
 
                     {/* =================================================
-                        ADD TO CART — REFERENCE VIDEO ANIMATION
+                        ADD TO CART
                     ================================================= */}
 
                     <button
                       type="button"
                       className={`${styles.addToCart} ${
-                        styles[`phase-${animationPhase}`]
+                        styles[
+                          `phase-${animationPhase}`
+                        ]
                       }`}
                       onClick={() =>
                         void handleAddToCart(
@@ -584,7 +828,8 @@ function Bestsellers() {
                         )
                       }
                       disabled={
-                        isAdding || stock <= 0
+                        isAdding ||
+                        stock <= 0
                       }
                       aria-label={
                         stock <= 0
@@ -597,6 +842,8 @@ function Bestsellers() {
                           styles.cartStage
                         }
                       >
+                        {/* NORMAL BUTTON */}
+
                         <span
                           className={
                             styles.cartFace
@@ -640,6 +887,8 @@ function Bestsellers() {
                           </span>
                         </span>
 
+                        {/* FOLD */}
+
                         <span
                           className={
                             styles.cartFolded
@@ -651,12 +900,15 @@ function Bestsellers() {
                               styles.cartFoldLineLeft
                             }
                           />
+
                           <span
                             className={
                               styles.cartFoldLineRight
                             }
                           />
                         </span>
+
+                        {/* BAG */}
 
                         <span
                           className={
@@ -694,7 +946,9 @@ function Bestsellers() {
                                 styles.cartTagFront
                               }
                             >
-                              {formatPrice(price)}
+                              {formatPrice(
+                                price,
+                              )}
                             </span>
 
                             <span
@@ -706,10 +960,13 @@ function Bestsellers() {
                                 size={12}
                                 strokeWidth={2.5}
                               />
+
                               Added
                             </span>
                           </span>
                         </span>
+
+                        {/* PUFF */}
 
                         <span
                           className={

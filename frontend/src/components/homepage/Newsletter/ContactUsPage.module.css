@@ -1,48 +1,114 @@
+/* =========================================================
+   JINI COSMETICS
+   CONTACT US PAGE
+   PREMIUM ROSE / CREAM DESIGN
+========================================================= */
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
 .page {
   min-height: 100vh;
-  background: #f8f8f6;
-  color: #20221f;
+  width: 100%;
+  overflow: hidden;
+  color: #2b211f;
+  background:
+    linear-gradient(
+      180deg,
+      #fffdfb 0%,
+      #ffffff 48%,
+      #fff8f7 100%
+    );
+  box-sizing: border-box;
 }
 
-/* Hero Section */
+
+/* =========================================================
+   HERO
+========================================================= */
+
 .hero {
   position: relative;
   overflow: hidden;
-  padding: 110px 24px 85px;
+  padding: 105px 24px 88px;
   background:
+    radial-gradient(
+      circle at 15% 20%,
+      rgba(196, 126, 128, 0.10),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 85% 80%,
+      rgba(228, 191, 183, 0.12),
+      transparent 35%
+    ),
     linear-gradient(
       135deg,
-      rgba(245, 239, 228, 0.96),
-      rgba(255, 255, 255, 0.98)
+      #fff8f6 0%,
+      #fffdfc 52%,
+      #fff7f6 100%
     );
-  border-bottom: 1px solid #e8e6df;
+  border-bottom: 1px solid #eee3e1;
+  box-sizing: border-box;
+  isolation: isolate;
 }
 
 .hero::before,
 .hero::after {
-  content: "";
   position: absolute;
+  content: "";
   border-radius: 50%;
   pointer-events: none;
+  z-index: -1;
 }
 
 .hero::before {
-  width: 260px;
-  height: 260px;
-  top: -150px;
-  left: -100px;
-  background: rgba(155, 121, 80, 0.08);
-  animation: floatingCircle 8s ease-in-out infinite;
+  width: 360px;
+  height: 360px;
+  top: -220px;
+  left: -130px;
+  background:
+    rgba(
+      180,
+      100,
+      103,
+      0.075
+    );
+  filter: blur(3px);
+  animation:
+    floatingCircle
+    9s
+    ease-in-out
+    infinite;
 }
 
 .hero::after {
-  width: 320px;
-  height: 320px;
-  right: -170px;
-  bottom: -210px;
-  background: rgba(155, 121, 80, 0.07);
-  animation: floatingCircle 10s ease-in-out infinite reverse;
+  width: 430px;
+  height: 430px;
+  right: -210px;
+  bottom: -290px;
+  background:
+    rgba(
+      210,
+      160,
+      150,
+      0.09
+    );
+  filter: blur(4px);
+  animation:
+    floatingCircle
+    11s
+    ease-in-out
+    infinite
+    reverse;
 }
+
+
+/* =========================================================
+   HERO CONTENT
+========================================================= */
 
 .heroContent {
   position: relative;
@@ -50,104 +116,255 @@
   width: min(850px, 100%);
   margin: 0 auto;
   text-align: center;
-  animation: heroReveal 0.9s ease both;
+  animation:
+    heroReveal
+    0.9s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    )
+    both;
 }
+
+
+/* =========================================================
+   LABELS
+========================================================= */
 
 .eyebrow,
 .smallLabel {
   display: inline-block;
-  color: #9b7950;
-  font-size: 11px;
-  font-weight: 700;
+  color: #a15b5e;
+  font-family:
+    "Montserrat",
+    "DM Sans",
+    Arial,
+    sans-serif;
+  font-size: 10px;
+  font-weight: 800;
   letter-spacing: 2.2px;
+  line-height: 1.2;
+  text-transform: uppercase;
 }
 
+
+/* =========================================================
+   HERO TITLE
+========================================================= */
+
 .hero h1 {
-  margin: 18px 0 20px;
-  font-size: clamp(42px, 6vw, 76px);
-  line-height: 1.05;
+  margin: 18px 0 21px;
+  color: #2a211f;
+  font-family:
+    "Playfair Display",
+    "Cormorant Garamond",
+    Georgia,
+    serif;
+  font-size:
+    clamp(
+      42px,
+      6vw,
+      76px
+    );
   font-weight: 500;
+  line-height: 1.04;
   letter-spacing: -2.5px;
 }
 
 .hero h1 span {
   display: block;
-  color: #9b7950;
+  color: #a45d60;
   font-style: italic;
 }
+
+
+/* =========================================================
+   HERO DESCRIPTION
+========================================================= */
 
 .hero p {
   max-width: 610px;
   margin: 0 auto;
-  color: #74756e;
-  font-size: 16px;
-  line-height: 1.8;
+  color: #7d716f;
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.85;
 }
 
-/* Main Contact Section */
+
+/* =========================================================
+   CONTACT SECTION
+========================================================= */
+
 .contactSection {
-  width: min(1180px, calc(100% - 40px));
-  margin: 70px auto;
+  position: relative;
+  z-index: 2;
+  width: min(
+    1180px,
+    calc(100% - 40px)
+  );
+  margin: 68px auto 82px;
   display: grid;
-  grid-template-columns: 0.85fr 1.15fr;
-  gap: 28px;
+  grid-template-columns:
+    0.85fr
+    1.15fr;
+  gap: 26px;
   align-items: stretch;
 }
 
-/* Information Panel */
+
+/* =========================================================
+   PANELS
+========================================================= */
+
 .infoPanel,
 .formPanel {
-  border: 1px solid #e8e6df;
-  border-radius: 26px;
+  position: relative;
+  overflow: hidden;
+  border:
+    1px
+    solid
+    #eee4e2;
+  border-radius: 24px;
   background: #ffffff;
-  animation: panelReveal 0.8s ease both;
+  box-shadow:
+    0
+    12px
+    35px
+    rgba(
+      91,
+      57,
+      55,
+      0.055
+    );
+  animation:
+    panelReveal
+    0.8s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    )
+    both;
 }
+
+.infoPanel::before,
+.formPanel::before {
+  position: absolute;
+  content: "";
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    rgba(
+      186,
+      104,
+      106,
+      0.045
+    );
+  filter: blur(35px);
+}
+
+.infoPanel::before {
+  top: -90px;
+  left: -90px;
+}
+
+.formPanel::before {
+  right: -90px;
+  bottom: -100px;
+}
+
+
+/* =========================================================
+   INFORMATION PANEL
+========================================================= */
 
 .infoPanel {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 44px;
+  padding: 43px;
   background:
     linear-gradient(
-      150deg,
-      #f1eadf 0%,
-      #f8f5ef 55%,
+      145deg,
+      #fdf4f2 0%,
+      #fffaf9 55%,
       #ffffff 100%
     );
   animation-delay: 0.1s;
 }
 
+
+/* =========================================================
+   HEADINGS
+========================================================= */
+
 .infoPanel h2,
 .formHeader h2 {
-  margin: 18px 0 15px;
-  color: #252620;
-  font-size: clamp(28px, 3vw, 42px);
-  line-height: 1.15;
+  margin: 17px 0 14px;
+  color: #2c2321;
+  font-family:
+    "Playfair Display",
+    "Cormorant Garamond",
+    Georgia,
+    serif;
+  font-size:
+    clamp(
+      28px,
+      3vw,
+      42px
+    );
   font-weight: 500;
+  line-height: 1.14;
   letter-spacing: -1px;
 }
 
 .infoPanel > div:first-child p,
 .formHeader p {
-  color: #77786f;
-  font-size: 14px;
+  color: #7e7371;
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+  font-size: 13px;
   line-height: 1.8;
 }
 
-/* Contact Information Items */
+
+/* =========================================================
+   CONTACT ITEMS
+========================================================= */
+
 .infoItems {
   display: flex;
   flex-direction: column;
-  gap: 26px;
-  margin-top: 55px;
+  gap: 25px;
+  margin-top: 53px;
 }
 
 .infoItem {
   display: flex;
   align-items: flex-start;
-  gap: 15px;
-  animation: itemReveal 0.7s ease both;
+  gap: 14px;
+  animation:
+    itemReveal
+    0.7s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    )
+    both;
 }
 
 .infoItem:nth-child(1) {
@@ -162,132 +379,252 @@
   animation-delay: 0.45s;
 }
 
+
+/* =========================================================
+   CONTACT ICON
+========================================================= */
+
 .iconBox {
   width: 44px;
   height: 44px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  color: #9b7950;
-  background: #ffffff;
-  border: 1px solid #e5dfd4;
-  border-radius: 13px;
+  color: #a45d60;
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.95
+    );
+  border:
+    1px
+    solid
+    #eadbd8;
+  border-radius: 12px;
+  box-shadow:
+    0
+    5px
+    14px
+    rgba(
+      115,
+      70,
+      70,
+      0.06
+    );
   transition:
     color 0.25s ease,
     background 0.25s ease,
-    transform 0.25s ease;
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .infoItem:hover .iconBox {
   color: #ffffff;
-  background: #9b7950;
-  transform: translateY(-4px) rotate(-5deg);
+  background:
+    linear-gradient(
+      135deg,
+      #9c575b,
+      #b66d70
+    );
+  transform:
+    translateY(-4px)
+    rotate(-4deg);
+  box-shadow:
+    0
+    9px
+    20px
+    rgba(
+      145,
+      78,
+      80,
+      0.15
+    );
 }
+
+
+/* =========================================================
+   CONTACT TEXT
+========================================================= */
 
 .infoItem span {
   display: block;
   margin-bottom: 5px;
-  color: #898981;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.4px;
+  color: #968886;
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
 }
 
 .infoItem a,
 .infoItem p {
   margin: 0;
-  color: #30312b;
-  font-size: 14px;
-  line-height: 1.6;
+  color: #352a28;
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+  font-size: 13px;
+  line-height: 1.65;
   text-decoration: none;
   overflow-wrap: anywhere;
 }
 
 .infoItem a {
-  transition: color 0.2s ease;
+  transition:
+    color 0.2s ease;
 }
 
 .infoItem a:hover {
-  color: #9b7950;
+  color: #a45d60;
 }
 
-/* Form Panel */
+
+/* =========================================================
+   FORM PANEL
+========================================================= */
+
 .formPanel {
-  padding: 44px;
+  padding: 43px;
   animation-delay: 0.2s;
 }
 
 .formHeader {
-  margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 27px;
 }
 
 .formHeader h2 {
-  margin-bottom: 12px;
+  margin-bottom: 11px;
 }
 
-/* Messages */
+
+/* =========================================================
+   SUCCESS / ERROR
+========================================================= */
+
 .successMessage,
 .errorMessage {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  margin-bottom: 22px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  font-size: 13px;
+  margin-bottom: 21px;
+  padding: 13px 15px;
+  border-radius: 11px;
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+  font-size: 12px;
   line-height: 1.6;
-  animation: messageReveal 0.35s ease both;
+  animation:
+    messageReveal
+    0.35s
+    ease
+    both;
 }
 
 .successMessage {
-  color: #286947;
-  background: #edf8f0;
-  border: 1px solid #ccebd5;
+  color: #276a48;
+  background: #eef8f1;
+  border:
+    1px
+    solid
+    #cfe9d7;
+}
+
+.successMessage svg {
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .errorMessage {
-  color: #a03d3d;
-  background: #fff1f1;
-  border: 1px solid #f1cccc;
+  color: #9e4141;
+  background: #fff2f2;
+  border:
+    1px
+    solid
+    #f0cccc;
 }
 
-/* Form */
+
+/* =========================================================
+   FORM
+========================================================= */
+
 .form {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 20px;
 }
 
 .formGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+  gap: 17px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 8px;
 }
 
 .field label {
-  color: #45463f;
-  font-size: 13px;
-  font-weight: 600;
+  color: #49403e;
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
 }
+
+
+/* =========================================================
+   INPUTS
+========================================================= */
 
 .field input,
 .field textarea {
   width: 100%;
   box-sizing: border-box;
-  padding: 14px 15px;
-  color: #292a25;
-  background: #fbfbf9;
-  border: 1px solid #deded7;
-  border-radius: 12px;
+  padding:
+    13px
+    14px;
+  color: #302725;
+  background: #fffdfc;
+  border:
+    1px
+    solid
+    #e4dcd9;
+  border-radius: 10px;
   outline: none;
-  font: inherit;
-  font-size: 14px;
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+  font-size: 13px;
+  font-weight: 400;
   transition:
     border-color 0.25s ease,
     background 0.25s ease,
@@ -296,50 +633,92 @@
 }
 
 .field input {
-  min-height: 50px;
+  min-height: 48px;
 }
 
 .field textarea {
-  min-height: 145px;
+  min-height: 140px;
   resize: vertical;
+  line-height: 1.65;
 }
 
 .field input::placeholder,
 .field textarea::placeholder {
-  color: #a2a39b;
+  color: #aaa09e;
 }
 
 .field input:hover,
 .field textarea:hover {
-  border-color: #c8b79f;
+  border-color: #d8bebe;
 }
 
 .field input:focus,
 .field textarea:focus {
   background: #ffffff;
-  border-color: #b2946b;
-  box-shadow: 0 0 0 4px rgba(178, 148, 107, 0.12);
+  border-color: #b9787b;
+  box-shadow:
+    0
+    0
+    0
+    4px
+    rgba(
+      176,
+      111,
+      114,
+      0.10
+    );
   transform: translateY(-1px);
 }
 
-/* Animated Submit Button */
+
+/* =========================================================
+   SUBMIT BUTTON
+========================================================= */
+
 .submitButton {
   position: relative;
   isolation: isolate;
-  min-height: 54px;
+  width: 100%;
+  min-height: 52px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 11px;
   overflow: hidden;
-  padding: 14px 25px;
+  margin-top: 2px;
+  padding:
+    13px
+    24px;
   color: #ffffff;
-  background: #292b26;
-  border: 1px solid #292b26;
-  border-radius: 13px;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
+  background:
+    linear-gradient(
+      135deg,
+      #955154 0%,
+      #a86063 50%,
+      #965154 100%
+    );
+  border:
+    1px
+    solid
+    #955154;
+  border-radius: 10px;
+  box-shadow:
+    0
+    8px
+    20px
+    rgba(
+      128,
+      67,
+      70,
+      0.13
+    );
+  font-family:
+    "DM Sans",
+    Arial,
+    sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.15px;
   cursor: pointer;
   transition:
     transform 0.25s ease,
@@ -348,38 +727,80 @@
     box-shadow 0.25s ease;
 }
 
-/* Moving shine */
+
+/* =========================================================
+   BUTTON SHINE
+========================================================= */
+
 .submitButton::before {
-  content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
   width: 35%;
-  background: linear-gradient(
-    100deg,
-    transparent,
-    rgba(255, 255, 255, 0.38),
-    transparent
-  );
-  transform: translateX(-180%) skewX(-20deg);
-  animation: buttonLight 2.8s ease-in-out infinite;
+  content: "";
+  background:
+    linear-gradient(
+      100deg,
+      transparent,
+      rgba(
+        255,
+        255,
+        255,
+        0.3
+      ),
+      transparent
+    );
+  transform:
+    translateX(-180%)
+    skewX(-20deg);
+  animation:
+    buttonLight
+    3s
+    ease-in-out
+    infinite;
 }
 
-/* Speed lines */
+
+/* =========================================================
+   BUTTON SPEED LINES
+========================================================= */
+
 .submitButton::after {
-  content: "";
   position: absolute;
   top: 50%;
   left: -55px;
   width: 35px;
   height: 2px;
-  background: rgba(255, 255, 255, 0.8);
+  content: "";
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.75
+    );
   box-shadow:
-    0 -9px 0 rgba(255, 255, 255, 0.48),
-    0 9px 0 rgba(255, 255, 255, 0.32);
+    0 -8px 0
+      rgba(
+        255,
+        255,
+        255,
+        0.42
+      ),
+    0 8px 0
+      rgba(
+        255,
+        255,
+        255,
+        0.25
+      );
   opacity: 0;
   transform: translateY(-50%);
-  animation: speedLines 2.2s linear infinite;
+  animation:
+    speedLines
+    2.4s
+    linear
+    infinite;
 }
 
 .submitButton > * {
@@ -394,29 +815,53 @@
 }
 
 .submitButton:hover:not(:disabled) {
-  background: #9b7950;
-  border-color: #9b7950;
+  background:
+    linear-gradient(
+      135deg,
+      #a65c60,
+      #bd7477
+    );
+  border-color: #a65c60;
   transform: translateY(-3px);
   box-shadow:
-    0 10px 0 rgba(41, 43, 38, 0.08),
-    0 18px 28px rgba(70, 55, 35, 0.2);
+    0
+    12px
+    25px
+    rgba(
+      132,
+      70,
+      73,
+      0.20
+    );
 }
 
 .submitButton:hover:not(:disabled) svg {
-  transform: translateX(7px) rotate(-8deg);
+  transform:
+    translateX(6px)
+    rotate(-8deg);
 }
 
 .submitButton:active:not(:disabled) {
-  transform: translateY(-1px) scale(0.98);
+  transform:
+    translateY(-1px)
+    scale(0.98);
 }
 
 .submitButton:focus-visible {
-  outline: 3px solid rgba(155, 121, 80, 0.35);
+  outline:
+    3px
+    solid
+    rgba(
+      166,
+      94,
+      96,
+      0.22
+    );
   outline-offset: 4px;
 }
 
 .submitButton:disabled {
-  opacity: 0.7;
+  opacity: 0.68;
   cursor: not-allowed;
 }
 
@@ -425,12 +870,24 @@
   animation-play-state: paused;
 }
 
-/* Loading Spinner */
+
+/* =========================================================
+   SPINNER
+========================================================= */
+
 .spinner {
-  animation: spin 0.8s linear infinite;
+  animation:
+    spin
+    0.8s
+    linear
+    infinite;
 }
 
-/* Animations */
+
+/* =========================================================
+   HERO ANIMATION
+========================================================= */
+
 @keyframes heroReveal {
   from {
     opacity: 0;
@@ -443,17 +900,31 @@
   }
 }
 
+
+/* =========================================================
+   PANEL ANIMATION
+========================================================= */
+
 @keyframes panelReveal {
   from {
     opacity: 0;
-    transform: translateY(35px);
+    transform:
+      translateY(35px)
+      scale(0.985);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform:
+      translateY(0)
+      scale(1);
   }
 }
+
+
+/* =========================================================
+   ITEM ANIMATION
+========================================================= */
 
 @keyframes itemReveal {
   from {
@@ -467,6 +938,11 @@
   }
 }
 
+
+/* =========================================================
+   MESSAGE ANIMATION
+========================================================= */
+
 @keyframes messageReveal {
   from {
     opacity: 0;
@@ -479,27 +955,56 @@
   }
 }
 
+
+/* =========================================================
+   FLOATING CIRCLES
+========================================================= */
+
 @keyframes floatingCircle {
   0%,
   100% {
-    transform: translate3d(0, 0, 0);
+    transform:
+      translate3d(
+        0,
+        0,
+        0
+      );
   }
 
   50% {
-    transform: translate3d(20px, 18px, 0);
+    transform:
+      translate3d(
+        20px,
+        18px,
+        0
+      );
   }
 }
 
+
+/* =========================================================
+   BUTTON SHINE ANIMATION
+========================================================= */
+
 @keyframes buttonLight {
   0% {
-    transform: translateX(-180%) skewX(-20deg);
+    transform:
+      translateX(-180%)
+      skewX(-20deg);
   }
 
   45%,
   100% {
-    transform: translateX(430%) skewX(-20deg);
+    transform:
+      translateX(430%)
+      skewX(-20deg);
   }
 }
+
+
+/* =========================================================
+   SPEED LINES
+========================================================= */
 
 @keyframes speedLines {
   0% {
@@ -522,69 +1027,376 @@
   }
 }
 
+
+/* =========================================================
+   SPINNER ANIMATION
+========================================================= */
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-/* Tablet */
-@media (max-width: 900px) {
-  .contactSection {
-    grid-template-columns: 1fr;
-  }
 
-  .infoPanel {
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1000px) {
+  .contactSection {
+    grid-template-columns:
+      1fr
+      1fr;
     gap: 20px;
-  }
-
-  .infoItems {
-    margin-top: 20px;
-  }
-}
-
-/* Mobile */
-@media (max-width: 600px) {
-  .hero {
-    padding: 75px 20px 60px;
-  }
-
-  .hero h1 {
-    letter-spacing: -1.5px;
-  }
-
-  .hero p {
-    font-size: 14px;
-  }
-
-  .contactSection {
-    width: min(100% - 28px, 1180px);
-    margin: 35px auto;
-    gap: 18px;
   }
 
   .infoPanel,
   .formPanel {
-    padding: 26px 20px;
-    border-radius: 20px;
-  }
-
-  .formGrid {
-    grid-template-columns: 1fr;
-    gap: 22px;
+    padding: 34px;
   }
 
   .infoPanel h2,
   .formHeader h2 {
-    font-size: 30px;
-  }
-
-  .submitButton {
-    width: 100%;
+    font-size: 32px;
   }
 }
 
-/* Reduced Motion Accessibility */
+
+/* =========================================================
+   SMALL TABLET
+========================================================= */
+
+@media (max-width: 800px) {
+  .hero {
+    padding:
+      85px
+      22px
+      70px;
+  }
+
+  .hero h1 {
+    font-size:
+      clamp(
+        40px,
+        8vw,
+        62px
+      );
+  }
+
+  .contactSection {
+    grid-template-columns: 1fr;
+    width:
+      min(
+        100% - 36px,
+        720px
+      );
+    margin:
+      50px
+      auto
+      65px;
+  }
+
+  .infoItems {
+    margin-top: 35px;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+  .hero {
+    padding:
+      72px
+      20px
+      58px;
+  }
+
+  .eyebrow,
+  .smallLabel {
+    font-size: 8.5px;
+    letter-spacing: 1.7px;
+  }
+
+  .hero h1 {
+    margin:
+      15px
+      0
+      17px;
+    font-size:
+      clamp(
+        36px,
+        11vw,
+        50px
+      );
+    line-height: 1.06;
+    letter-spacing: -1.5px;
+  }
+
+  .hero p {
+    font-size: 13px;
+    line-height: 1.75;
+  }
+
+  .contactSection {
+    width:
+      calc(
+        100% - 28px
+      );
+    margin:
+      35px
+      auto
+      45px;
+    gap: 17px;
+  }
+
+  .infoPanel,
+  .formPanel {
+    padding:
+      27px
+      20px;
+    border-radius: 19px;
+  }
+
+  .infoPanel h2,
+  .formHeader h2 {
+    margin-top: 14px;
+    font-size: 29px;
+    letter-spacing: -0.7px;
+  }
+
+  .infoPanel > div:first-child p,
+  .formHeader p {
+    font-size: 12px;
+    line-height: 1.75;
+  }
+
+  .infoItems {
+    gap: 21px;
+    margin-top: 30px;
+  }
+
+  .iconBox {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .infoItem {
+    gap: 12px;
+  }
+
+  .infoItem span {
+    font-size: 9px;
+  }
+
+  .infoItem a,
+  .infoItem p {
+    font-size: 12px;
+  }
+
+  .formHeader {
+    margin-bottom: 23px;
+  }
+
+  .form {
+    gap: 18px;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .field {
+    gap: 7px;
+  }
+
+  .field label {
+    font-size: 10px;
+  }
+
+  .field input,
+  .field textarea {
+    padding:
+      12px
+      13px;
+    font-size: 12px;
+    border-radius: 9px;
+  }
+
+  .field input {
+    min-height: 46px;
+  }
+
+  .field textarea {
+    min-height: 125px;
+  }
+
+  .successMessage,
+  .errorMessage {
+    padding:
+      11px
+      12px;
+    font-size: 11px;
+  }
+
+  .submitButton {
+    min-height: 49px;
+    width: 100%;
+    padding:
+      12px
+      20px;
+    border-radius: 9px;
+    font-size: 12px;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+  .hero {
+    padding:
+      60px
+      16px
+      48px;
+  }
+
+  .hero h1 {
+    font-size:
+      clamp(
+        33px,
+        11.5vw,
+        44px
+      );
+  }
+
+  .hero p {
+    font-size: 12px;
+  }
+
+  .contactSection {
+    width:
+      calc(
+        100% - 22px
+      );
+    margin:
+      27px
+      auto
+      35px;
+    gap: 14px;
+  }
+
+  .infoPanel,
+  .formPanel {
+    padding:
+      23px
+      16px;
+    border-radius: 17px;
+  }
+
+  .infoPanel h2,
+  .formHeader h2 {
+    font-size: 26px;
+  }
+
+  .infoItems {
+    gap: 18px;
+    margin-top: 25px;
+  }
+
+  .iconBox {
+    width: 37px;
+    height: 37px;
+  }
+
+  .iconBox svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .infoItem a,
+  .infoItem p {
+    font-size: 11px;
+  }
+
+  .field input,
+  .field textarea {
+    font-size: 11px;
+  }
+
+  .field textarea {
+    min-height: 115px;
+  }
+
+  .submitButton {
+    min-height: 46px;
+    font-size: 11px;
+  }
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 350px) {
+  .hero {
+    padding:
+      52px
+      14px
+      42px;
+  }
+
+  .hero h1 {
+    font-size: 31px;
+  }
+
+  .contactSection {
+    width:
+      calc(
+        100% - 18px
+      );
+  }
+
+  .infoPanel,
+  .formPanel {
+    padding:
+      20px
+      14px;
+  }
+
+  .infoPanel h2,
+  .formHeader h2 {
+    font-size: 24px;
+  }
+
+  .infoItem {
+    gap: 9px;
+  }
+
+  .iconBox {
+    width: 34px;
+    height: 34px;
+  }
+
+  .iconBox svg {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
 @media (prefers-reduced-motion: reduce) {
   .heroContent,
   .infoPanel,
@@ -599,7 +1411,12 @@
   .submitButton::after,
   .submitButton svg,
   .spinner {
-    animation: none;
-    transition: none;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .infoItem:hover .iconBox,
+  .submitButton:hover:not(:disabled) {
+    transform: none;
   }
 }

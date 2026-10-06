@@ -1,4 +1,5 @@
 import {
+  CSSProperties,
   useEffect,
   useState,
 } from "react";
@@ -80,7 +81,7 @@ const getImageUrl = (
 };
 
 /* =========================================================
-   CATEGORY SLUG
+   CATEGORY PATH
 ========================================================= */
 
 const getCategoryPath = (
@@ -98,8 +99,7 @@ const getCategoryPath = (
 ========================================================= */
 
 function ShopByCategory() {
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
   const [
     categories,
@@ -139,7 +139,6 @@ function ShopByCategory() {
               `${API_BASE_URL}/categories`,
               {
                 method: "GET",
-
                 headers: {
                   Accept:
                     "application/json",
@@ -150,17 +149,15 @@ function ShopByCategory() {
           const responseText =
             await response.text();
 
-          let data:
-            CategoryResponse =
+          let data: CategoryResponse =
             {};
 
           try {
-            data =
-              responseText
-                ? JSON.parse(
-                    responseText,
-                  )
-                : {};
+            data = responseText
+              ? JSON.parse(
+                  responseText,
+                )
+              : {};
           } catch {
             throw new Error(
               "Server returned an invalid response.",
@@ -175,9 +172,7 @@ function ShopByCategory() {
           }
 
           const receivedCategories =
-            Array.isArray(
-              data.data,
-            )
+            Array.isArray(data.data)
               ? data.data
               : Array.isArray(
                     data.categories,
@@ -197,9 +192,7 @@ function ShopByCategory() {
               activeCategories,
             );
           }
-        } catch (
-          fetchError
-        ) {
+        } catch (fetchError) {
           console.error(
             "Fetch categories error:",
             fetchError,
@@ -244,6 +237,16 @@ function ShopByCategory() {
   };
 
   /* =======================================================
+     VIEW ALL
+  ======================================================= */
+
+  const handleViewAll = () => {
+    setShowAllCategories(
+      (previous) => !previous,
+    );
+  };
+
+  /* =======================================================
      RENDER
   ======================================================= */
 
@@ -253,12 +256,10 @@ function ShopByCategory() {
       id="collections"
     >
       <div
-        className={
-          styles.container
-        }
+        className={styles.container}
       >
         {/* =================================================
-            HEADER
+            SECTION HEADER
         ================================================= */}
 
         <div
@@ -272,19 +273,15 @@ function ShopByCategory() {
             }
           >
             <span
-              className={
-                styles.eyebrow
-              }
+              className={styles.eyebrow}
             >
-              DISCOVER YOUR BEAUTY RITUAL
+              BEAUTY ESSENTIALS
             </span>
 
             <h2
-              className={
-                styles.title
-              }
+              className={styles.title}
             >
-              SHOP BY CATEGORY
+              Shop by Category
             </h2>
 
             <span
@@ -292,23 +289,26 @@ function ShopByCategory() {
                 styles.headingLine
               }
             />
+
+            <p
+              className={
+                styles.headingDescription
+              }
+            >
+              Explore our wide range of
+              beauty essentials
+            </p>
           </div>
 
           {!loading &&
-            categories.length >
-              0 && (
+            categories.length > 0 && (
               <button
                 type="button"
                 className={
                   styles.viewAllButton
                 }
-                onClick={() =>
-                  setShowAllCategories(
-                    (
-                      previous,
-                    ) =>
-                      !previous,
-                  )
+                onClick={
+                  handleViewAll
                 }
                 aria-expanded={
                   showAllCategories
@@ -331,7 +331,15 @@ function ShopByCategory() {
               styles.loadingState
             }
           >
-            Loading categories...
+            <span
+              className={
+                styles.loadingSpinner
+              }
+            />
+
+            <span>
+              Loading categories...
+            </span>
           </div>
         )}
 
@@ -339,16 +347,15 @@ function ShopByCategory() {
             ERROR
         ================================================= */}
 
-        {!loading &&
-          error && (
-            <div
-              className={
-                styles.errorState
-              }
-            >
-              {error}
-            </div>
-          )}
+        {!loading && error && (
+          <div
+            className={
+              styles.errorState
+            }
+          >
+            {error}
+          </div>
+        )}
 
         {/* =================================================
             EMPTY
@@ -356,8 +363,7 @@ function ShopByCategory() {
 
         {!loading &&
           !error &&
-          categories.length ===
-            0 && (
+          categories.length === 0 && (
             <div
               className={
                 styles.emptyState
@@ -373,22 +379,19 @@ function ShopByCategory() {
 
         {!loading &&
           !error &&
-          categories.length >
-            0 && (
+          categories.length > 0 && (
             <div
               className={
                 showAllCategories
                   ? styles.categoryGrid
                   : styles.categoryScroller
               }
-              id={
-                showAllCategories
-                  ? "all-categories"
-                  : undefined
-              }
             >
               {categories.map(
-                (category) => {
+                (
+                  category,
+                  index,
+                ) => {
                   const categoryId =
                     getCategoryId(
                       category,
@@ -401,12 +404,16 @@ function ShopByCategory() {
 
                   return (
                     <button
+                      key={categoryId}
                       type="button"
                       className={
                         styles.categoryItem
                       }
-                      key={
-                        categoryId
+                      style={
+                        {
+                          "--category-index":
+                            index,
+                        } as CSSProperties
                       }
                       onClick={() =>
                         handleCategoryClick(
@@ -420,46 +427,54 @@ function ShopByCategory() {
                           styles.categoryCard
                         }
                       >
-                        <div
-                          className={
-                            styles.imageWrapper
+                        {/* =================================================
+                            FULL IMAGE
+                        ================================================= */}
+
+                        <img
+                          src={
+                            categoryImage
                           }
-                        >
-                          <img
-                            src={
-                              categoryImage
-                            }
-                            alt={
-                              category.name
-                            }
-                            className={
-                              styles.categoryImage
-                            }
-                            loading="lazy"
-                            onError={(
-                              event,
-                            ) => {
-                              const image =
-                                event.currentTarget;
-
-                              image.onerror =
-                                null;
-
-                              image.src =
-                                "/images/category-placeholder.png";
-                            }}
-                          />
-                        </div>
-
-                        <h3
-                          className={
-                            styles.categoryLabel
-                          }
-                        >
-                          {
+                          alt={
                             category.name
                           }
-                        </h3>
+                          className={
+                            styles.categoryImage
+                          }
+                          loading="lazy"
+                          onError={(
+                            event,
+                          ) => {
+                            const image =
+                              event.currentTarget;
+
+                            image.onerror =
+                              null;
+
+                            image.src =
+                              "/images/category-placeholder.png";
+                          }}
+                        />
+
+                        {/* =================================================
+                            BOTTOM CATEGORY NAME
+                        ================================================= */}
+
+                        <div
+                          className={
+                            styles.categoryNameBar
+                          }
+                        >
+                          <h3
+                            className={
+                              styles.categoryLabel
+                            }
+                          >
+                            {
+                              category.name
+                            }
+                          </h3>
+                        </div>
                       </div>
                     </button>
                   );

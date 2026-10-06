@@ -2,12 +2,10 @@ import {
   BadgeCheck,
   CreditCard,
   Headset,
-  RefreshCcw,
+  Leaf,
   ShieldCheck,
-  Truck,
+  Sparkles,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-
 import styles from "./TrustFeatures.module.css";
 
 type TrustFeature = {
@@ -18,74 +16,52 @@ type TrustFeature = {
 
 const features: TrustFeature[] = [
   {
-    title: "100% Authentic",
-    description: "Genuine beauty products",
+    title: "Natural Ingredients",
+    description: "Safe for your skin",
+    icon: Leaf,
+  },
+  {
+    title: "Dermatologist Tested",
+    description: "Trusted by experts",
     icon: BadgeCheck,
   },
   {
+    title: "Cruelty Free",
+    description: "Kind to animals",
+    icon: Sparkles,
+  },
+  {
     title: "Secure Payments",
-    description: "Safe and protected checkout",
+    description: "100% safe & encrypted",
     icon: CreditCard,
   },
   {
-    title: "Easy Returns",
-    description: "Simple and convenient",
-    icon: RefreshCcw,
-  },
-  {
-    title: "Fast Delivery",
-    description: "Beauty delivered to you",
-    icon: Truck,
-  },
-  {
-    title: "Free Shipping",
-    description: "On orders above ₹999",
-    icon: ShieldCheck,
-  },
-  {
-    title: "Customer Support",
-    description: "We are here to help",
+    title: "Dedicated Support",
+    description: "We're here to help",
     icon: Headset,
   },
 ];
 
 function TrustFeatures() {
-  const navigate = useNavigate();
-
   return (
     <section
       className={styles.section}
       aria-label="Shopping benefits and services"
     >
       <div className={styles.container}>
-        <div className={styles.sectionIntro}>
-          <span className={styles.introAccent}>Why shop with us</span>
-          <span className={styles.introLine} />
-        </div>
-
         <div className={styles.featureGrid}>
-          {features.map((feature, index) => {
+          {features.map((feature) => {
             const Icon = feature.icon;
 
             return (
-              <div
-                className={styles.feature}
-                key={feature.title}
-                style={
-                  {
-                    "--feature-delay": `${index * 80}ms`,
-                  } as React.CSSProperties
-                }
-              >
+              <div className={styles.feature} key={feature.title}>
                 <div className={styles.iconWrapper}>
                   <Icon
                     className={styles.icon}
-                    size={22}
-                    strokeWidth={1.6}
+                    size={18}
+                    strokeWidth={1.7}
                     aria-hidden="true"
                   />
-
-                  <span className={styles.iconGlow} />
                 </div>
 
                 <div className={styles.content}>
@@ -95,24 +71,6 @@ function TrustFeatures() {
               </div>
             );
           })}
-        </div>
-
-        {/* Virtual Mall CTA */}
-        <div className={styles.virtualMallWrapper}>
-          <button
-            type="button"
-            className={styles.virtualMallButton}
-            onClick={() => navigate("/virtual-mall")}
-          >
-            <span className={styles.virtualMallIcon}>🏬</span>
-
-            <span className={styles.virtualMallText}>
-              <strong>Explore Virtual Mall</strong>
-              <small>Walk through our 3D beauty store</small>
-            </span>
-
-            <span className={styles.virtualMallArrow}>→</span>
-          </button>
         </div>
       </div>
     </section>

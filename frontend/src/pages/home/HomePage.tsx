@@ -28,13 +28,14 @@ function HomePage() {
 
       <main>
         <HeroBanner />
+        <PromoBanner />
         <TrustFeatures />
         <ShopByCategory />
         <Offers />
-        <PromoBanner />
+        
         <NewArrivals />
         <Bestsellers />
-        <BrandShowcase />
+        {/* <BrandShowcase /> */}
         {/* <ShopByRange /> */}
         <ContactUsPage />
       </main>

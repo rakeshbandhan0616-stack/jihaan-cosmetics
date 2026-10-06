@@ -5,125 +5,82 @@ import styles from "./PromoBanner.module.css";
 type PromoBannerItem = {
   id: number;
   title: string;
-  highlight: string;
-  description: string;
+  subtitle: string;
   buttonText: string;
   image: string;
   href: string;
+  accent: string;
 };
 
 const banners: PromoBannerItem[] = [
   {
     id: 1,
-    title: "Skincare That",
-    highlight: "Brings Out Your Glow",
-    description: "Pure ingredients. Real results.",
+    title: "Skincare",
+    subtitle: "Healthy skin, happier you.",
     buttonText: "Shop Skincare",
     image:
-      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1200&q=90",
+      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=600&q=90",
     href: "/category/skin-care",
+    accent: "#f9ebe8",
   },
   {
     id: 2,
-    title: "Makeup For",
-    highlight: "Every You",
-    description: "Express. Enhance. Empower.",
-    buttonText: "Explore Makeup",
+    title: "Makeup",
+    subtitle: "Express your unique beauty.",
+    buttonText: "Shop Makeup",
     image:
-      "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1200&q=90",
+      "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=600&q=90",
     href: "/category/makeup",
+    accent: "#f7e8f2",
   },
   {
     id: 3,
-    title: "Care For",
-    highlight: "Your Beautiful Hair",
-    description: "Nourish, protect and shine.",
+    title: "Haircare",
+    subtitle: "Stronger, shinier hair naturally.",
     buttonText: "Shop Haircare",
     image:
-      "https://images.unsplash.com/photo-1522337360788-8b13dfc61c9?auto=format&fit=crop&w=1200&q=90",
+      "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=90",
     href: "/category/hair-care",
+    accent: "#eef4f1",
   },
 ];
 
 function PromoBanner() {
   const navigate = useNavigate();
 
-  const handleBannerNavigation = (
-    event: React.MouseEvent<HTMLAnchorElement>,
-    href: string,
-  ) => {
-    event.preventDefault();
-    navigate(href);
-  };
-
   return (
-    <section
-      className={styles.section}
-      aria-labelledby="beauty-collections-title"
-    >
+    <section className={styles.section} aria-label="Shop by category">
       <div className={styles.container}>
-        <header className={styles.sectionHeading}>
-          <span className={styles.eyebrow}>BEAUTY ESSENTIALS</span>
-
-          <h2 id="beauty-collections-title">
-            Discover Your Beauty Ritual
-          </h2>
-
-          <p>
-            Thoughtfully selected essentials for your everyday glow.
-          </p>
-        </header>
-
         <div className={styles.bannerGrid}>
           {banners.map((banner) => (
             <article
-              className={styles.banner}
               key={banner.id}
+              className={styles.banner}
+              style={{ backgroundColor: banner.accent }}
             >
+              {/* Left Content */}
               <div className={styles.content}>
-                <span className={styles.bannerNumber}>
-                  <span className={styles.badgeBrush}>
-                    0{banner.id}
-                  </span>
-                </span>
+                <h3>{banner.title}</h3>
+                <p>{banner.subtitle}</p>
 
-                <h3>
-                  {banner.title}
-                  <br />
-                  <span>{banner.highlight}</span>
-                </h3>
-
-                <p>{banner.description}</p>
-
-                <a
-                  href={banner.href}
+                <button
+                  type="button"
                   className={styles.button}
-                  onClick={(event) =>
-                    handleBannerNavigation(
-                      event,
-                      banner.href,
-                    )
-                  }
-                  aria-label={`${banner.buttonText} - ${banner.highlight}`}
+                  onClick={() => navigate(banner.href)}
                 >
-                  <span>{banner.buttonText}</span>
-
-                  <ArrowRight
-                    size={16}
-                    strokeWidth={1.8}
-                  />
-                </a>
+                  {banner.buttonText}
+                  <ArrowRight size={14} strokeWidth={2.2} />
+                </button>
               </div>
 
+              {/* Right Image */}
               <div className={styles.imageWrapper}>
                 <img
                   src={banner.image}
-                  alt={banner.highlight}
+                  alt={banner.title}
                   className={styles.image}
                   loading="lazy"
                 />
-
-                <div className={styles.imageOverlay} />
               </div>
             </article>
           ))}
